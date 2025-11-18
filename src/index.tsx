@@ -78,6 +78,164 @@ app.get('/api/live/activity', async (c) => {
   }
 });
 
+// ============================================================================
+// AUTHENTICATION APIs
+// ============================================================================
+
+// Login endpoint
+app.post('/api/auth/login', async (c) => {
+  const { DB } = c.env;
+  const { email, password, sso_provider } = await c.req.json();
+  
+  try {
+    // For demo purposes - in production, verify password hash
+    const user = await DB.prepare(`
+      SELECT u.id, u.email, u.first_name, u.last_name, u.sso_provider, u.is_active,
+             r.id as role_id, r.name as role_name, r.display_name as role_display_name, r.level as role_level
+      FROM users u
+      LEFT JOIN user_roles ur ON u.id = ur.user_id
+      LEFT JOIN roles r ON ur.role_id = r.id
+      WHERE u.email = ? AND u.is_active = 1
+      LIMIT 1
+    `).bind(email).first();
+    
+    if (!user) {
+      return c.json({ success: false, error: 'Invalid credentials' }, 401);
+    }
+    
+    // Get user permissions
+    const permissions = await DB.prepare(`
+      SELECT DISTINCT p.name, p.display_name, p.module
+      FROM permissions p
+      JOIN role_permissions rp ON p.id = rp.permission_id
+      JOIN user_roles ur ON rp.role_id = ur.role_id
+      WHERE ur.user_id = ?
+    `).bind(user.id).all();
+    
+    // Create session (in production, generate real JWT token)
+    const sessionToken = `demo_token_${user.id}_${Date.now()}`;
+    
+    await DB.prepare(`
+      INSERT INTO sessions (user_id, token_hash, ip_address, expires_at, created_at, last_activity_at)
+      VALUES (?, ?, ?, datetime('now', '+8 hours'), datetime('now'), datetime('now'))
+    `).bind(user.id, sessionToken, c.req.header('cf-connecting-ip') || 'unknown').run();
+    
+    // Update last login
+    await DB.prepare(`
+      UPDATE users SET last_login_at = datetime('now'), last_login_ip = ? WHERE id = ?
+    `).bind(c.req.header('cf-connecting-ip') || 'unknown', user.id).run();
+    
+    return c.json({ 
+      success: true, 
+      data: {
+        token: sessionToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: `${user.first_name} ${user.last_name}`,
+          role: {
+            id: user.role_id,
+            name: user.role_name,
+            display_name: user.role_display_name,
+            level: user.role_level
+          },
+          permissions: permissions.results.map(p => p.name)
+        }
+      }
+    });
+  } catch (error: any) {
+    console.error('Login error:', error);
+    return c.json({ success: false, error: 'Login failed', message: error.message }, 500);
+  }
+});
+
+// Get current user
+app.get('/api/auth/me', async (c) => {
+  const { DB } = c.env;
+  const token = c.req.header('Authorization')?.replace('Bearer ', '');
+  
+  if (!token) {
+    return c.json({ success: false, error: 'Not authenticated' }, 401);
+  }
+  
+  try {
+    const session = await DB.prepare(`
+      SELECT s.user_id, u.email, u.first_name, u.last_name, u.profile_photo_url,
+             r.id as role_id, r.name as role_name, r.display_name as role_display_name, r.level as role_level
+      FROM sessions s
+      JOIN users u ON s.user_id = u.id
+      LEFT JOIN user_roles ur ON u.id = ur.user_id
+      LEFT JOIN roles r ON ur.role_id = r.id
+      WHERE s.token_hash = ? AND s.is_active = 1 AND s.expires_at > datetime('now')
+      LIMIT 1
+    `).bind(token).first();
+    
+    if (!session) {
+      return c.json({ success: false, error: 'Invalid or expired session' }, 401);
+    }
+    
+    // Get permissions
+    const permissions = await DB.prepare(`
+      SELECT DISTINCT p.name, p.display_name, p.module
+      FROM permissions p
+      JOIN role_permissions rp ON p.id = rp.permission_id
+      JOIN user_roles ur ON rp.role_id = ur.role_id
+      WHERE ur.user_id = ?
+    `).bind(session.user_id).all();
+    
+    return c.json({
+      success: true,
+      data: {
+        id: session.user_id,
+        email: session.email,
+        name: `${session.first_name} ${session.last_name}`,
+        profile_photo_url: session.profile_photo_url,
+        role: {
+          id: session.role_id,
+          name: session.role_name,
+          display_name: session.role_display_name,
+          level: session.role_level
+        },
+        permissions: permissions.results.map(p => p.name)
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to get user', message: error.message }, 500);
+  }
+});
+
+// Logout endpoint
+app.post('/api/auth/logout', async (c) => {
+  const { DB } = c.env;
+  const token = c.req.header('Authorization')?.replace('Bearer ', '');
+  
+  if (!token) {
+    return c.json({ success: true, message: 'Already logged out' });
+  }
+  
+  try {
+    await DB.prepare(`
+      UPDATE sessions SET is_active = 0 WHERE token_hash = ?
+    `).bind(token).run();
+    
+    return c.json({ success: true, message: 'Logged out successfully' });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Logout failed', message: error.message }, 500);
+  }
+});
+
+// OAuth callback handler (placeholder for future implementation)
+app.get('/api/auth/oauth/:provider/callback', async (c) => {
+  const provider = c.req.param('provider');
+  const code = c.req.query('code');
+  
+  return c.json({ 
+    success: false, 
+    error: 'OAuth not fully implemented',
+    message: `Received callback from ${provider} with code: ${code}. Configure OAuth credentials in environment variables.`
+  });
+});
+
 // Get leaderboard
 app.get('/api/leaderboard', async (c) => {
   const { DB } = c.env;
@@ -1086,6 +1244,227 @@ app.get('/api/departments', async (c) => {
 });
 
 // ============================================================================
+// AUTHENTICATION FRONTEND
+// ============================================================================
+
+// Login Page
+app.get('/login', (c) => {
+  return c.html(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZuZaWorks - Enterprise Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sa-red': '#DE3831',
+                        'sa-blue': '#001489',
+                        'sa-green': '#007A4D',
+                        'sa-yellow': '#FFB81C',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #001489 0%, #007A4D 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .sso-button {
+            transition: all 0.3s ease;
+        }
+        .sso-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo & Branding -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg mb-4">
+                <i class="fas fa-briefcase text-4xl text-sa-blue"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2">ZuZaWorks</h1>
+            <p class="text-white/90 text-sm">Enterprise Workforce Operating System</p>
+            <div class="flex items-center justify-center gap-3 mt-3">
+                <span class="px-3 py-1 bg-white/20 text-white text-xs rounded-full font-bold">🇿🇦 Proudly South African</span>
+                <span class="px-3 py-1 bg-white/20 text-white text-xs rounded-full font-bold">B-BBEE Level 1</span>
+            </div>
+        </div>
+        
+        <!-- Login Card -->
+        <div class="glass-card rounded-2xl shadow-2xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Sign In to Your Account</h2>
+            
+            <!-- Demo Users Info -->
+            <div class="mb-6 p-4 bg-sa-blue/10 border border-sa-blue/30 rounded-xl">
+                <div class="flex items-start gap-2">
+                    <i class="fas fa-info-circle text-sa-blue mt-1"></i>
+                    <div class="text-sm text-gray-700">
+                        <p class="font-bold mb-1">Demo Access:</p>
+                        <p class="text-xs">Use any demo email below to login</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Email/Password Form -->
+            <form id="loginForm" class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="email" id="email" required
+                            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sa-blue focus:border-transparent"
+                            placeholder="your.email@company.com">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="password" id="password" required
+                            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sa-blue focus:border-transparent"
+                            placeholder="Enter your password">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-sa-blue to-sa-green text-white font-bold rounded-xl hover:scale-105 transition">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Sign In with Password
+                </button>
+            </form>
+            
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-white text-gray-500 font-medium">Or continue with</span>
+                </div>
+            </div>
+            
+            <!-- SSO Buttons -->
+            <div class="space-y-3">
+                <button onclick="loginWithSSO('google')" class="sso-button w-full py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:border-sa-blue transition flex items-center justify-center gap-3">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Sign in with Google
+                </button>
+                
+                <button onclick="loginWithSSO('microsoft')" class="sso-button w-full py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:border-sa-blue transition flex items-center justify-center gap-3">
+                    <svg class="w-5 h-5" viewBox="0 0 23 23">
+                        <path fill="#f35325" d="M0 0h11v11H0z"/>
+                        <path fill="#81bc06" d="M12 0h11v11H12z"/>
+                        <path fill="#05a6f0" d="M0 12h11v11H0z"/>
+                        <path fill="#ffba08" d="M12 12h11v11H12z"/>
+                    </svg>
+                    Sign in with Microsoft
+                </button>
+                
+                <button onclick="loginWithSSO('linkedin')" class="sso-button w-full py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:border-sa-blue transition flex items-center justify-center gap-3">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#0077B5" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                    Sign in with LinkedIn
+                </button>
+            </div>
+            
+            <!-- Demo Accounts -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <p class="text-xs text-gray-500 text-center mb-3 font-semibold">Quick Demo Access:</p>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="quickLogin('thabo.motsepe@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-sa-blue/10 rounded-lg border border-gray-200 text-left transition">
+                        <div class="font-semibold text-gray-700">Super Admin</div>
+                        <div class="text-gray-500 truncate">thabo.motsepe@...</div>
+                    </button>
+                    <button onclick="quickLogin('nosipho.madonsela@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-sa-green/10 rounded-lg border border-gray-200 text-left transition">
+                        <div class="font-semibold text-gray-700">HR Manager</div>
+                        <div class="text-gray-500 truncate">nosipho.madonsela@...</div>
+                    </button>
+                    <button onclick="quickLogin('johannes.mabuza@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-sa-yellow/10 rounded-lg border border-gray-200 text-left transition">
+                        <div class="font-semibold text-gray-700">Dept Manager</div>
+                        <div class="text-gray-500 truncate">johannes.mabuza@...</div>
+                    </button>
+                    <button onclick="quickLogin('alfred.mashego@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 text-left transition">
+                        <div class="font-semibold text-gray-700">Employee</div>
+                        <div class="text-gray-500 truncate">alfred.mashego@...</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-6 text-white/80 text-sm">
+            <p>© 2025 ZuZaWorks. POPIA Compliant. <a href="#" class="underline">Privacy Policy</a></p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script>
+        // Handle email/password login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await axios.post('/api/auth/login', { email, password, sso_provider: 'local' });
+                if (response.data.success) {
+                    localStorage.setItem('auth_token', response.data.data.token);
+                    localStorage.setItem('user', JSON.stringify(response.data.data.user));
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                alert('Login failed: ' + (error.response?.data?.error || error.message));
+            }
+        });
+        
+        // Quick demo login
+        function quickLogin(email) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = 'demo';
+            document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+        }
+        
+        // SSO login (placeholder - requires OAuth setup)
+        function loginWithSSO(provider) {
+            alert(\`\${provider.toUpperCase()} OAuth Integration\\n\\nTo enable this:\\n1. Register OAuth app with \${provider}\\n2. Add credentials to environment variables\\n3. Configure redirect URLs\\n\\nFor demo, use email/password login or Quick Demo buttons.\`);
+            
+            // In production, this would redirect to OAuth provider:
+            // window.location.href = \`/api/auth/oauth/\${provider}/authorize\`;
+        }
+        
+        // Check if already logged in
+        if (localStorage.getItem('auth_token')) {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
+  `);
+});
+
+// ============================================================================
 // GAMIFIED FRONTEND
 // ============================================================================
 
@@ -1367,9 +1746,49 @@ app.get('/', (c) => {
                     </button>
                     
                     <!-- Profile -->
-                    <button class="glass-card p-3 hover:scale-105 transition">
-                        <i class="fas fa-user-circle text-2xl text-sa-green"></i>
-                    </button>
+                    <div class="relative">
+                        <button onclick="toggleProfileMenu()" class="glass-card p-3 hover:scale-105 transition flex items-center gap-2">
+                            <i class="fas fa-user-circle text-2xl text-sa-green"></i>
+                            <div class="text-left hidden md:block">
+                                <div class="text-xs font-bold text-gray-800" id="userNameDisplay">Loading...</div>
+                                <div class="text-xs text-gray-500" id="userRoleDisplay">...</div>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                        </button>
+                        
+                        <!-- Profile Dropdown -->
+                        <div id="profileMenu" class="hidden absolute right-0 mt-2 w-64 glass-card rounded-xl shadow-2xl p-4 z-50">
+                            <div class="border-b border-gray-200 pb-3 mb-3">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-user-circle text-3xl text-sa-green"></i>
+                                    <div>
+                                        <div class="font-bold text-gray-800" id="userNameFull">Loading...</div>
+                                        <div class="text-xs text-gray-500" id="userEmailDisplay">...</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <span class="px-2 py-1 bg-sa-blue text-white text-xs rounded-full font-bold" id="userRoleBadge">...</span>
+                                    <span class="text-xs text-gray-500">Level <span id="userLevelDisplay">0</span></span>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <button onclick="navigateToPage('user-management')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2 text-sm">
+                                    <i class="fas fa-cog text-gray-600"></i>
+                                    Profile Settings
+                                </button>
+                                <button onclick="window.location.href='/login'" class="w-full text-left px-3 py-2 hover:bg-sa-red/10 rounded-lg flex items-center gap-2 text-sm text-sa-red font-semibold">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Logout
+                                </button>
+                            </div>
+                            
+                            <div class="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                                <div class="font-bold mb-1">Your Permissions:</div>
+                                <div id="userPermissionsList" class="text-xs text-gray-600 max-h-32 overflow-y-auto">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -1641,6 +2060,99 @@ app.get('/', (c) => {
     
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     <script>
+        // ============================================================================
+        // AUTHENTICATION & USER PROFILE
+        // ============================================================================
+        
+        let currentUser = null;
+        
+        // Check authentication and load user profile
+        async function checkAuth() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            try {
+                // Set authorization header for all axios requests
+                axios.defaults.headers.common['Authorization'] = \`Bearer \${token}\`;
+                
+                const response = await axios.get('/api/auth/me');
+                if (response.data.success) {
+                    currentUser = response.data.data;
+                    updateUserProfile();
+                } else {
+                    localStorage.removeItem('auth_token');
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                localStorage.removeItem('auth_token');
+                window.location.href = '/login';
+            }
+        }
+        
+        // Update user profile display
+        function updateUserProfile() {
+            if (!currentUser) return;
+            
+            document.getElementById('userNameDisplay').textContent = currentUser.name.split(' ')[0];
+            document.getElementById('userRoleDisplay').textContent = currentUser.role.display_name;
+            document.getElementById('userNameFull').textContent = currentUser.name;
+            document.getElementById('userEmailDisplay').textContent = currentUser.email;
+            document.getElementById('userRoleBadge').textContent = currentUser.role.display_name;
+            document.getElementById('userLevelDisplay').textContent = currentUser.role.level;
+            
+            // Display permissions (first 5)
+            const permList = document.getElementById('userPermissionsList');
+            const displayPerms = currentUser.permissions.slice(0, 5);
+            permList.innerHTML = displayPerms.map(p => \`<div>• \${p}</div>\`).join('') + 
+                (currentUser.permissions.length > 5 ? \`<div class="text-xs text-gray-400 mt-1">+\${currentUser.permissions.length - 5} more...</div>\` : '');
+        }
+        
+        // Toggle profile menu
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profileMenu');
+            menu.classList.toggle('hidden');
+        }
+        
+        // Close profile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profileMenu');
+            const profileBtn = e.target.closest('button[onclick="toggleProfileMenu()"]');
+            if (!profileBtn && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+        
+        // Logout function
+        async function logout() {
+            try {
+                await axios.post('/api/auth/logout');
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            }
+        }
+        
+        // Check if user has permission
+        function hasPermission(permissionName) {
+            return currentUser && currentUser.permissions.includes(permissionName);
+        }
+        
+        // Check if user has role
+        function hasRole(roleName) {
+            return currentUser && currentUser.role.name === roleName;
+        }
+        
+        // ============================================================================
+        // DASHBOARD & DATA LOADING
+        // ============================================================================
+        
         // Load dashboard stats
         async function loadStats() {
             try {
@@ -1752,11 +2264,13 @@ app.get('/', (c) => {
             }, 15000);
         }
         
-        // Initialize
-        loadStats();
-        loadGamificationStats();
-        loadLiveActivity();
-        simulateAchievements();
+        // Initialize - Check authentication first
+        checkAuth().then(() => {
+            loadStats();
+            loadGamificationStats();
+            loadLiveActivity();
+            simulateAchievements();
+        });
         
         // Refresh stats every 30 seconds
         setInterval(loadStats, 30000);
