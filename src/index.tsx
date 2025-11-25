@@ -138,9 +138,9 @@ app.get('/api/dashboard/analytics', async (c) => {
       
       const budgetVariance = await DB.prepare(`
         SELECT 
-          SUM(budgeted_amount) as total_budget,
-          SUM(actual_amount) as total_actual,
-          SUM(variance_amount) as total_variance
+          SUM(labor_budget) as total_budget,
+          SUM(actual_labor_cost) as total_actual,
+          (SUM(actual_labor_cost) - SUM(labor_budget)) as total_variance
         FROM budget_periods
         WHERE period_start >= DATE('now', '-30 days')
       `).first();
@@ -253,9 +253,10 @@ app.get('/api/dashboard/analytics', async (c) => {
         LIMIT 1
       `).first();
       
+      // Get organization-wide compliance (not employee-specific)
       const myCompliance = await DB.prepare(`
         SELECT * FROM compliance_checks
-        WHERE employee_id = 1
+        WHERE organization_id = 1
         ORDER BY last_check_date DESC
         LIMIT 5
       `).all();
