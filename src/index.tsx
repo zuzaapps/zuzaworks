@@ -7,6 +7,8 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serveStatic } from 'hono/cloudflare-workers';
+import { sign, verify } from 'hono/jwt';
+import bcrypt from 'bcryptjs';
 import type { Bindings, Variables } from './types';
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -28,6 +30,368 @@ app.use('*', async (c, next) => {
   await next();
   const ms = Date.now() - start;
   console.log(`${c.req.method} ${c.req.path} - ${ms}ms - ${c.res.status}`);
+});
+
+// ============================================================================
+// AUTHENTICATION MIDDLEWARE & HELPERS
+// ============================================================================
+
+const JWT_SECRET = 'zuzaworks-jwt-secret-change-in-production-2025';
+
+// Helper: Generate JWT token
+async function generateToken(userId: number, email: string, role: string) {
+  return await sign(
+    { 
+      userId, 
+      email, 
+      role,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
+    },
+    JWT_SECRET
+  );
+}
+
+// Middleware: Require authentication
+async function requireAuth(c: any, next: any) {
+  const authHeader = c.req.header('Authorization');
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return c.json({ success: false, error: 'Unauthorized - No token provided' }, 401);
+  }
+
+  const token = authHeader.substring(7);
+  
+  try {
+    const payload = await verify(token, JWT_SECRET);
+    c.set('user', payload);
+    await next();
+  } catch (error) {
+    return c.json({ success: false, error: 'Unauthorized - Invalid token' }, 401);
+  }
+}
+
+// Middleware: Require specific role(s)
+function requireRole(...allowedRoles: string[]) {
+  return async (c: any, next: any) => {
+    const user = c.get('user');
+    
+    if (!user) {
+      return c.json({ success: false, error: 'Unauthorized - No user context' }, 401);
+    }
+    
+    if (!allowedRoles.includes(user.role)) {
+      return c.json({ 
+        success: false, 
+        error: `Forbidden - Requires role: ${allowedRoles.join(' or ')}`,
+        userRole: user.role 
+      }, 403);
+    }
+    
+    await next();
+  };
+}
+
+// ============================================================================
+// AUTHENTICATION APIs
+// ============================================================================
+
+// Register new user
+app.post('/api/auth/register', async (c) => {
+  const { DB } = c.env;
+  const { email, password, first_name, last_name, role, employee_id } = await c.req.json();
+  
+  // Validate required fields
+  if (!email || !password || !first_name || !last_name || !role) {
+    return c.json({ 
+      success: false, 
+      error: 'Missing required fields: email, password, first_name, last_name, role' 
+    }, 400);
+  }
+  
+  // Validate role
+  const validRoles = ['executive', 'manager', 'employee', 'officer'];
+  if (!validRoles.includes(role)) {
+    return c.json({ 
+      success: false, 
+      error: `Invalid role. Must be one of: ${validRoles.join(', ')}` 
+    }, 400);
+  }
+  
+  try {
+    // Check if email already exists
+    const existingUser = await DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+    
+    if (existingUser) {
+      return c.json({ success: false, error: 'Email already registered' }, 409);
+    }
+    
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    // Create user
+    const result = await DB.prepare(`
+      INSERT INTO users (email, password_hash, first_name, last_name, role, employee_id, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, 1)
+    `).bind(email, passwordHash, first_name, last_name, role, employee_id || null).run();
+    
+    // Generate token
+    const token = await generateToken(result.meta.last_row_id as number, email, role);
+    
+    return c.json({ 
+      success: true, 
+      data: {
+        userId: result.meta.last_row_id,
+        email,
+        first_name,
+        last_name,
+        role,
+        token
+      },
+      message: 'User registered successfully'
+    }, 201);
+  } catch (error: any) {
+    return c.json({ 
+      success: false, 
+      error: 'Registration failed', 
+      message: error.message 
+    }, 500);
+  }
+});
+
+// Login user
+app.post('/api/auth/login', async (c) => {
+  const { DB } = c.env;
+  const { email, password } = await c.req.json();
+  
+  if (!email || !password) {
+    return c.json({ success: false, error: 'Email and password required' }, 400);
+  }
+  
+  try {
+    // Find user
+    const user = await DB.prepare(`
+      SELECT id, email, password_hash, first_name, last_name, role, is_active 
+      FROM users 
+      WHERE email = ?
+    `).bind(email).first();
+    
+    if (!user) {
+      return c.json({ success: false, error: 'Invalid email or password' }, 401);
+    }
+    
+    // Check if account is active
+    if (!user.is_active) {
+      return c.json({ success: false, error: 'Account is deactivated' }, 403);
+    }
+    
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash as string);
+    
+    if (!isValidPassword) {
+      return c.json({ success: false, error: 'Invalid email or password' }, 401);
+    }
+    
+    // Update last login
+    await DB.prepare('UPDATE users SET last_login = datetime("now") WHERE id = ?')
+      .bind(user.id)
+      .run();
+    
+    // Generate token
+    const token = await generateToken(user.id as number, user.email as string, user.role as string);
+    
+    return c.json({ 
+      success: true, 
+      data: {
+        userId: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role,
+        token
+      },
+      message: 'Login successful'
+    });
+  } catch (error: any) {
+    return c.json({ 
+      success: false, 
+      error: 'Login failed', 
+      message: error.message 
+    }, 500);
+  }
+});
+
+// Get current user info
+app.get('/api/auth/me', requireAuth, async (c) => {
+  const { DB } = c.env;
+  const user = c.get('user');
+  
+  try {
+    const userInfo = await DB.prepare(`
+      SELECT id, email, first_name, last_name, role, employee_id, is_active, last_login, created_at
+      FROM users 
+      WHERE id = ?
+    `).bind(user.userId).first();
+    
+    if (!userInfo) {
+      return c.json({ success: false, error: 'User not found' }, 404);
+    }
+    
+    return c.json({ success: true, data: userInfo });
+  } catch (error: any) {
+    return c.json({ 
+      success: false, 
+      error: 'Failed to fetch user info', 
+      message: error.message 
+    }, 500);
+  }
+});
+
+// Logout (client-side token removal, but we can track it)
+app.post('/api/auth/logout', requireAuth, async (c) => {
+  // In a stateless JWT system, logout is primarily client-side
+  // But we can log the event or invalidate refresh tokens if implemented
+  return c.json({ 
+    success: true, 
+    message: 'Logout successful. Please remove token from client.' 
+  });
+});
+
+// Change password (authenticated users only)
+app.post('/api/auth/change-password', requireAuth, async (c) => {
+  const { DB } = c.env;
+  const user = c.get('user');
+  const { current_password, new_password } = await c.req.json();
+  
+  if (!current_password || !new_password) {
+    return c.json({ 
+      success: false, 
+      error: 'Current password and new password required' 
+    }, 400);
+  }
+  
+  if (new_password.length < 6) {
+    return c.json({ 
+      success: false, 
+      error: 'New password must be at least 6 characters' 
+    }, 400);
+  }
+  
+  try {
+    // Get current password hash
+    const userRecord = await DB.prepare('SELECT password_hash FROM users WHERE id = ?')
+      .bind(user.userId)
+      .first();
+    
+    if (!userRecord) {
+      return c.json({ success: false, error: 'User not found' }, 404);
+    }
+    
+    // Verify current password
+    const isValid = await bcrypt.compare(current_password, userRecord.password_hash as string);
+    
+    if (!isValid) {
+      return c.json({ success: false, error: 'Current password is incorrect' }, 401);
+    }
+    
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(new_password, 10);
+    
+    // Update password
+    await DB.prepare('UPDATE users SET password_hash = ?, updated_at = datetime("now") WHERE id = ?')
+      .bind(newPasswordHash, user.userId)
+      .run();
+    
+    return c.json({ 
+      success: true, 
+      message: 'Password changed successfully' 
+    });
+  } catch (error: any) {
+    return c.json({ 
+      success: false, 
+      error: 'Failed to change password', 
+      message: error.message 
+    }, 500);
+  }
+});
+
+// List all users (executives and managers only)
+app.get('/api/auth/users', requireAuth, requireRole('executive', 'manager'), async (c) => {
+  const { DB } = c.env;
+  
+  try {
+    const users = await DB.prepare(`
+      SELECT 
+        u.id, 
+        u.email, 
+        u.first_name, 
+        u.last_name, 
+        u.role, 
+        u.employee_id,
+        u.is_active,
+        u.last_login,
+        u.created_at,
+        e.employee_number,
+        e.job_title,
+        e.department_id
+      FROM users u
+      LEFT JOIN employees e ON u.employee_id = e.id
+      ORDER BY u.created_at DESC
+    `).all();
+    
+    return c.json({ success: true, data: users.results });
+  } catch (error: any) {
+    return c.json({ 
+      success: false, 
+      error: 'Failed to fetch users', 
+      message: error.message 
+    }, 500);
+  }
+});
+
+// Deactivate user (executives only)
+app.patch('/api/auth/users/:userId/deactivate', requireAuth, requireRole('executive'), async (c) => {
+  const { DB } = c.env;
+  const userId = c.req.param('userId');
+  
+  try {
+    await DB.prepare('UPDATE users SET is_active = 0, updated_at = datetime("now") WHERE id = ?')
+      .bind(userId)
+      .run();
+    
+    return c.json({ 
+      success: true, 
+      message: 'User deactivated successfully' 
+    });
+  } catch (error: any) {
+    return c.json({ 
+      success: false, 
+      error: 'Failed to deactivate user', 
+      message: error.message 
+    }, 500);
+  }
+});
+
+// Activate user (executives only)
+app.patch('/api/auth/users/:userId/activate', requireAuth, requireRole('executive'), async (c) => {
+  const { DB } = c.env;
+  const userId = c.req.param('userId');
+  
+  try {
+    await DB.prepare('UPDATE users SET is_active = 1, updated_at = datetime("now") WHERE id = ?')
+      .bind(userId)
+      .run();
+    
+    return c.json({ 
+      success: true, 
+      message: 'User activated successfully' 
+    });
+  } catch (error: any) {
+    return c.json({ 
+      success: false, 
+      error: 'Failed to activate user', 
+      message: error.message 
+    }, 500);
+  }
 });
 
 // ============================================================================
@@ -1476,62 +1840,68 @@ app.get('/api/interns/programs', async (c) => {
   }
 });
 
+// Create new intern program
+app.post('/api/interns/programs', async (c) => {
+  const { DB } = c.env;
+  const data = await c.req.json();
+  
+  try {
+    const result = await DB.prepare(`
+      INSERT INTO intern_programs (
+        program_name, program_type, description, duration_months,
+        seta_name, qualification_title, qualification_nqf_level,
+        stipend_amount, is_active, start_date, end_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.program_name,
+      data.program_type,
+      data.description || null,
+      data.duration_months || null,
+      data.seta_name || null,
+      data.qualification_title || null,
+      data.qualification_nqf_level || null,
+      data.stipend_amount || null,
+      data.is_active !== undefined ? data.is_active : 1,
+      data.start_date || null,
+      data.end_date || null
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      data: { program_id: result.meta.last_row_id },
+      message: 'Program created successfully' 
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to create program', message: error.message }, 500);
+  }
+});
+
 // Register new intern
 app.post('/api/interns/register', async (c) => {
   const { DB } = c.env;
   const data = await c.req.json();
   
   try {
-    // Insert intern record
+    // Insert intern record (simplified schema - only fields that exist)
     const internResult = await DB.prepare(`
       INSERT INTO interns (
-        first_name, last_name, id_number, date_of_birth, gender, race, disability_status,
-        email, phone, physical_address,
-        program_id, intake_cohort, intern_status, legal_status,
-        application_date, start_date, expected_end_date,
-        highest_qualification, qualification_institution,
-        bank_name, account_number, account_type, branch_code, tax_number,
-        data_consent, data_consent_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        first_name, last_name, id_number, email, phone,
+        program_id, intern_status, legal_status, start_date, expected_end_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
-      data.first_name, data.last_name, data.id_number, data.date_of_birth,
-      data.gender, data.race, data.disability_status,
-      data.email, data.phone, data.physical_address,
-      data.program_id, data.intake_cohort, 'registered', data.legal_status,
-      data.application_date, data.start_date, data.expected_end_date,
-      data.highest_qualification, data.qualification_institution,
-      data.bank_name, data.account_number, data.account_type, data.branch_code, data.tax_number,
-      1, new Date().toISOString().split('T')[0]
+      data.first_name,
+      data.last_name,
+      data.id_number,
+      data.email || null,
+      data.phone || null,
+      data.program_id,
+      data.intern_status || 'registered',
+      data.legal_status,
+      data.start_date || new Date().toISOString().split('T')[0],
+      data.expected_end_date || null
     ).run();
     
     const internId = internResult.meta.last_row_id;
-    
-    // If SETA program, create SETA registration
-    if (data.program_type && data.program_type.startsWith('seta_')) {
-      await DB.prepare(`
-        INSERT INTO seta_registrations (
-          intern_id, program_id, seta_name, registration_date, registration_status
-        ) VALUES (?, ?, ?, DATE('now'), 'pending')
-      `).bind(internId, data.program_id, data.seta_name || 'UNKNOWN').run();
-    }
-    
-    // If YES program, create YES registration
-    if (data.program_type === 'yes_program') {
-      await DB.prepare(`
-        INSERT INTO yes_registrations (
-          intern_id, registration_date, registration_status
-        ) VALUES (?, DATE('now'), 'pending')
-      `).bind(internId).run();
-    }
-    
-    // If NYS program, create NYS registration
-    if (data.program_type === 'nys_program') {
-      await DB.prepare(`
-        INSERT INTO nys_registrations (
-          intern_id, nys_program_type, registration_date, registration_status
-        ) VALUES (?, ?, DATE('now'), 'pending')
-      `).bind(internId, data.nys_program_type || 'nyda_programme').run();
-    }
     
     return c.json({ 
       success: true, 
@@ -3536,18 +3906,15 @@ app.post('/api/employees', async (c) => {
   try {
     const data = await c.req.json();
     
-    // Generate employee number
-    const employee_number = `EMP${data.organization_id || 1}-${Date.now().toString(36).toUpperCase()}`;
+    // Generate employee number if not provided
+    const employee_number = data.employee_number || `EMP${String(Date.now()).slice(-6)}`;
     
     const result = await DB.prepare(`
       INSERT INTO employees (
         organization_id, employee_number, first_name, last_name, email,
         employment_type, employment_status, job_title, hire_date,
-        department_id, location_id, manager_id,
-        phone_mobile, date_of_birth, gender, nationality,
-        contracted_hours_per_week, salary_amount, salary_currency, salary_frequency,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        department_id, location_id, phone_mobile, id_number, salary_amount
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       data.organization_id || 1,
       employee_number,
@@ -3560,15 +3927,9 @@ app.post('/api/employees', async (c) => {
       data.hire_date || new Date().toISOString().split('T')[0],
       data.department_id || null,
       data.location_id || null,
-      data.manager_id || null,
       data.phone_mobile || null,
-      data.date_of_birth || null,
-      data.gender || null,
-      data.nationality || 'South African',
-      data.contracted_hours_per_week || 40,
-      data.salary_amount || null,
-      data.salary_currency || 'ZAR',
-      data.salary_frequency || 'Monthly'
+      data.id_number || null,
+      data.salary_amount || null
     ).run();
     
     if (result.success) {
@@ -3604,7 +3965,7 @@ app.put('/api/employees/:id', async (c) => {
         department_id = COALESCE(?, department_id),
         location_id = COALESCE(?, location_id),
         employment_status = COALESCE(?, employment_status),
-        updated_at = datetime('now')
+        salary_amount = COALESCE(?, salary_amount)
       WHERE id = ?
     `).bind(
       data.first_name || null,
@@ -3615,6 +3976,7 @@ app.put('/api/employees/:id', async (c) => {
       data.department_id || null,
       data.location_id || null,
       data.employment_status || null,
+      data.salary_amount || null,
       id
     ).run();
     
@@ -4542,6 +4904,15 @@ app.get('/login', (c) => {
 });
 
 // ============================================================================
+// AUTHENTICATION UI
+// ============================================================================
+
+// Login page
+app.get('/login', (c) => {
+  return c.redirect('/static/login.html');
+});
+
+// ============================================================================
 // GAMIFIED FRONTEND
 // ============================================================================
 
@@ -5178,6 +5549,7 @@ app.get('/', (c) => {
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script src="/static/auth-check.js"></script>
     <script>
         // ============================================================================
         // AUTHENTICATION & USER PROFILE
@@ -5185,8 +5557,8 @@ app.get('/', (c) => {
         
         let currentUser = null;
         
-        // Check authentication and load user profile
-        async function checkAuth() {
+        // Check authentication and load user profile (enhanced version)
+        async function checkAuthEnhanced() {
             const token = localStorage.getItem('auth_token');
             if (!token) {
                 window.location.href = '/login';
