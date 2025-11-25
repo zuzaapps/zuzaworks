@@ -268,7 +268,7 @@ app.get('/api/dashboard/analytics', async (c) => {
         JOIN shifts s ON ssr.original_shift_id = s.id
         WHERE ssr.status = 'pending'
         AND (ssr.target_employee_id IS NULL OR ssr.target_employee_id = 1)
-        ORDER BY ssr.created_at DESC
+        ORDER BY ssr.requested_at DESC
         LIMIT 5
       `).all();
       
