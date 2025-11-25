@@ -236,6 +236,412 @@ app.get('/api/auth/oauth/:provider/callback', async (c) => {
   });
 });
 
+// ============================================================================
+// ADVANCED WORKFORCE FEATURES APIs
+// ============================================================================
+
+// ========== SHIFT SWAP/TRADE APIs ==========
+
+// Get all shift swap requests (for employees and managers)
+app.get('/api/shift-swaps', async (c) => {
+  const { DB } = c.env;
+  const status = c.req.query('status') || 'all';
+  const employeeId = c.req.query('employee_id');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (status !== 'all') {
+      whereClause += ' AND ssr.status = ?';
+      params.push(status);
+    }
+    
+    if (employeeId) {
+      whereClause += ' AND (ssr.requesting_employee_id = ? OR ssr.target_employee_id = ? OR ssr.target_employee_id IS NULL)';
+      params.push(employeeId, employeeId);
+    }
+    
+    const swaps = await DB.prepare(`
+      SELECT ssr.*,
+             re.first_name || ' ' || re.last_name as requesting_employee_name,
+             re.job_title as requesting_employee_title,
+             te.first_name || ' ' || te.last_name as target_employee_name,
+             s.shift_date, s.start_time, s.end_time, s.shift_type,
+             l.name as location_name, d.name as department_name
+      FROM shift_swap_requests ssr
+      JOIN employees re ON ssr.requesting_employee_id = re.id
+      LEFT JOIN employees te ON ssr.target_employee_id = te.id
+      JOIN shifts s ON ssr.original_shift_id = s.id
+      LEFT JOIN locations l ON s.location_id = l.id
+      LEFT JOIN departments d ON s.department_id = d.id
+      WHERE ${whereClause}
+      ORDER BY ssr.requested_at DESC
+      LIMIT 50
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: swaps.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch shift swaps', message: error.message }, 500);
+  }
+});
+
+// Create shift swap request
+app.post('/api/shift-swaps', async (c) => {
+  const { DB } = c.env;
+  const { requesting_employee_id, original_shift_id, target_employee_id, swap_type, reason, notes } = await c.req.json();
+  
+  try {
+    const result = await DB.prepare(`
+      INSERT INTO shift_swap_requests (
+        organization_id, requesting_employee_id, original_shift_id, target_employee_id,
+        swap_type, reason, notes, expires_at
+      ) VALUES (1, ?, ?, ?, ?, ?, ?, datetime('now', '+7 days'))
+    `).bind(requesting_employee_id, original_shift_id, target_employee_id || null, swap_type, reason || null, notes || null).run();
+    
+    return c.json({ success: true, data: { id: result.meta.last_row_id } });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to create swap request', message: error.message }, 500);
+  }
+});
+
+// Accept/Decline shift swap
+app.patch('/api/shift-swaps/:id', async (c) => {
+  const { DB } = c.env;
+  const swapId = c.req.param('id');
+  const { action, employee_id, manager_id, decline_reason } = await c.req.json();
+  
+  try {
+    if (action === 'accept') {
+      await DB.prepare(`
+        UPDATE shift_swap_requests 
+        SET status = 'accepted', accepted_by_employee_id = ?, responded_at = datetime('now')
+        WHERE id = ?
+      `).bind(employee_id, swapId).run();
+    } else if (action === 'approve') {
+      await DB.prepare(`
+        UPDATE shift_swap_requests 
+        SET status = 'approved_by_manager', approved_by_manager_id = ?, approved_at = datetime('now')
+        WHERE id = ?
+      `).bind(manager_id, swapId).run();
+    } else if (action === 'decline') {
+      await DB.prepare(`
+        UPDATE shift_swap_requests 
+        SET status = 'declined', declined_reason = ?, responded_at = datetime('now')
+        WHERE id = ?
+      `).bind(decline_reason || 'Declined', swapId).run();
+    }
+    
+    return c.json({ success: true, message: 'Swap request updated' });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to update swap request', message: error.message }, 500);
+  }
+});
+
+// ========== TEAM MESSAGING APIs ==========
+
+// Get team messages
+app.get('/api/messages', async (c) => {
+  const { DB } = c.env;
+  const employeeId = c.req.query('employee_id');
+  const messageType = c.req.query('type') || 'all';
+  
+  try {
+    const messages = await DB.prepare(`
+      SELECT tm.*,
+             e.first_name || ' ' || e.last_name as sender_name,
+             e.profile_photo_url as sender_photo,
+             e.job_title as sender_title,
+             d.name as department_name,
+             l.name as location_name
+      FROM team_messages tm
+      JOIN employees e ON tm.sender_employee_id = e.id
+      LEFT JOIN departments d ON tm.department_id = d.id
+      LEFT JOIN locations l ON tm.location_id = l.id
+      WHERE tm.organization_id = 1
+      ORDER BY tm.is_pinned DESC, tm.created_at DESC
+      LIMIT 50
+    `).all();
+    
+    return c.json({ success: true, data: messages.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch messages', message: error.message }, 500);
+  }
+});
+
+// Send team message
+app.post('/api/messages', async (c) => {
+  const { DB } = c.env;
+  const { sender_employee_id, subject, message, message_type, target_type, department_id, location_id, is_urgent } = await c.req.json();
+  
+  try {
+    const result = await DB.prepare(`
+      INSERT INTO team_messages (
+        organization_id, sender_employee_id, subject, message, message_type,
+        target_type, department_id, location_id, is_urgent
+      ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(sender_employee_id, subject || null, message, message_type, target_type, department_id || null, location_id || null, is_urgent ? 1 : 0).run();
+    
+    return c.json({ success: true, data: { id: result.meta.last_row_id } });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to send message', message: error.message }, 500);
+  }
+});
+
+// ========== DOCUMENT MANAGEMENT APIs ==========
+
+// Get employee documents
+app.get('/api/documents', async (c) => {
+  const { DB } = c.env;
+  const employeeId = c.req.query('employee_id');
+  const documentType = c.req.query('type');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (employeeId) {
+      whereClause += ' AND ed.employee_id = ?';
+      params.push(employeeId);
+    }
+    
+    if (documentType) {
+      whereClause += ' AND ed.document_type = ?';
+      params.push(documentType);
+    }
+    
+    const documents = await DB.prepare(`
+      SELECT ed.*,
+             e.first_name || ' ' || e.last_name as employee_name,
+             e.employee_number,
+             u.first_name || ' ' || u.last_name as uploaded_by_name
+      FROM employee_documents ed
+      JOIN employees e ON ed.employee_id = e.id
+      LEFT JOIN users u ON ed.uploaded_by = u.id
+      WHERE ${whereClause}
+      ORDER BY ed.created_at DESC
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: documents.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch documents', message: error.message }, 500);
+  }
+});
+
+// Upload document (placeholder - real upload would use R2/S3)
+app.post('/api/documents', async (c) => {
+  const { DB } = c.env;
+  const { employee_id, document_type, document_name, description, uploaded_by, has_expiry, expiry_date, is_confidential } = await c.req.json();
+  
+  try {
+    // In production, this would handle file upload to R2/S3
+    const file_path = \`/documents/\${employee_id}/\${Date.now()}_\${document_name}\`;
+    
+    const result = await DB.prepare(`
+      INSERT INTO employee_documents (
+        organization_id, employee_id, document_type, document_name, description,
+        file_path, uploaded_by, has_expiry, expiry_date, is_confidential
+      ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(employee_id, document_type, document_name, description || null, file_path, uploaded_by, has_expiry ? 1 : 0, expiry_date || null, is_confidential ? 1 : 0).run();
+    
+    return c.json({ success: true, data: { id: result.meta.last_row_id, file_path } });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to upload document', message: error.message }, 500);
+  }
+});
+
+// ========== PAYROLL EXPORT APIs ==========
+
+// Get payroll batches
+app.get('/api/payroll/batches', async (c) => {
+  const { DB } = c.env;
+  
+  try {
+    const batches = await DB.prepare(`
+      SELECT pb.*,
+             u1.first_name || ' ' || u1.last_name as calculated_by_name,
+             u2.first_name || ' ' || u2.last_name as approved_by_name
+      FROM payroll_batches pb
+      LEFT JOIN users u1 ON pb.calculated_by = u1.id
+      LEFT JOIN users u2 ON pb.approved_by = u2.id
+      ORDER BY pb.created_at DESC
+      LIMIT 20
+    `).all();
+    
+    return c.json({ success: true, data: batches.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch payroll batches', message: error.message }, 500);
+  }
+});
+
+// Create payroll batch
+app.post('/api/payroll/batches', async (c) => {
+  const { DB } = c.env;
+  const { pay_period_start, pay_period_end, calculated_by } = await c.req.json();
+  
+  try {
+    const batch_number = \`PAY-\${Date.now()}\`;
+    
+    const result = await DB.prepare(`
+      INSERT INTO payroll_batches (
+        organization_id, batch_number, pay_period_start, pay_period_end, 
+        status, calculated_by, calculated_at
+      ) VALUES (1, ?, ?, ?, 'draft', ?, datetime('now'))
+    `).bind(batch_number, pay_period_start, pay_period_end, calculated_by).run();
+    
+    return c.json({ success: true, data: { id: result.meta.last_row_id, batch_number } });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to create payroll batch', message: error.message }, 500);
+  }
+});
+
+// ========== LABOR FORECASTING APIs ==========
+
+// Get labor forecasts
+app.get('/api/forecasts', async (c) => {
+  const { DB } = c.env;
+  const startDate = c.req.query('start_date');
+  const endDate = c.req.query('end_date');
+  const locationId = c.req.query('location_id');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (startDate) {
+      whereClause += ' AND lf.forecast_date >= ?';
+      params.push(startDate);
+    }
+    
+    if (endDate) {
+      whereClause += ' AND lf.forecast_date <= ?';
+      params.push(endDate);
+    }
+    
+    if (locationId) {
+      whereClause += ' AND lf.location_id = ?';
+      params.push(locationId);
+    }
+    
+    const forecasts = await DB.prepare(`
+      SELECT lf.*,
+             l.name as location_name,
+             d.name as department_name
+      FROM labor_forecasts lf
+      LEFT JOIN locations l ON lf.location_id = l.id
+      LEFT JOIN departments d ON lf.department_id = d.id
+      WHERE ${whereClause}
+      ORDER BY lf.forecast_date ASC
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: forecasts.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch forecasts', message: error.message }, 500);
+  }
+});
+
+// ========== ATTENDANCE RULES APIs ==========
+
+// Get attendance rules
+app.get('/api/attendance/rules', async (c) => {
+  const { DB } = c.env;
+  
+  try {
+    const rules = await DB.prepare(`
+      SELECT ar.*,
+             d.name as department_name,
+             l.name as location_name
+      FROM attendance_rules ar
+      LEFT JOIN departments d ON ar.department_id = d.id
+      LEFT JOIN locations l ON ar.location_id = l.id
+      WHERE ar.is_active = 1
+      ORDER BY ar.rule_type, ar.created_at DESC
+    `).all();
+    
+    return c.json({ success: true, data: rules.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch attendance rules', message: error.message }, 500);
+  }
+});
+
+// Get attendance violations
+app.get('/api/attendance/violations', async (c) => {
+  const { DB } = c.env;
+  const employeeId = c.req.query('employee_id');
+  const status = c.req.query('status');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (employeeId) {
+      whereClause += ' AND av.employee_id = ?';
+      params.push(employeeId);
+    }
+    
+    if (status) {
+      whereClause += ' AND av.status = ?';
+      params.push(status);
+    }
+    
+    const violations = await DB.prepare(`
+      SELECT av.*,
+             e.first_name || ' ' || e.last_name as employee_name,
+             e.employee_number,
+             ar.rule_name
+      FROM attendance_violations av
+      JOIN employees e ON av.employee_id = e.id
+      LEFT JOIN attendance_rules ar ON av.attendance_rule_id = ar.id
+      WHERE ${whereClause}
+      ORDER BY av.violation_date DESC
+      LIMIT 100
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: violations.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch violations', message: error.message }, 500);
+  }
+});
+
+// ========== BUDGET TRACKING APIs ==========
+
+// Get budget periods
+app.get('/api/budgets', async (c) => {
+  const { DB } = c.env;
+  const departmentId = c.req.query('department_id');
+  const locationId = c.req.query('location_id');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (departmentId) {
+      whereClause += ' AND bp.department_id = ?';
+      params.push(departmentId);
+    }
+    
+    if (locationId) {
+      whereClause += ' AND bp.location_id = ?';
+      params.push(locationId);
+    }
+    
+    const budgets = await DB.prepare(`
+      SELECT bp.*,
+             d.name as department_name,
+             l.name as location_name
+      FROM budget_periods bp
+      LEFT JOIN departments d ON bp.department_id = d.id
+      LEFT JOIN locations l ON bp.location_id = l.id
+      WHERE ${whereClause}
+      ORDER BY bp.period_start DESC
+    `).all();
+    
+    return c.json({ success: true, data: budgets.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch budgets', message: error.message }, 500);
+  }
+});
+
 // Get leaderboard
 app.get('/api/leaderboard', async (c) => {
   const { DB } = c.env;
