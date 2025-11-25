@@ -924,6 +924,112 @@ app.post('/api/gamification/award', async (c) => {
 // Comprehensive SA Labour Law Compliance Monitoring System
 // Covers 16 legislative categories with 50+ critical checkpoints
 
+// Initialize compliance system (run once to create tables and seed data)
+app.post('/api/compliance/initialize', async (c) => {
+  const { DB } = c.env;
+  
+  try {
+    // Check if already initialized
+    const check = await DB.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='compliance_categories'
+    `).first();
+    
+    if (check) {
+      return c.json({ success: true, message: 'Compliance system already initialized' });
+    }
+    
+    // Execute migration SQL from file (simplified - tables only, no complex schema)
+    // In production, this would be handled by wrangler migrations
+    await DB.batch([
+      DB.prepare(`CREATE TABLE IF NOT EXISTS compliance_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        legislation_reference TEXT,
+        risk_level TEXT CHECK(risk_level IN ('critical', 'high', 'medium', 'low')) DEFAULT 'medium',
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      DB.prepare(`CREATE TABLE IF NOT EXISTS compliance_checkpoints (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_id INTEGER NOT NULL,
+        code TEXT UNIQUE NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        check_type TEXT NOT NULL,
+        frequency TEXT NOT NULL,
+        responsible_role TEXT,
+        days_before_alert INTEGER DEFAULT 30,
+        is_automated INTEGER DEFAULT 0,
+        penalty_amount_min REAL,
+        penalty_amount_max REAL,
+        legislation_reference TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      DB.prepare(`CREATE TABLE IF NOT EXISTS organization_compliance_status (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        checkpoint_id INTEGER NOT NULL,
+        status TEXT DEFAULT 'pending',
+        compliance_date DATE,
+        expiry_date DATE,
+        next_review_date DATE,
+        evidence_document_path TEXT,
+        notes TEXT,
+        last_checked_at DATETIME,
+        last_checked_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      DB.prepare(`CREATE TABLE IF NOT EXISTS compliance_alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        alert_type TEXT NOT NULL,
+        severity TEXT DEFAULT 'warning',
+        category_id INTEGER,
+        checkpoint_id INTEGER,
+        employee_id INTEGER,
+        title TEXT NOT NULL,
+        description TEXT,
+        due_date DATE,
+        days_until_due INTEGER,
+        responsible_role TEXT,
+        assigned_to INTEGER,
+        status TEXT DEFAULT 'new',
+        acknowledged_at DATETIME,
+        acknowledged_by INTEGER,
+        resolved_at DATETIME,
+        resolved_by INTEGER,
+        resolution_notes TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      // Seed 16 compliance categories
+      DB.prepare(`INSERT OR IGNORE INTO compliance_categories (code, name, risk_level) VALUES 
+        ('LEGISLATIVE_FRAMEWORK', 'Legislative Framework', 'critical'),
+        ('REGISTRATION_LICENSING', 'Registration & Licensing', 'critical'),
+        ('EMPLOYMENT_CONTRACTS', 'Employment Contracts', 'high'),
+        ('WAGES_REMUNERATION', 'Wages & Remuneration', 'critical'),
+        ('WORKING_TIME', 'Working Time Regulations', 'high'),
+        ('LEAVE_ENTITLEMENTS', 'Leave Entitlements', 'high'),
+        ('HEALTH_SAFETY', 'Health & Safety', 'critical'),
+        ('INSURANCE_COMPENSATION', 'Insurance & Compensation', 'critical'),
+        ('EMPLOYMENT_EQUITY', 'Employment Equity', 'high'),
+        ('SKILLS_DEVELOPMENT', 'Skills Development', 'medium'),
+        ('DATA_PROTECTION', 'Data Protection (POPIA)', 'high'),
+        ('LABOUR_RELATIONS', 'Labour Relations', 'medium'),
+        ('TERMINATION_EXIT', 'Termination & Exit', 'high'),
+        ('TES_COMPLIANCE', 'TES Compliance', 'critical'),
+        ('RECORD_KEEPING', 'Record-Keeping', 'high'),
+        ('AUDITS_INSPECTIONS', 'Audits & Inspections', 'medium')
+      `)
+    ]);
+    
+    return c.json({ success: true, message: 'Compliance system initialized successfully' });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to initialize compliance system', message: error.message }, 500);
+  }
+});
+
 // Get compliance overview/dashboard (role-specific)
 app.get('/api/compliance/overview', async (c) => {
   const { DB } = c.env;
@@ -979,36 +1085,6 @@ app.get('/api/compliance/overview', async (c) => {
       LIMIT 20
     `).all();
     
-    // Get upcoming deadlines (next 30 days)
-    const upcomingDeadlines = await DB.prepare(`
-      SELECT 
-        sr.report_type,
-        sr.submission_deadline,
-        sr.status,
-        CAST((JULIANDAY(sr.submission_deadline) - JULIANDAY('now')) AS INTEGER) as days_until_due
-      FROM statutory_reports sr
-      WHERE sr.status IN ('not_started', 'in_progress')
-        AND sr.submission_deadline >= DATE('now')
-        AND sr.submission_deadline <= DATE('now', '+30 days')
-      ORDER BY sr.submission_deadline ASC
-      LIMIT 10
-    `).all();
-    
-    // Recent violations
-    const recentViolations = await DB.prepare(`
-      SELECT 
-        wtv.violation_type,
-        wtv.violation_date,
-        wtv.severity,
-        COUNT(*) as violation_count
-      FROM working_time_violations wtv
-      WHERE wtv.resolved = 0
-        AND wtv.violation_date >= DATE('now', '-30 days')
-      GROUP BY wtv.violation_type, wtv.violation_date, wtv.severity
-      ORDER BY wtv.violation_date DESC
-      LIMIT 10
-    `).all();
-    
     return c.json({
       success: true,
       data: {
@@ -1017,8 +1093,10 @@ app.get('/api/compliance/overview', async (c) => {
         compliant_checks: compliantChecks?.count || 0,
         categories: categoryStats.results,
         critical_alerts: criticalAlerts.results,
-        upcoming_deadlines: upcomingDeadlines.results,
-        recent_violations: recentViolations.results
+        // Note: upcoming_deadlines and recent_violations require additional tables
+        // These will be populated once full migration is applied
+        upcoming_deadlines: [],
+        recent_violations: []
       }
     });
   } catch (error: any) {
