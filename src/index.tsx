@@ -761,7 +761,7 @@ app.get('/api/dashboard/analytics', async (c) => {
       `).all();
       
       const locationStats = await DB.prepare(`
-        SELECT l.name, l.city, l.province, COUNT(e.id) as employee_count
+        SELECT l.location_name, l.city, l.province, COUNT(e.id) as employee_count
         FROM locations l
         LEFT JOIN employees e ON l.id = e.location_id AND e.employment_status = 'Active'
         GROUP BY l.id
@@ -1145,7 +1145,7 @@ app.get('/api/shift-swaps', async (c) => {
              re.job_title as requesting_employee_title,
              te.first_name || ' ' || te.last_name as target_employee_name,
              s.shift_date, s.start_time, s.end_time, s.shift_type,
-             l.name as location_name, d.name as department_name
+             l.location_name as location_name, d.name as department_name
       FROM shift_swap_requests ssr
       JOIN employees re ON ssr.requesting_employee_id = re.id
       LEFT JOIN employees te ON ssr.target_employee_id = te.id
@@ -1230,7 +1230,7 @@ app.get('/api/messages', async (c) => {
              e.profile_photo_url as sender_photo,
              e.job_title as sender_title,
              d.name as department_name,
-             l.name as location_name
+             l.location_name as location_name
       FROM team_messages tm
       JOIN employees e ON tm.sender_employee_id = e.id
       LEFT JOIN departments d ON tm.department_id = d.id
@@ -1402,7 +1402,7 @@ app.get('/api/forecasts', async (c) => {
     
     const forecasts = await DB.prepare(`
       SELECT lf.*,
-             l.name as location_name,
+             l.location_name as location_name,
              d.name as department_name
       FROM labor_forecasts lf
       LEFT JOIN locations l ON lf.location_id = l.id
@@ -1427,7 +1427,7 @@ app.get('/api/attendance/rules', async (c) => {
     const rules = await DB.prepare(`
       SELECT ar.*,
              d.name as department_name,
-             l.name as location_name
+             l.location_name as location_name
       FROM attendance_rules ar
       LEFT JOIN departments d ON ar.department_id = d.id
       LEFT JOIN locations l ON ar.location_id = l.id
@@ -1505,7 +1505,7 @@ app.get('/api/budgets', async (c) => {
     const budgets = await DB.prepare(`
       SELECT bp.*,
              d.name as department_name,
-             l.name as location_name
+             l.location_name as location_name
       FROM budget_periods bp
       LEFT JOIN departments d ON bp.department_id = d.id
       LEFT JOIN locations l ON bp.location_id = l.id
@@ -4136,14 +4136,12 @@ app.get('/api/employees', async (c) => {
       SELECT 
         e.*,
         d.name as department_name,
-        l.name as location_name,
-        m.first_name || ' ' || m.last_name as manager_name
+        l.location_name as location_name
       FROM employees e
       LEFT JOIN departments d ON e.department_id = d.id
       LEFT JOIN locations l ON e.location_id = l.id
-      LEFT JOIN employees m ON e.manager_id = m.id
       ${whereClause}
-      ORDER BY e.created_at DESC
+      ORDER BY e.hire_date DESC
       LIMIT ? OFFSET ?
     `).bind(...params, per_page, offset).all();
     
@@ -4172,12 +4170,10 @@ app.get('/api/employees/:id', async (c) => {
       SELECT 
         e.*,
         d.name as department_name,
-        l.name as location_name,
-        m.first_name || ' ' || m.last_name as manager_name
+        l.location_name as location_name
       FROM employees e
       LEFT JOIN departments d ON e.department_id = d.id
       LEFT JOIN locations l ON e.location_id = l.id
-      LEFT JOIN employees m ON e.manager_id = m.id
       WHERE e.id = ?
     `).bind(id).first();
     
@@ -4488,7 +4484,7 @@ app.get('/api/shifts', async (c) => {
         s.*,
         e.first_name || ' ' || e.last_name as employee_name,
         e.profile_photo_url as employee_photo,
-        l.name as location_name,
+        l.location_name as location_name,
         d.name as department_name
       FROM shifts s
       LEFT JOIN employees e ON s.employee_id = e.id
@@ -4569,7 +4565,7 @@ app.get('/api/incidents', async (c) => {
       SELECT 
         i.*,
         e.first_name || ' ' || e.last_name as reported_by_name,
-        l.name as location_name,
+        l.location_name as location_name,
         d.name as department_name
       FROM incidents i
       JOIN employees e ON i.reported_by = e.id
@@ -4742,7 +4738,7 @@ app.get('/api/hr/team-locations', async (c) => {
         e.phone_mobile,
         e.profile_photo_url,
         d.name as department_name,
-        l.name as location_name,
+        l.location_name as location_name,
         l.latitude as base_latitude,
         l.longitude as base_longitude,
         te.clock_in_latitude,
@@ -4789,7 +4785,7 @@ app.get('/api/hr/worker-status/:employeeId', async (c) => {
       SELECT 
         e.*,
         d.name as department_name,
-        l.name as location_name,
+        l.location_name as location_name,
         l.latitude as base_latitude,
         l.longitude as base_longitude
       FROM employees e
