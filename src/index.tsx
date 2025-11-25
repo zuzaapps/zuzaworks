@@ -4701,10 +4701,10 @@ app.get('/login', (c) => {
             theme: {
                 extend: {
                     colors: {
-                        'sa-red': '#DE3831',
-                        'sa-blue': '#001489',
-                        'sa-green': '#007A4D',
-                        'sa-yellow': '#FFB81C',
+                        'pastel-blue': '#7dd3fc',
+                        'pastel-blue-dark': '#38bdf8',
+                        'pastel-blue-light': '#bae6fd',
+                        'pastel-blue-pale': '#e0f2fe',
                     }
                 }
             }
@@ -4712,7 +4712,7 @@ app.get('/login', (c) => {
     </script>
     <style>
         body {
-            background: linear-gradient(135deg, #001489 0%, #007A4D 100%);
+            background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
             min-height: 100vh;
         }
         .glass-card {
@@ -4734,7 +4734,7 @@ app.get('/login', (c) => {
         <!-- Logo & Branding -->
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg mb-4">
-                <i class="fas fa-briefcase text-4xl text-sa-blue"></i>
+                <i class="fas fa-briefcase text-4xl text-pastel-blue-dark"></i>
             </div>
             <h1 class="text-4xl font-bold text-white mb-2">ZuZaWorks</h1>
             <p class="text-white/90 text-sm">Enterprise Workforce Operating System</p>
@@ -4749,9 +4749,9 @@ app.get('/login', (c) => {
             <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Sign In to Your Account</h2>
             
             <!-- Demo Users Info -->
-            <div class="mb-6 p-4 bg-sa-blue/10 border border-sa-blue/30 rounded-xl">
+            <div class="mb-6 p-4 bg-pastel-blue-dark/10 border border-pastel-blue-dark/30 rounded-xl">
                 <div class="flex items-start gap-2">
-                    <i class="fas fa-info-circle text-sa-blue mt-1"></i>
+                    <i class="fas fa-info-circle text-pastel-blue-dark mt-1"></i>
                     <div class="text-sm text-gray-700">
                         <p class="font-bold mb-1">Demo Access:</p>
                         <p class="text-xs">Use any demo email below to login</p>
@@ -4766,7 +4766,7 @@ app.get('/login', (c) => {
                     <div class="relative">
                         <i class="fas fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         <input type="email" id="email" required
-                            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sa-blue focus:border-transparent"
+                            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pastel-blue-dark focus:border-transparent"
                             placeholder="your.email@company.com">
                     </div>
                 </div>
@@ -4776,12 +4776,12 @@ app.get('/login', (c) => {
                     <div class="relative">
                         <i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         <input type="password" id="password" required
-                            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sa-blue focus:border-transparent"
+                            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pastel-blue-dark focus:border-transparent"
                             placeholder="Enter your password">
                     </div>
                 </div>
                 
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-sa-blue to-sa-green text-white font-bold rounded-xl hover:scale-105 transition">
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-pastel-blue-dark to-pastel-blue-light text-white font-bold rounded-xl hover:scale-105 transition">
                     <i class="fas fa-sign-in-alt mr-2"></i>
                     Sign In with Password
                 </button>
@@ -4799,7 +4799,7 @@ app.get('/login', (c) => {
             
             <!-- SSO Buttons -->
             <div class="space-y-3">
-                <button onclick="loginWithSSO('google')" class="sso-button w-full py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:border-sa-blue transition flex items-center justify-center gap-3">
+                <button onclick="loginWithSSO('google')" class="sso-button w-full py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:border-pastel-blue-dark transition flex items-center justify-center gap-3">
                     <svg class="w-5 h-5" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -4809,7 +4809,7 @@ app.get('/login', (c) => {
                     Sign in with Google
                 </button>
                 
-                <button onclick="loginWithSSO('microsoft')" class="sso-button w-full py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:border-sa-blue transition flex items-center justify-center gap-3">
+                <button onclick="loginWithSSO('microsoft')" class="sso-button w-full py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:border-pastel-blue-dark transition flex items-center justify-center gap-3">
                     <svg class="w-5 h-5" viewBox="0 0 23 23">
                         <path fill="#f35325" d="M0 0h11v11H0z"/>
                         <path fill="#81bc06" d="M12 0h11v11H12z"/>
@@ -4819,7 +4819,7 @@ app.get('/login', (c) => {
                     Sign in with Microsoft
                 </button>
                 
-                <button onclick="loginWithSSO('linkedin')" class="sso-button w-full py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:border-sa-blue transition flex items-center justify-center gap-3">
+                <button onclick="loginWithSSO('linkedin')" class="sso-button w-full py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:border-pastel-blue-dark transition flex items-center justify-center gap-3">
                     <svg class="w-5 h-5" viewBox="0 0 24 24">
                         <path fill="#0077B5" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                     </svg>
@@ -4831,15 +4831,15 @@ app.get('/login', (c) => {
             <div class="mt-6 pt-6 border-t border-gray-200">
                 <p class="text-xs text-gray-500 text-center mb-3 font-semibold">Quick Demo Access:</p>
                 <div class="grid grid-cols-2 gap-2 text-xs">
-                    <button onclick="quickLogin('thabo.motsepe@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-sa-blue/10 rounded-lg border border-gray-200 text-left transition">
+                    <button onclick="quickLogin('thabo.motsepe@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-pastel-blue-dark/10 rounded-lg border border-gray-200 text-left transition">
                         <div class="font-semibold text-gray-700">Super Admin</div>
                         <div class="text-gray-500 truncate">thabo.motsepe@...</div>
                     </button>
-                    <button onclick="quickLogin('nosipho.madonsela@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-sa-green/10 rounded-lg border border-gray-200 text-left transition">
+                    <button onclick="quickLogin('nosipho.madonsela@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-pastel-blue-light/10 rounded-lg border border-gray-200 text-left transition">
                         <div class="font-semibold text-gray-700">HR Manager</div>
                         <div class="text-gray-500 truncate">nosipho.madonsela@...</div>
                     </button>
-                    <button onclick="quickLogin('johannes.mabuza@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-sa-yellow/10 rounded-lg border border-gray-200 text-left transition">
+                    <button onclick="quickLogin('johannes.mabuza@mzansi.co.za')" class="p-2 bg-gray-50 hover:bg-pastel-blue/10 rounded-lg border border-gray-200 text-left transition">
                         <div class="font-semibold text-gray-700">Dept Manager</div>
                         <div class="text-gray-500 truncate">johannes.mabuza@...</div>
                     </button>
@@ -4931,12 +4931,12 @@ app.get('/', (c) => {
             theme: {
                 extend: {
                     colors: {
-                        'sa-red': '#DE3831',
-                        'sa-blue': '#001489',
-                        'sa-green': '#007A4D',
-                        'sa-yellow': '#FFB81C',
-                        'sa-black': '#000000',
-                        'sa-white': '#FFFFFF',
+                        'pastel-blue-50': '#f0f9ff',
+                        'pastel-blue-100': '#e0f2fe',
+                        'pastel-blue-200': '#bae6fd',
+                        'pastel-blue-300': '#7dd3fc',
+                        'pastel-blue-400': '#38bdf8',
+                        'pastel-blue-500': '#0ea5e9',
                     }
                 }
             }
@@ -4950,7 +4950,7 @@ app.get('/', (c) => {
         }
         
         body {
-            background: linear-gradient(135deg, #001489 0%, #007A4D 50%, #FFB81C 100%);
+            background: linear-gradient(135deg, #a8d5e2 0%, #7ec8e3 50%, #c7e3f0 100%);
             background-attachment: fixed;
             min-height: 100vh;
         }
@@ -4959,18 +4959,18 @@ app.get('/', (c) => {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 24px;
-            box-shadow: 0 8px 32px 0 rgba(0, 20, 137, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(168, 213, 226, 0.3);
+            border: 2px solid rgba(186, 230, 253, 0.5);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .glass-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 16px 48px 0 rgba(0, 20, 137, 0.3);
+            box-shadow: 0 16px 48px 0 rgba(126, 200, 227, 0.4);
         }
         
         .sa-gradient {
-            background: linear-gradient(135deg, #DE3831 0%, #001489 25%, #007A4D 50%, #FFB81C 75%, #DE3831 100%);
+            background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 50%, #bae6fd 100%);
             background-size: 200% 200%;
             animation: gradientShift 8s ease infinite;
         }
@@ -4985,8 +4985,8 @@ app.get('/', (c) => {
         }
         
         @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 20px rgba(222, 56, 49, 0.5); }
-            50% { box-shadow: 0 0 40px rgba(0, 122, 77, 0.8); }
+            0%, 100% { box-shadow: 0 0 20px rgba(125, 211, 252, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(56, 189, 248, 0.8); }
         }
         
         .badge-pop {
@@ -5032,9 +5032,9 @@ app.get('/', (c) => {
         }
         
         @keyframes levelUpFlash {
-            0% { background-color: #FFB81C; transform: scale(1); }
-            50% { background-color: #DE3831; transform: scale(1.05); }
-            100% { background-color: #007A4D; transform: scale(1); }
+            0% { background-color: #bae6fd; transform: scale(1); }
+            50% { background-color: #7dd3fc; transform: scale(1.05); }
+            100% { background-color: #38bdf8; transform: scale(1); }
         }
         
         /* Digital Twin Avatar */
@@ -5045,19 +5045,19 @@ app.get('/', (c) => {
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #007A4D, #001489);
+            background: linear-gradient(135deg, #7dd3fc, #38bdf8);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             z-index: 1000;
-            box-shadow: 0 8px 24px rgba(0, 20, 137, 0.4);
+            box-shadow: 0 8px 24px rgba(125, 211, 252, 0.4);
             transition: all 0.3s ease;
         }
         
         .digital-twin:hover {
             transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 12px 32px rgba(0, 122, 77, 0.6);
+            box-shadow: 0 12px 32px rgba(56, 189, 248, 0.6);
         }
         
         .digital-twin.speaking {
@@ -5093,7 +5093,7 @@ app.get('/', (c) => {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #DE3831;
+            background: #7dd3fc;
             animation: pulse 2s infinite;
         }
         
@@ -5103,26 +5103,26 @@ app.get('/', (c) => {
         }
         
         /* Leaderboard Rank Colors */
-        .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); }
-        .rank-2 { background: linear-gradient(135deg, #C0C0C0, #808080); }
-        .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); }
+        .rank-1 { background: linear-gradient(135deg, #7dd3fc, #38bdf8); }
+        .rank-2 { background: linear-gradient(135deg, #bae6fd, #7dd3fc); }
+        .rank-3 { background: linear-gradient(135deg, #e0f2fe, #bae6fd); }
         
         /* FOMO Elements */
         .viewing-now {
             background: rgba(222, 56, 49, 0.1);
-            border: 1px solid #DE3831;
+            border: 1px solid #7dd3fc;
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 600;
-            color: #DE3831;
+            color: #38bdf8;
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
         
         .trending-badge {
-            background: linear-gradient(135deg, #DE3831, #FFB81C);
+            background: linear-gradient(135deg, #7dd3fc, #38bdf8);
             color: white;
             padding: 4px 12px;
             border-radius: 12px;
@@ -5158,28 +5158,28 @@ app.get('/', (c) => {
                 <div class="flex items-center gap-4 flex-wrap">
                     <!-- Streak Counter -->
                     <div class="glass-card p-3 flex items-center gap-2 streak-fire">
-                        <i class="fas fa-fire text-sa-red text-2xl"></i>
+                        <i class="fas fa-fire text-pastel-blue text-2xl"></i>
                         <div>
                             <div class="text-xs text-gray-600">Streak</div>
-                            <div class="text-xl font-bold text-sa-red" id="streakDays">15</div>
+                            <div class="text-xl font-bold text-pastel-blue" id="streakDays">15</div>
                         </div>
                     </div>
                     
                     <!-- ZuZa Coins -->
                     <div class="glass-card p-3 flex items-center gap-2 coin-flip">
-                        <i class="fas fa-coins text-sa-yellow text-2xl"></i>
+                        <i class="fas fa-coins text-pastel-blue text-2xl"></i>
                         <div>
                             <div class="text-xs text-gray-600">ZuZa Coins</div>
-                            <div class="text-xl font-bold text-sa-yellow" id="zuzaCoins">1,250</div>
+                            <div class="text-xl font-bold text-pastel-blue" id="zuzaCoins">1,250</div>
                         </div>
                     </div>
                     
                     <!-- Level & Rank -->
                     <div class="glass-card p-3 flex items-center gap-2">
-                        <i class="fas fa-trophy text-sa-green text-2xl"></i>
+                        <i class="fas fa-trophy text-pastel-blue-light text-2xl"></i>
                         <div>
                             <div class="text-xs text-gray-600">Level / Rank</div>
-                            <div class="text-xl font-bold text-sa-green">
+                            <div class="text-xl font-bold text-pastel-blue-light">
                                 <span id="userLevel">12</span> / #<span id="userRank">23</span>
                             </div>
                         </div>
@@ -5187,8 +5187,8 @@ app.get('/', (c) => {
                     
                     <!-- Notifications -->
                     <button class="glass-card p-3 relative hover:scale-105 transition">
-                        <i class="fas fa-bell text-2xl text-sa-blue"></i>
-                        <span class="absolute top-1 right-1 w-5 h-5 bg-sa-red text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        <i class="fas fa-bell text-2xl text-pastel-blue-dark"></i>
+                        <span class="absolute top-1 right-1 w-5 h-5 bg-pastel-blue text-white text-xs rounded-full flex items-center justify-center font-bold">
                             3
                         </span>
                     </button>
@@ -5196,7 +5196,7 @@ app.get('/', (c) => {
                     <!-- Profile -->
                     <div class="relative">
                         <button onclick="toggleProfileMenu()" class="glass-card p-3 hover:scale-105 transition flex items-center gap-2">
-                            <i class="fas fa-user-circle text-2xl text-sa-green"></i>
+                            <i class="fas fa-user-circle text-2xl text-pastel-blue-light"></i>
                             <div class="text-left hidden md:block">
                                 <div class="text-xs font-bold text-gray-800" id="userNameDisplay">Loading...</div>
                                 <div class="text-xs text-gray-500" id="userRoleDisplay">...</div>
@@ -5208,14 +5208,14 @@ app.get('/', (c) => {
                         <div id="profileMenu" class="hidden absolute right-0 mt-2 w-64 glass-card rounded-xl shadow-2xl p-4 z-50">
                             <div class="border-b border-gray-200 pb-3 mb-3">
                                 <div class="flex items-center gap-3 mb-2">
-                                    <i class="fas fa-user-circle text-3xl text-sa-green"></i>
+                                    <i class="fas fa-user-circle text-3xl text-pastel-blue-light"></i>
                                     <div>
                                         <div class="font-bold text-gray-800" id="userNameFull">Loading...</div>
                                         <div class="text-xs text-gray-500" id="userEmailDisplay">...</div>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 mt-2">
-                                    <span class="px-2 py-1 bg-sa-blue text-white text-xs rounded-full font-bold" id="userRoleBadge">...</span>
+                                    <span class="px-2 py-1 bg-pastel-blue-dark text-white text-xs rounded-full font-bold" id="userRoleBadge">...</span>
                                     <span class="text-xs text-gray-500">Level <span id="userLevelDisplay">0</span></span>
                                 </div>
                             </div>
@@ -5225,7 +5225,7 @@ app.get('/', (c) => {
                                     <i class="fas fa-cog text-gray-600"></i>
                                     Profile Settings
                                 </button>
-                                <button onclick="window.location.href='/login'" class="w-full text-left px-3 py-2 hover:bg-sa-red/10 rounded-lg flex items-center gap-2 text-sm text-sa-red font-semibold">
+                                <button onclick="window.location.href='/login'" class="w-full text-left px-3 py-2 hover:bg-pastel-blue/10 rounded-lg flex items-center gap-2 text-sm text-pastel-blue font-semibold">
                                     <i class="fas fa-sign-out-alt"></i>
                                     Logout
                                 </button>
@@ -5241,10 +5241,10 @@ app.get('/', (c) => {
             </div>
             
             <!-- Live Activity Bar -->
-            <div class="mt-4 p-3 rounded-xl bg-gradient-to-r from-sa-red/10 via-sa-blue/10 to-sa-green/10 border border-sa-blue/20">
+            <div class="mt-4 p-3 rounded-xl bg-gradient-to-r from-pastel-blue/10 via-pastel-blue-dark/10 to-pastel-blue-light/10 border border-pastel-blue-dark/20">
                 <div class="flex items-center gap-2 text-sm">
                     <div class="activity-dot"></div>
-                    <span class="font-semibold text-sa-blue">Live Now:</span>
+                    <span class="font-semibold text-pastel-blue-dark">Live Now:</span>
                     <span class="text-gray-700" id="liveActivity">Loading...</span>
                 </div>
             </div>
@@ -5256,64 +5256,64 @@ app.get('/', (c) => {
                 <div class="glass-card p-4 mb-6">
                     <nav class="space-y-1">
                         <!-- Core Workforce Management -->
-                        <a href="#" class="nav-item flex items-center p-3 rounded-xl bg-sa-blue text-white font-semibold" data-page="dashboard" onclick="navigateToPage('dashboard'); return false;">
+                        <a href="#" class="nav-item flex items-center p-3 rounded-xl bg-pastel-blue-dark text-white font-semibold" data-page="dashboard" onclick="navigateToPage('dashboard'); return false;">
                             <i class="fas fa-tachometer-alt w-6"></i>
                             <span class="ml-3">Executive Dashboard</span>
                         </a>
                         
-                        <a href="#schedule" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="schedule" onclick="navigateToPage('schedule'); return false;">
-                            <i class="fas fa-calendar-week w-6 text-sa-blue"></i>
+                        <a href="#schedule" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="schedule" onclick="navigateToPage('schedule'); return false;">
+                            <i class="fas fa-calendar-week w-6 text-pastel-blue-dark"></i>
                             <span class="ml-3">Scheduling</span>
                         </a>
                         
-                        <a href="#employees" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="employees" onclick="navigateToPage('employees'); return false;">
-                            <i class="fas fa-users w-6 text-sa-blue"></i>
+                        <a href="#employees" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="employees" onclick="navigateToPage('employees'); return false;">
+                            <i class="fas fa-users w-6 text-pastel-blue-dark"></i>
                             <span class="ml-3">Employee Management</span>
                         </a>
                         
-                        <a href="#interns" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="interns" onclick="navigateToPage('interns'); return false;">
-                            <i class="fas fa-user-graduate w-6 text-sa-green"></i>
+                        <a href="#interns" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="interns" onclick="navigateToPage('interns'); return false;">
+                            <i class="fas fa-user-graduate w-6 text-pastel-blue-light"></i>
                             <span class="ml-3">Interns (SETA/YES/NYS)</span>
                         </a>
                         
-                        <a href="#compliance" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="compliance" onclick="navigateToPage('compliance'); return false;">
-                            <i class="fas fa-shield-alt w-6 text-sa-red"></i>
+                        <a href="#compliance" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="compliance" onclick="navigateToPage('compliance'); return false;">
+                            <i class="fas fa-shield-alt w-6 text-pastel-blue"></i>
                             <span class="ml-3">Compliance Manager</span>
-                            <span class="ml-auto text-xs bg-sa-red text-white px-2 py-1 rounded-full font-bold">!</span>
+                            <span class="ml-auto text-xs bg-pastel-blue text-white px-2 py-1 rounded-full font-bold">!</span>
                         </a>
                         
-                        <a href="#my-compliance" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="my-compliance" onclick="navigateToPage('myCompliance'); return false;">
-                            <i class="fas fa-clipboard-check w-6 text-sa-green"></i>
+                        <a href="#my-compliance" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="my-compliance" onclick="navigateToPage('myCompliance'); return false;">
+                            <i class="fas fa-clipboard-check w-6 text-pastel-blue-light"></i>
                             <span class="ml-3">My Compliance</span>
                         </a>
                         
-                        <a href="#time-tracking" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="time-tracking" onclick="navigateToPage('timeTracking'); return false;">
-                            <i class="fas fa-clock w-6 text-sa-blue"></i>
+                        <a href="#time-tracking" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="time-tracking" onclick="navigateToPage('timeTracking'); return false;">
+                            <i class="fas fa-clock w-6 text-pastel-blue-dark"></i>
                             <span class="ml-3">Time Tracking</span>
                         </a>
                         
-                        <a href="#locations" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="locations" onclick="navigateToPage('locations'); return false;">
-                            <i class="fas fa-map-marker-alt w-6 text-sa-green"></i>
+                        <a href="#locations" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="locations" onclick="navigateToPage('locations'); return false;">
+                            <i class="fas fa-map-marker-alt w-6 text-pastel-blue-light"></i>
                             <span class="ml-3">Multi-Location</span>
                         </a>
                         
-                        <a href="#leave" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="leave" onclick="navigateToPage('leave'); return false;">
-                            <i class="fas fa-umbrella-beach w-6 text-sa-yellow"></i>
+                        <a href="#leave" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="leave" onclick="navigateToPage('leave'); return false;">
+                            <i class="fas fa-umbrella-beach w-6 text-pastel-blue"></i>
                             <span class="ml-3">Leave Management</span>
                         </a>
                         
-                        <a href="#onboarding" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="onboarding" onclick="navigateToPage('onboarding'); return false;">
-                            <i class="fas fa-user-plus w-6 text-sa-blue"></i>
+                        <a href="#onboarding" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="onboarding" onclick="navigateToPage('onboarding'); return false;">
+                            <i class="fas fa-user-plus w-6 text-pastel-blue-dark"></i>
                             <span class="ml-3">Employee Onboarding</span>
                         </a>
                         
-                        <a href="#analytics" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="analytics" onclick="navigateToPage('analytics'); return false;">
-                            <i class="fas fa-chart-line w-6 text-sa-green"></i>
+                        <a href="#analytics" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="analytics" onclick="navigateToPage('analytics'); return false;">
+                            <i class="fas fa-chart-line w-6 text-pastel-blue-light"></i>
                             <span class="ml-3">Analytics & BI</span>
                         </a>
                         
-                        <a href="#user-management" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="user-management" onclick="navigateToPage('userManagement'); return false;">
-                            <i class="fas fa-user-cog w-6 text-sa-blue"></i>
+                        <a href="#user-management" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="user-management" onclick="navigateToPage('userManagement'); return false;">
+                            <i class="fas fa-user-cog w-6 text-pastel-blue-dark"></i>
                             <span class="ml-3">User Management</span>
                         </a>
                         
@@ -5321,41 +5321,41 @@ app.get('/', (c) => {
                         <div class="border-t border-gray-200 my-2"></div>
                         
                         <!-- Advanced Workforce Features -->
-                        <a href="#shift-swaps" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="shift-swaps" onclick="navigateToPage('shiftSwaps'); return false;">
-                            <i class="fas fa-exchange-alt w-6 text-sa-green"></i>
+                        <a href="#shift-swaps" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="shift-swaps" onclick="navigateToPage('shiftSwaps'); return false;">
+                            <i class="fas fa-exchange-alt w-6 text-pastel-blue-light"></i>
                             <span class="ml-3">Shift Swaps</span>
-                            <span class="ml-auto text-xs bg-sa-yellow text-white px-2 py-1 rounded-full font-bold">NEW</span>
+                            <span class="ml-auto text-xs bg-pastel-blue text-white px-2 py-1 rounded-full font-bold">NEW</span>
                         </a>
                         
-                        <a href="#messaging" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="messaging" onclick="navigateToPage('messaging'); return false;">
-                            <i class="fas fa-comments-alt w-6 text-sa-blue"></i>
+                        <a href="#messaging" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="messaging" onclick="navigateToPage('messaging'); return false;">
+                            <i class="fas fa-comments-alt w-6 text-pastel-blue-dark"></i>
                             <span class="ml-3">Team Messaging</span>
-                            <span class="ml-auto text-xs bg-sa-red text-white px-2 py-1 rounded-full font-bold">3</span>
+                            <span class="ml-auto text-xs bg-pastel-blue text-white px-2 py-1 rounded-full font-bold">3</span>
                         </a>
                         
-                        <a href="#documents" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="documents" onclick="navigateToPage('documents'); return false;">
-                            <i class="fas fa-folder-open w-6 text-sa-yellow"></i>
+                        <a href="#documents" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="documents" onclick="navigateToPage('documents'); return false;">
+                            <i class="fas fa-folder-open w-6 text-pastel-blue"></i>
                             <span class="ml-3">Documents</span>
                         </a>
                         
-                        <a href="#payroll" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="payroll" onclick="navigateToPage('payroll'); return false;">
-                            <i class="fas fa-dollar-sign w-6 text-sa-green"></i>
+                        <a href="#payroll" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="payroll" onclick="navigateToPage('payroll'); return false;">
+                            <i class="fas fa-dollar-sign w-6 text-pastel-blue-light"></i>
                             <span class="ml-3">Payroll Export</span>
                         </a>
                         
-                        <a href="#forecasting" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="forecasting" onclick="navigateToPage('forecasting'); return false;">
-                            <i class="fas fa-brain w-6 text-sa-red"></i>
+                        <a href="#forecasting" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="forecasting" onclick="navigateToPage('forecasting'); return false;">
+                            <i class="fas fa-brain w-6 text-pastel-blue"></i>
                             <span class="ml-3">Labor Forecasting</span>
-                            <span class="ml-auto text-xs bg-sa-blue text-white px-2 py-1 rounded-full font-bold">AI</span>
+                            <span class="ml-auto text-xs bg-pastel-blue-dark text-white px-2 py-1 rounded-full font-bold">AI</span>
                         </a>
                         
-                        <a href="#attendance-rules" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="attendance-rules" onclick="navigateToPage('attendanceRules'); return false;">
-                            <i class="fas fa-gavel w-6 text-sa-red"></i>
+                        <a href="#attendance-rules" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="attendance-rules" onclick="navigateToPage('attendanceRules'); return false;">
+                            <i class="fas fa-gavel w-6 text-pastel-blue"></i>
                             <span class="ml-3">Attendance Rules</span>
                         </a>
                         
-                        <a href="#budgets" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="budgets" onclick="navigateToPage('budgets'); return false;">
-                            <i class="fas fa-chart-pie w-6 text-sa-green"></i>
+                        <a href="#budgets" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="budgets" onclick="navigateToPage('budgets'); return false;">
+                            <i class="fas fa-chart-pie w-6 text-pastel-blue-light"></i>
                             <span class="ml-3">Budget Tracking</span>
                         </a>
                         
@@ -5363,12 +5363,12 @@ app.get('/', (c) => {
                         <div class="border-t border-gray-200 my-2"></div>
                         
                         <!-- Optional Features -->
-                        <a href="#social" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="social" onclick="navigateToPage('social'); return false;">
+                        <a href="#social" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="social" onclick="navigateToPage('social'); return false;">
                             <i class="fas fa-comments w-6 text-gray-400"></i>
                             <span class="ml-3 text-gray-600">Social Feed</span>
                         </a>
                         
-                        <a href="#engagement" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="engagement" onclick="navigateToPage('engagement'); return false;">
+                        <a href="#engagement" class="nav-item flex items-center p-3 rounded-xl hover:bg-pastel-blue-dark/10 transition" data-page="engagement" onclick="navigateToPage('engagement'); return false;">
                             <i class="fas fa-trophy w-6 text-gray-400"></i>
                             <span class="ml-3 text-gray-600">Engagement</span>
                         </a>
@@ -5377,7 +5377,7 @@ app.get('/', (c) => {
                 
                 <!-- Compliance Quick Stats -->
                 <div class="glass-card p-4">
-                    <h3 class="font-bold text-lg mb-3 text-sa-blue flex items-center">
+                    <h3 class="font-bold text-lg mb-3 text-pastel-blue-dark flex items-center">
                         <i class="fas fa-shield-alt mr-2"></i>
                         Compliance Health
                     </h3>
@@ -5385,23 +5385,23 @@ app.get('/', (c) => {
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-600">BCEA Compliance</span>
-                                <span class="font-bold text-sa-green">94%</span>
+                                <span class="font-bold text-pastel-blue-light">94%</span>
                             </div>
                             <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-sa-green transition-all" style="width: 94%"></div>
+                                <div class="h-full bg-pastel-blue-light transition-all" style="width: 94%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
                                 <span class="text-gray-600">EEA Progress</span>
-                                <span class="font-bold text-sa-blue">78%</span>
+                                <span class="font-bold text-pastel-blue-dark">78%</span>
                             </div>
                             <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-sa-blue transition-all" style="width: 78%"></div>
+                                <div class="h-full bg-pastel-blue-dark transition-all" style="width: 78%"></div>
                             </div>
                         </div>
-                        <div class="mt-4 p-2 bg-sa-red/10 rounded-lg border border-sa-red/30">
-                            <div class="flex items-center text-sm text-sa-red">
+                        <div class="mt-4 p-2 bg-pastel-blue/10 rounded-lg border border-pastel-blue/30">
+                            <div class="flex items-center text-sm text-pastel-blue">
                                 <i class="fas fa-exclamation-triangle mr-2"></i>
                                 <span class="font-medium">3 items need attention</span>
                             </div>
@@ -5414,47 +5414,47 @@ app.get('/', (c) => {
             <div class="col-span-12 md:col-span-9">
                 <!-- Dashboard Stats with SA Colors -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="glass-card p-6 border-l-4 border-sa-blue">
+                    <div class="glass-card p-6 border-l-4 border-pastel-blue-dark">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm font-medium">Active Team</p>
-                                <p class="text-3xl font-bold text-sa-blue mt-1" id="stat-employees">0</p>
-                                <p class="text-xs text-sa-green mt-1">↑ 12% vs last week</p>
+                                <p class="text-3xl font-bold text-pastel-blue-dark mt-1" id="stat-employees">0</p>
+                                <p class="text-xs text-pastel-blue-light mt-1">↑ 12% vs last week</p>
                             </div>
-                            <i class="fas fa-users text-5xl text-sa-blue opacity-20"></i>
+                            <i class="fas fa-users text-5xl text-pastel-blue-dark opacity-20"></i>
                         </div>
                     </div>
                     
-                    <div class="glass-card p-6 border-l-4 border-sa-green">
+                    <div class="glass-card p-6 border-l-4 border-pastel-blue-light">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm font-medium">Shifts Today</p>
-                                <p class="text-3xl font-bold text-sa-green mt-1" id="stat-shifts">0</p>
-                                <p class="text-xs text-sa-red mt-1">1 urgent fill needed</p>
+                                <p class="text-3xl font-bold text-pastel-blue-light mt-1" id="stat-shifts">0</p>
+                                <p class="text-xs text-pastel-blue mt-1">1 urgent fill needed</p>
                             </div>
-                            <i class="fas fa-calendar-check text-5xl text-sa-green opacity-20"></i>
+                            <i class="fas fa-calendar-check text-5xl text-pastel-blue-light opacity-20"></i>
                         </div>
                     </div>
                     
-                    <div class="glass-card p-6 border-l-4 border-sa-yellow">
+                    <div class="glass-card p-6 border-l-4 border-pastel-blue">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm font-medium">Compliance</p>
-                                <p class="text-3xl font-bold text-sa-yellow mt-1" id="stat-compliance">0%</p>
-                                <p class="text-xs text-sa-green mt-1">✓ BCEA Compliant</p>
+                                <p class="text-3xl font-bold text-pastel-blue mt-1" id="stat-compliance">0%</p>
+                                <p class="text-xs text-pastel-blue-light mt-1">✓ BCEA Compliant</p>
                             </div>
-                            <i class="fas fa-shield-check text-5xl text-sa-yellow opacity-20"></i>
+                            <i class="fas fa-shield-check text-5xl text-pastel-blue opacity-20"></i>
                         </div>
                     </div>
                     
-                    <div class="glass-card p-6 border-l-4 border-sa-red">
+                    <div class="glass-card p-6 border-l-4 border-pastel-blue">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-600 text-sm font-medium">Incidents</p>
-                                <p class="text-3xl font-bold text-sa-red mt-1" id="stat-incidents">0</p>
+                                <p class="text-3xl font-bold text-pastel-blue mt-1" id="stat-incidents">0</p>
                                 <p class="text-xs text-gray-500 mt-1">This month</p>
                             </div>
-                            <i class="fas fa-exclamation-circle text-5xl text-sa-red opacity-20"></i>
+                            <i class="fas fa-exclamation-circle text-5xl text-pastel-blue opacity-20"></i>
                         </div>
                     </div>
                 </div>
@@ -5462,11 +5462,11 @@ app.get('/', (c) => {
                 <!-- Leaderboard Section -->
                 <div class="glass-card p-6 mb-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-2xl font-bold text-sa-blue">
-                            <i class="fas fa-trophy mr-2 text-sa-yellow"></i>
+                        <h2 class="text-2xl font-bold text-pastel-blue-dark">
+                            <i class="fas fa-trophy mr-2 text-pastel-blue"></i>
                             Top Performers This Week
                         </h2>
-                        <button class="px-4 py-2 bg-gradient-to-r from-sa-blue to-sa-green text-white rounded-xl font-semibold hover:scale-105 transition">
+                        <button class="px-4 py-2 bg-gradient-to-r from-pastel-blue-dark to-pastel-blue-light text-white rounded-xl font-semibold hover:scale-105 transition">
                             View Full Leaderboard
                         </button>
                     </div>
@@ -5503,24 +5503,24 @@ app.get('/', (c) => {
                 
                 <!-- Recent Achievements -->
                 <div class="glass-card p-6 mb-6">
-                    <h2 class="text-2xl font-bold text-sa-green mb-4">
-                        <i class="fas fa-star mr-2 text-sa-yellow"></i>
+                    <h2 class="text-2xl font-bold text-pastel-blue-light mb-4">
+                        <i class="fas fa-star mr-2 text-pastel-blue"></i>
                         Recent Achievements
                     </h2>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="text-center p-4 rounded-xl bg-gradient-to-br from-sa-blue/10 to-sa-green/10 border-2 border-sa-green badge-pop">
+                        <div class="text-center p-4 rounded-xl bg-gradient-to-br from-pastel-blue-dark/10 to-pastel-blue-light/10 border-2 border-pastel-blue-light badge-pop">
                             <div class="text-4xl mb-2">🔥</div>
                             <div class="font-bold text-sm">15-Day Streak</div>
                         </div>
-                        <div class="text-center p-4 rounded-xl bg-gradient-to-br from-sa-red/10 to-sa-yellow/10 border-2 border-sa-yellow badge-pop">
+                        <div class="text-center p-4 rounded-xl bg-gradient-to-br from-pastel-blue/10 to-pastel-blue/10 border-2 border-pastel-blue badge-pop">
                             <div class="text-4xl mb-2">⚡</div>
                             <div class="font-bold text-sm">Speed Demon</div>
                         </div>
-                        <div class="text-center p-4 rounded-xl bg-gradient-to-br from-sa-green/10 to-sa-blue/10 border-2 border-sa-blue badge-pop">
+                        <div class="text-center p-4 rounded-xl bg-gradient-to-br from-pastel-blue-light/10 to-pastel-blue-dark/10 border-2 border-pastel-blue-dark badge-pop">
                             <div class="text-4xl mb-2">🎯</div>
                             <div class="font-bold text-sm">Perfect Week</div>
                         </div>
-                        <div class="text-center p-4 rounded-xl bg-gradient-to-br from-sa-yellow/10 to-sa-red/10 border-2 border-sa-red badge-pop">
+                        <div class="text-center p-4 rounded-xl bg-gradient-to-br from-pastel-blue/10 to-pastel-blue/10 border-2 border-pastel-blue badge-pop">
                             <div class="text-4xl mb-2">🏆</div>
                             <div class="font-bold text-sm">Top Contributor</div>
                         </div>
@@ -5530,7 +5530,7 @@ app.get('/', (c) => {
                 <!-- Social Feed with FOMO -->
                 <div class="glass-card p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-2xl font-bold text-sa-red">
+                        <h2 class="text-2xl font-bold text-pastel-blue">
                             <i class="fas fa-fire mr-2"></i>
                             What's Happening Now
                         </h2>
@@ -5775,14 +5775,14 @@ app.get('/', (c) => {
         function navigateToPage(pageName) {
             // Update active nav item
             document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('bg-sa-green', 'text-white', 'font-semibold');
-                item.classList.add('hover:bg-sa-blue/10');
+                item.classList.remove('bg-pastel-blue-light', 'text-white', 'font-semibold');
+                item.classList.add('hover:bg-pastel-blue-dark/10');
             });
             
             const activeNav = document.querySelector(\`[data-page="\${pageName}"]\`);
             if (activeNav) {
-                activeNav.classList.add('bg-sa-green', 'text-white', 'font-semibold');
-                activeNav.classList.remove('hover:bg-sa-blue/10');
+                activeNav.classList.add('bg-pastel-blue-light', 'text-white', 'font-semibold');
+                activeNav.classList.remove('hover:bg-pastel-blue-dark/10');
             }
             
             // Route to appropriate page loader
@@ -5857,7 +5857,7 @@ app.get('/', (c) => {
         
         function loadDashboardPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading dashboard...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading dashboard...</p></div>';
             
             // Get current user role from localStorage or sessionStorage
             const userRole = localStorage.getItem('userRole') || 'employee';
@@ -5874,7 +5874,7 @@ app.get('/', (c) => {
                         dashboardHTML = \`
                             <!-- Page Header -->
                             <div class="mb-6">
-                                <h1 class="text-4xl font-bold text-sa-blue mb-2">
+                                <h1 class="text-4xl font-bold text-pastel-blue-dark mb-2">
                                     <i class="fas fa-tachometer-alt mr-3"></i>
                                     Executive Dashboard
                                 </h1>
@@ -5883,68 +5883,68 @@ app.get('/', (c) => {
                             
                             <!-- Key Performance Indicators -->
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                                <div class="glass-card p-6 border-l-4 border-sa-blue">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue-dark">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Total Workforce</p>
-                                            <p class="text-4xl font-bold text-sa-blue mt-2">\${overview.totalEmployees}</p>
-                                            <p class="text-xs text-sa-green mt-2">Active employees</p>
+                                            <p class="text-4xl font-bold text-pastel-blue-dark mt-2">\${overview.totalEmployees}</p>
+                                            <p class="text-xs text-pastel-blue-light mt-2">Active employees</p>
                                         </div>
-                                        <i class="fas fa-users text-5xl text-sa-blue opacity-20"></i>
+                                        <i class="fas fa-users text-5xl text-pastel-blue-dark opacity-20"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 border-l-4 border-sa-green">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue-light">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Scheduled Today</p>
-                                            <p class="text-4xl font-bold text-sa-green mt-2">\${overview.shiftsToday}</p>
+                                            <p class="text-4xl font-bold text-pastel-blue-light mt-2">\${overview.shiftsToday}</p>
                                             <p class="text-xs text-gray-500 mt-2">Active shifts</p>
                                         </div>
-                                        <i class="fas fa-calendar-check text-5xl text-sa-green opacity-20"></i>
+                                        <i class="fas fa-calendar-check text-5xl text-pastel-blue-light opacity-20"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 border-l-4 border-sa-yellow">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Compliance Score</p>
-                                            <p class="text-4xl font-bold text-sa-yellow mt-2">\${roleSpecific.compliance.percentage}%</p>
-                                            <p class="text-xs text-\${roleSpecific.compliance.percentage >= 90 ? 'sa-green' : 'sa-red'} mt-2">
+                                            <p class="text-4xl font-bold text-pastel-blue mt-2">\${roleSpecific.compliance.percentage}%</p>
+                                            <p class="text-xs text-\${roleSpecific.compliance.percentage >= 90 ? 'pastel-blue-light' : 'pastel-blue'} mt-2">
                                                 \${roleSpecific.compliance.compliant}/\${roleSpecific.compliance.total} compliant
                                             </p>
                                         </div>
-                                        <i class="fas fa-shield-check text-5xl text-sa-yellow opacity-20"></i>
+                                        <i class="fas fa-shield-check text-5xl text-pastel-blue opacity-20"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 border-l-4 border-sa-red">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Incidents (30d)</p>
-                                            <p class="text-4xl font-bold text-sa-red mt-2">\${overview.recentIncidents}</p>
+                                            <p class="text-4xl font-bold text-pastel-blue mt-2">\${overview.recentIncidents}</p>
                                             <p class="text-xs text-gray-500 mt-2">Safety & compliance</p>
                                         </div>
-                                        <i class="fas fa-exclamation-triangle text-5xl text-sa-red opacity-20"></i>
+                                        <i class="fas fa-exclamation-triangle text-5xl text-pastel-blue opacity-20"></i>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Workforce Distribution by Location -->
                             <div class="glass-card p-6 mb-6">
-                                <h2 class="text-2xl font-bold text-sa-blue mb-4 flex items-center">
+                                <h2 class="text-2xl font-bold text-pastel-blue-dark mb-4 flex items-center">
                                     <i class="fas fa-map-marked-alt mr-3"></i>
                                     Workforce Distribution Across South Africa
                                 </h2>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     \${roleSpecific.locations.map(loc => \`
-                                        <div class="p-4 rounded-xl bg-gradient-to-br from-sa-blue/10 to-sa-green/10 border border-sa-blue/20">
+                                        <div class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue-dark/10 to-pastel-blue-light/10 border border-pastel-blue-dark/20">
                                             <div class="flex items-center justify-between mb-2">
                                                 <h3 class="font-bold text-lg text-gray-800">\${loc.name}</h3>
-                                                <span class="px-3 py-1 bg-sa-blue text-white rounded-full text-sm font-bold">\${loc.employee_count}</span>
+                                                <span class="px-3 py-1 bg-pastel-blue-dark text-white rounded-full text-sm font-bold">\${loc.employee_count}</span>
                                             </div>
                                             <p class="text-sm text-gray-600">
-                                                <i class="fas fa-map-pin mr-1 text-sa-red"></i>
+                                                <i class="fas fa-map-pin mr-1 text-pastel-blue"></i>
                                                 \${loc.city}, \${loc.province}
                                             </p>
                                         </div>
@@ -5954,7 +5954,7 @@ app.get('/', (c) => {
                             
                             <!-- Department Performance -->
                             <div class="glass-card p-6 mb-6">
-                                <h2 class="text-2xl font-bold text-sa-green mb-4 flex items-center">
+                                <h2 class="text-2xl font-bold text-pastel-blue-light mb-4 flex items-center">
                                     <i class="fas fa-building mr-3"></i>
                                     Department Headcount vs Target
                                 </h2>
@@ -5966,7 +5966,7 @@ app.get('/', (c) => {
                                         const isUnderstaffed = fillRate < 80;
                                         
                                         return \`
-                                            <div class="p-4 rounded-xl bg-white border-l-4 \${isUnderstaffed ? 'border-sa-red' : 'border-sa-green'}">
+                                            <div class="p-4 rounded-xl bg-white border-l-4 \${isUnderstaffed ? 'border-pastel-blue' : 'border-pastel-blue-light'}">
                                                 <div class="flex items-center justify-between mb-2">
                                                     <div class="flex-1">
                                                         <h3 class="font-bold text-lg">\${dept.name}</h3>
@@ -5982,16 +5982,16 @@ app.get('/', (c) => {
                                                         </div>
                                                     </div>
                                                     <div class="text-right">
-                                                        <div class="text-3xl font-bold \${isUnderstaffed ? 'text-sa-red' : 'text-sa-green'}">
+                                                        <div class="text-3xl font-bold \${isUnderstaffed ? 'text-pastel-blue' : 'text-pastel-blue-light'}">
                                                             \${fillRate}%
                                                         </div>
-                                                        <div class="text-xs \${isUnderstaffed ? 'text-sa-red' : 'text-sa-green'} font-semibold">
+                                                        <div class="text-xs \${isUnderstaffed ? 'text-pastel-blue' : 'text-pastel-blue-light'} font-semibold">
                                                             \${isUnderstaffed ? 'UNDERSTAFFED' : 'ON TARGET'}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                                    <div class="h-full \${isUnderstaffed ? 'bg-sa-red' : 'bg-sa-green'} transition-all" 
+                                                    <div class="h-full \${isUnderstaffed ? 'bg-pastel-blue' : 'bg-pastel-blue-light'} transition-all" 
                                                          style="width: \${Math.min(100, fillRate)}%"></div>
                                                 </div>
                                             </div>
@@ -6004,48 +6004,48 @@ app.get('/', (c) => {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <!-- Pending Actions -->
                                 <div class="glass-card p-6">
-                                    <h3 class="text-xl font-bold text-sa-blue mb-4 flex items-center">
+                                    <h3 class="text-xl font-bold text-pastel-blue-dark mb-4 flex items-center">
                                         <i class="fas fa-tasks mr-2"></i>
                                         Pending Actions
                                     </h3>
                                     <div class="space-y-3">
-                                        <div class="p-3 rounded-lg bg-sa-yellow/10 border border-sa-yellow/30 flex items-center justify-between">
+                                        <div class="p-3 rounded-lg bg-pastel-blue/10 border border-pastel-blue/30 flex items-center justify-between">
                                             <div>
                                                 <div class="font-bold text-gray-800">Shift Swap Requests</div>
                                                 <div class="text-sm text-gray-600">Awaiting manager approval</div>
                                             </div>
-                                            <div class="text-2xl font-bold text-sa-yellow">\${roleSpecific.workforceMetrics.pendingSwaps}</div>
+                                            <div class="text-2xl font-bold text-pastel-blue">\${roleSpecific.workforceMetrics.pendingSwaps}</div>
                                         </div>
                                         
-                                        <div class="p-3 rounded-lg bg-sa-red/10 border border-sa-red/30 flex items-center justify-between">
+                                        <div class="p-3 rounded-lg bg-pastel-blue/10 border border-pastel-blue/30 flex items-center justify-between">
                                             <div>
                                                 <div class="font-bold text-gray-800">Attendance Violations</div>
                                                 <div class="text-sm text-gray-600">Unresolved (last 7 days)</div>
                                             </div>
-                                            <div class="text-2xl font-bold text-sa-red">\${roleSpecific.workforceMetrics.activeViolations}</div>
+                                            <div class="text-2xl font-bold text-pastel-blue">\${roleSpecific.workforceMetrics.activeViolations}</div>
                                         </div>
                                         
-                                        <div class="p-3 rounded-lg bg-sa-blue/10 border border-sa-blue/30 flex items-center justify-between">
+                                        <div class="p-3 rounded-lg bg-pastel-blue-dark/10 border border-pastel-blue-dark/30 flex items-center justify-between">
                                             <div>
                                                 <div class="font-bold text-gray-800">Leave Requests</div>
                                                 <div class="text-sm text-gray-600">Pending approval</div>
                                             </div>
-                                            <div class="text-2xl font-bold text-sa-blue">\${overview.pendingLeave}</div>
+                                            <div class="text-2xl font-bold text-pastel-blue-dark">\${overview.pendingLeave}</div>
                                         </div>
                                         
-                                        <div class="p-3 rounded-lg bg-sa-green/10 border border-sa-green/30 flex items-center justify-between">
+                                        <div class="p-3 rounded-lg bg-pastel-blue-light/10 border border-pastel-blue-light/30 flex items-center justify-between">
                                             <div>
                                                 <div class="font-bold text-gray-800">Compliance Checks</div>
                                                 <div class="text-sm text-gray-600">Pending review</div>
                                             </div>
-                                            <div class="text-2xl font-bold text-sa-green">\${roleSpecific.compliance.pending}</div>
+                                            <div class="text-2xl font-bold text-pastel-blue-light">\${roleSpecific.compliance.pending}</div>
                                         </div>
                                     </div>
                                 </div>
                                 
                                 <!-- Budget Overview -->
                                 <div class="glass-card p-6">
-                                    <h3 class="text-xl font-bold text-sa-green mb-4 flex items-center">
+                                    <h3 class="text-xl font-bold text-pastel-blue-light mb-4 flex items-center">
                                         <i class="fas fa-dollar-sign mr-2"></i>
                                         Labor Budget Overview (30d)
                                     </h3>
@@ -6053,29 +6053,29 @@ app.get('/', (c) => {
                                         <div>
                                             <div class="flex justify-between text-sm mb-2">
                                                 <span class="text-gray-600 font-medium">Budgeted Amount</span>
-                                                <span class="font-bold text-sa-blue">R \${(roleSpecific.workforceMetrics.totalBudget || 0).toFixed(2)}</span>
+                                                <span class="font-bold text-pastel-blue-dark">R \${(roleSpecific.workforceMetrics.totalBudget || 0).toFixed(2)}</span>
                                             </div>
                                             <div class="flex justify-between text-sm mb-2">
                                                 <span class="text-gray-600 font-medium">Actual Spend</span>
-                                                <span class="font-bold text-sa-green">R \${(roleSpecific.workforceMetrics.totalActual || 0).toFixed(2)}</span>
+                                                <span class="font-bold text-pastel-blue-light">R \${(roleSpecific.workforceMetrics.totalActual || 0).toFixed(2)}</span>
                                             </div>
                                             <div class="flex justify-between text-sm mb-3">
                                                 <span class="text-gray-600 font-medium">Variance</span>
-                                                <span class="font-bold \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'text-sa-red' : 'text-sa-green'}">
+                                                <span class="font-bold \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'text-pastel-blue' : 'text-pastel-blue-light'}">
                                                     R \${Math.abs(roleSpecific.workforceMetrics.budgetVariance || 0).toFixed(2)}
                                                     \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? '(Over)' : '(Under)'}
                                                 </span>
                                             </div>
                                             <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
-                                                <div class="h-full \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'bg-sa-red' : 'bg-sa-green'}" 
+                                                <div class="h-full \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'bg-pastel-blue' : 'bg-pastel-blue-light'}" 
                                                      style="width: \${roleSpecific.workforceMetrics.totalBudget > 0 ? Math.min(100, (roleSpecific.workforceMetrics.totalActual / roleSpecific.workforceMetrics.totalBudget) * 100) : 0}%"></div>
                                             </div>
                                         </div>
                                         
-                                        <div class="p-4 rounded-lg \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'bg-sa-red/10 border border-sa-red/30' : 'bg-sa-green/10 border border-sa-green/30'}">
+                                        <div class="p-4 rounded-lg \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'bg-pastel-blue/10 border border-pastel-blue/30' : 'bg-pastel-blue-light/10 border border-pastel-blue-light/30'}">
                                             <div class="flex items-center gap-2 mb-2">
-                                                <i class="fas fa-\${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'exclamation-triangle' : 'check-circle'} text-xl \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'text-sa-red' : 'text-sa-green'}"></i>
-                                                <span class="font-bold \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'text-sa-red' : 'text-sa-green'}">
+                                                <i class="fas fa-\${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'exclamation-triangle' : 'check-circle'} text-xl \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'text-pastel-blue' : 'text-pastel-blue-light'}"></i>
+                                                <span class="font-bold \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'text-pastel-blue' : 'text-pastel-blue-light'}">
                                                     \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'Budget Overrun Alert' : 'Within Budget'}
                                                 </span>
                                             </div>
@@ -6091,28 +6091,28 @@ app.get('/', (c) => {
                             
                             <!-- Quick Actions -->
                             <div class="glass-card p-6">
-                                <h3 class="text-xl font-bold text-sa-blue mb-4 flex items-center">
+                                <h3 class="text-xl font-bold text-pastel-blue-dark mb-4 flex items-center">
                                     <i class="fas fa-bolt mr-2"></i>
                                     Quick Actions
                                 </h3>
                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <button onclick="navigateToPage('employees')" class="p-4 rounded-xl bg-gradient-to-br from-sa-blue/10 to-sa-blue/20 hover:from-sa-blue/20 hover:to-sa-blue/30 border border-sa-blue/30 transition text-center">
-                                        <i class="fas fa-user-plus text-3xl text-sa-blue mb-2"></i>
+                                    <button onclick="navigateToPage('employees')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue-dark/10 to-pastel-blue-dark/20 hover:from-pastel-blue-dark/20 hover:to-pastel-blue-dark/30 border border-pastel-blue-dark/30 transition text-center">
+                                        <i class="fas fa-user-plus text-3xl text-pastel-blue-dark mb-2"></i>
                                         <div class="font-bold text-sm">Add Employee</div>
                                     </button>
                                     
-                                    <button onclick="navigateToPage('schedule')" class="p-4 rounded-xl bg-gradient-to-br from-sa-green/10 to-sa-green/20 hover:from-sa-green/20 hover:to-sa-green/30 border border-sa-green/30 transition text-center">
-                                        <i class="fas fa-calendar-plus text-3xl text-sa-green mb-2"></i>
+                                    <button onclick="navigateToPage('schedule')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue-light/10 to-pastel-blue-light/20 hover:from-pastel-blue-light/20 hover:to-pastel-blue-light/30 border border-pastel-blue-light/30 transition text-center">
+                                        <i class="fas fa-calendar-plus text-3xl text-pastel-blue-light mb-2"></i>
                                         <div class="font-bold text-sm">Create Schedule</div>
                                     </button>
                                     
-                                    <button onclick="navigateToPage('compliance')" class="p-4 rounded-xl bg-gradient-to-br from-sa-red/10 to-sa-red/20 hover:from-sa-red/20 hover:to-sa-red/30 border border-sa-red/30 transition text-center">
-                                        <i class="fas fa-clipboard-check text-3xl text-sa-red mb-2"></i>
+                                    <button onclick="navigateToPage('compliance')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue/10 to-pastel-blue/20 hover:from-pastel-blue/20 hover:to-pastel-blue/30 border border-pastel-blue/30 transition text-center">
+                                        <i class="fas fa-clipboard-check text-3xl text-pastel-blue mb-2"></i>
                                         <div class="font-bold text-sm">Run Compliance</div>
                                     </button>
                                     
-                                    <button onclick="navigateToPage('analytics')" class="p-4 rounded-xl bg-gradient-to-br from-sa-yellow/10 to-sa-yellow/20 hover:from-sa-yellow/20 hover:to-sa-yellow/30 border border-sa-yellow/30 transition text-center">
-                                        <i class="fas fa-chart-bar text-3xl text-sa-yellow mb-2"></i>
+                                    <button onclick="navigateToPage('analytics')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue/10 to-pastel-blue/20 hover:from-pastel-blue/20 hover:to-pastel-blue/30 border border-pastel-blue/30 transition text-center">
+                                        <i class="fas fa-chart-bar text-3xl text-pastel-blue mb-2"></i>
                                         <div class="font-bold text-sm">View Reports</div>
                                     </button>
                                 </div>
@@ -6124,7 +6124,7 @@ app.get('/', (c) => {
                         dashboardHTML = \`
                             <!-- Page Header -->
                             <div class="mb-6">
-                                <h1 class="text-4xl font-bold text-sa-green mb-2">
+                                <h1 class="text-4xl font-bold text-pastel-blue-light mb-2">
                                     <i class="fas fa-user-tie mr-3"></i>
                                     Team Manager Dashboard
                                 </h1>
@@ -6133,64 +6133,64 @@ app.get('/', (c) => {
                             
                             <!-- Team Overview -->
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                                <div class="glass-card p-6 border-l-4 border-sa-blue">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue-dark">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Team Size</p>
-                                            <p class="text-4xl font-bold text-sa-blue mt-2">\${roleSpecific.teamSize}</p>
+                                            <p class="text-4xl font-bold text-pastel-blue-dark mt-2">\${roleSpecific.teamSize}</p>
                                             <p class="text-xs text-gray-500 mt-2">Active members</p>
                                         </div>
-                                        <i class="fas fa-users text-5xl text-sa-blue opacity-20"></i>
+                                        <i class="fas fa-users text-5xl text-pastel-blue-dark opacity-20"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 border-l-4 border-sa-green">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue-light">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Working Now</p>
-                                            <p class="text-4xl font-bold text-sa-green mt-2">\${roleSpecific.attendance.currentlyWorking}</p>
+                                            <p class="text-4xl font-bold text-pastel-blue-light mt-2">\${roleSpecific.attendance.currentlyWorking}</p>
                                             <p class="text-xs text-gray-500 mt-2">Clocked in today: \${roleSpecific.attendance.totalClocked}</p>
                                         </div>
-                                        <i class="fas fa-clock text-5xl text-sa-green opacity-20"></i>
+                                        <i class="fas fa-clock text-5xl text-pastel-blue-light opacity-20"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 border-l-4 border-sa-yellow">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Pending Approvals</p>
-                                            <p class="text-4xl font-bold text-sa-yellow mt-2">\${roleSpecific.pendingApprovals.swaps + roleSpecific.pendingApprovals.leave}</p>
+                                            <p class="text-4xl font-bold text-pastel-blue mt-2">\${roleSpecific.pendingApprovals.swaps + roleSpecific.pendingApprovals.leave}</p>
                                             <p class="text-xs text-gray-500 mt-2">Swaps: \${roleSpecific.pendingApprovals.swaps} | Leave: \${roleSpecific.pendingApprovals.leave}</p>
                                         </div>
-                                        <i class="fas fa-clipboard-list text-5xl text-sa-yellow opacity-20"></i>
+                                        <i class="fas fa-clipboard-list text-5xl text-pastel-blue opacity-20"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 border-l-4 border-sa-red">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Shifts Today</p>
-                                            <p class="text-4xl font-bold text-sa-red mt-2">\${roleSpecific.todayShifts.length}</p>
+                                            <p class="text-4xl font-bold text-pastel-blue mt-2">\${roleSpecific.todayShifts.length}</p>
                                             <p class="text-xs text-gray-500 mt-2">Scheduled shifts</p>
                                         </div>
-                                        <i class="fas fa-calendar-day text-5xl text-sa-red opacity-20"></i>
+                                        <i class="fas fa-calendar-day text-5xl text-pastel-blue opacity-20"></i>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Today's Shifts -->
                             <div class="glass-card p-6 mb-6">
-                                <h2 class="text-2xl font-bold text-sa-blue mb-4 flex items-center">
+                                <h2 class="text-2xl font-bold text-pastel-blue-dark mb-4 flex items-center">
                                     <i class="fas fa-calendar-alt mr-3"></i>
                                     Today's Team Schedule
                                 </h2>
                                 \${roleSpecific.todayShifts.length > 0 ? \`
                                     <div class="space-y-3">
                                         \${roleSpecific.todayShifts.map(shift => \`
-                                            <div class="p-4 rounded-xl bg-white border-l-4 border-sa-green flex items-center justify-between">
+                                            <div class="p-4 rounded-xl bg-white border-l-4 border-pastel-blue-light flex items-center justify-between">
                                                 <div class="flex items-center gap-4">
-                                                    <div class="w-12 h-12 rounded-full bg-sa-green/20 flex items-center justify-center">
-                                                        <i class="fas fa-user text-sa-green text-xl"></i>
+                                                    <div class="w-12 h-12 rounded-full bg-pastel-blue-light/20 flex items-center justify-center">
+                                                        <i class="fas fa-user text-pastel-blue-light text-xl"></i>
                                                     </div>
                                                     <div>
                                                         <div class="font-bold text-lg">\${shift.first_name} \${shift.last_name}</div>
@@ -6200,7 +6200,7 @@ app.get('/', (c) => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <span class="px-4 py-2 bg-sa-green/10 text-sa-green rounded-lg font-bold">
+                                                <span class="px-4 py-2 bg-pastel-blue-light/10 text-pastel-blue-light rounded-lg font-bold">
                                                     \${shift.shift_type || 'Regular'}
                                                 </span>
                                             </div>
@@ -6216,14 +6216,14 @@ app.get('/', (c) => {
                             
                             <!-- Pending Leave Requests -->
                             <div class="glass-card p-6 mb-6">
-                                <h2 class="text-2xl font-bold text-sa-yellow mb-4 flex items-center">
+                                <h2 class="text-2xl font-bold text-pastel-blue mb-4 flex items-center">
                                     <i class="fas fa-umbrella-beach mr-3"></i>
                                     Pending Leave Requests
                                 </h2>
                                 \${roleSpecific.pendingLeave.length > 0 ? \`
                                     <div class="space-y-3">
                                         \${roleSpecific.pendingLeave.map(leave => \`
-                                            <div class="p-4 rounded-xl bg-white border-l-4 border-sa-yellow">
+                                            <div class="p-4 rounded-xl bg-white border-l-4 border-pastel-blue">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex-1">
                                                         <div class="font-bold text-lg">\${leave.first_name} \${leave.last_name}</div>
@@ -6237,10 +6237,10 @@ app.get('/', (c) => {
                                                         </div>
                                                     </div>
                                                     <div class="flex gap-2">
-                                                        <button class="px-4 py-2 bg-sa-green text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                        <button class="px-4 py-2 bg-pastel-blue-light text-white rounded-lg font-bold hover:shadow-lg transition">
                                                             <i class="fas fa-check mr-1"></i> Approve
                                                         </button>
-                                                        <button class="px-4 py-2 bg-sa-red text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                        <button class="px-4 py-2 bg-pastel-blue text-white rounded-lg font-bold hover:shadow-lg transition">
                                                             <i class="fas fa-times mr-1"></i> Decline
                                                         </button>
                                                     </div>
@@ -6258,28 +6258,28 @@ app.get('/', (c) => {
                             
                             <!-- Quick Actions -->
                             <div class="glass-card p-6">
-                                <h3 class="text-xl font-bold text-sa-blue mb-4 flex items-center">
+                                <h3 class="text-xl font-bold text-pastel-blue-dark mb-4 flex items-center">
                                     <i class="fas fa-bolt mr-2"></i>
                                     Quick Actions
                                 </h3>
                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <button onclick="navigateToPage('schedule')" class="p-4 rounded-xl bg-gradient-to-br from-sa-blue/10 to-sa-blue/20 hover:from-sa-blue/20 hover:to-sa-blue/30 border border-sa-blue/30 transition text-center">
-                                        <i class="fas fa-calendar-plus text-3xl text-sa-blue mb-2"></i>
+                                    <button onclick="navigateToPage('schedule')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue-dark/10 to-pastel-blue-dark/20 hover:from-pastel-blue-dark/20 hover:to-pastel-blue-dark/30 border border-pastel-blue-dark/30 transition text-center">
+                                        <i class="fas fa-calendar-plus text-3xl text-pastel-blue-dark mb-2"></i>
                                         <div class="font-bold text-sm">Create Shift</div>
                                     </button>
                                     
-                                    <button onclick="navigateToPage('shiftSwaps')" class="p-4 rounded-xl bg-gradient-to-br from-sa-green/10 to-sa-green/20 hover:from-sa-green/20 hover:to-sa-green/30 border border-sa-green/30 transition text-center">
-                                        <i class="fas fa-exchange-alt text-3xl text-sa-green mb-2"></i>
+                                    <button onclick="navigateToPage('shiftSwaps')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue-light/10 to-pastel-blue-light/20 hover:from-pastel-blue-light/20 hover:to-pastel-blue-light/30 border border-pastel-blue-light/30 transition text-center">
+                                        <i class="fas fa-exchange-alt text-3xl text-pastel-blue-light mb-2"></i>
                                         <div class="font-bold text-sm">Approve Swaps</div>
                                     </button>
                                     
-                                    <button onclick="navigateToPage('timeTracking')" class="p-4 rounded-xl bg-gradient-to-br from-sa-yellow/10 to-sa-yellow/20 hover:from-sa-yellow/20 hover:to-sa-yellow/30 border border-sa-yellow/30 transition text-center">
-                                        <i class="fas fa-clock text-3xl text-sa-yellow mb-2"></i>
+                                    <button onclick="navigateToPage('timeTracking')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue/10 to-pastel-blue/20 hover:from-pastel-blue/20 hover:to-pastel-blue/30 border border-pastel-blue/30 transition text-center">
+                                        <i class="fas fa-clock text-3xl text-pastel-blue mb-2"></i>
                                         <div class="font-bold text-sm">View Timesheets</div>
                                     </button>
                                     
-                                    <button onclick="navigateToPage('messaging')" class="p-4 rounded-xl bg-gradient-to-br from-sa-red/10 to-sa-red/20 hover:from-sa-red/20 hover:to-sa-red/30 border border-sa-red/30 transition text-center">
-                                        <i class="fas fa-bullhorn text-3xl text-sa-red mb-2"></i>
+                                    <button onclick="navigateToPage('messaging')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue/10 to-pastel-blue/20 hover:from-pastel-blue/20 hover:to-pastel-blue/30 border border-pastel-blue/30 transition text-center">
+                                        <i class="fas fa-bullhorn text-3xl text-pastel-blue mb-2"></i>
                                         <div class="font-bold text-sm">Team Message</div>
                                     </button>
                                 </div>
@@ -6291,7 +6291,7 @@ app.get('/', (c) => {
                         dashboardHTML = \`
                             <!-- Page Header -->
                             <div class="mb-6">
-                                <h1 class="text-4xl font-bold text-sa-green mb-2">
+                                <h1 class="text-4xl font-bold text-pastel-blue-light mb-2">
                                     <i class="fas fa-home mr-3"></i>
                                     My Workspace
                                 </h1>
@@ -6300,70 +6300,70 @@ app.get('/', (c) => {
                             
                             <!-- Personal Stats -->
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                                <div class="glass-card p-6 border-l-4 border-sa-blue">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue-dark">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Today's Status</p>
-                                            <p class="text-2xl font-bold text-sa-blue mt-2">
+                                            <p class="text-2xl font-bold text-pastel-blue-dark mt-2">
                                                 \${roleSpecific.myTimeToday ? (roleSpecific.myTimeToday.clock_out_time ? 'Clocked Out' : 'Working') : 'Not Started'}
                                             </p>
                                             <p class="text-xs text-gray-500 mt-2">
                                                 \${roleSpecific.myTimeToday ? roleSpecific.myTimeToday.clock_in_time.substring(11, 16) : '--:--'}
                                             </p>
                                         </div>
-                                        <i class="fas fa-user-clock text-5xl text-sa-blue opacity-20"></i>
+                                        <i class="fas fa-user-clock text-5xl text-pastel-blue-dark opacity-20"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 border-l-4 border-sa-green">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue-light">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Upcoming Shifts</p>
-                                            <p class="text-4xl font-bold text-sa-green mt-2">\${roleSpecific.myShifts.length}</p>
+                                            <p class="text-4xl font-bold text-pastel-blue-light mt-2">\${roleSpecific.myShifts.length}</p>
                                             <p class="text-xs text-gray-500 mt-2">Next 7 days</p>
                                         </div>
-                                        <i class="fas fa-calendar-alt text-5xl text-sa-green opacity-20"></i>
+                                        <i class="fas fa-calendar-alt text-5xl text-pastel-blue-light opacity-20"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 border-l-4 border-sa-yellow">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Leave Requests</p>
-                                            <p class="text-4xl font-bold text-sa-yellow mt-2">\${roleSpecific.myLeave.length}</p>
+                                            <p class="text-4xl font-bold text-pastel-blue mt-2">\${roleSpecific.myLeave.length}</p>
                                             <p class="text-xs text-gray-500 mt-2">All statuses</p>
                                         </div>
-                                        <i class="fas fa-umbrella-beach text-5xl text-sa-yellow opacity-20"></i>
+                                        <i class="fas fa-umbrella-beach text-5xl text-pastel-blue opacity-20"></i>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 border-l-4 border-sa-red">
+                                <div class="glass-card p-6 border-l-4 border-pastel-blue">
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <p class="text-gray-600 text-sm font-medium">Available Swaps</p>
-                                            <p class="text-4xl font-bold text-sa-red mt-2">\${roleSpecific.availableSwaps.length}</p>
+                                            <p class="text-4xl font-bold text-pastel-blue mt-2">\${roleSpecific.availableSwaps.length}</p>
                                             <p class="text-xs text-gray-500 mt-2">Open requests</p>
                                         </div>
-                                        <i class="fas fa-exchange-alt text-5xl text-sa-red opacity-20"></i>
+                                        <i class="fas fa-exchange-alt text-5xl text-pastel-blue opacity-20"></i>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- My Upcoming Shifts -->
                             <div class="glass-card p-6 mb-6">
-                                <h2 class="text-2xl font-bold text-sa-blue mb-4 flex items-center">
+                                <h2 class="text-2xl font-bold text-pastel-blue-dark mb-4 flex items-center">
                                     <i class="fas fa-calendar-week mr-3"></i>
                                     My Upcoming Shifts
                                 </h2>
                                 \${roleSpecific.myShifts.length > 0 ? \`
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         \${roleSpecific.myShifts.map(shift => \`
-                                            <div class="p-4 rounded-xl bg-gradient-to-br from-sa-green/10 to-sa-blue/10 border border-sa-green/30">
+                                            <div class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue-light/10 to-pastel-blue-dark/10 border border-pastel-blue-light/30">
                                                 <div class="flex items-center justify-between mb-2">
-                                                    <span class="text-lg font-bold text-sa-blue">
+                                                    <span class="text-lg font-bold text-pastel-blue-dark">
                                                         \${new Date(shift.shift_date).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })}
                                                     </span>
-                                                    <span class="px-3 py-1 bg-sa-green text-white rounded-full text-xs font-bold">
+                                                    <span class="px-3 py-1 bg-pastel-blue-light text-white rounded-full text-xs font-bold">
                                                         \${shift.shift_type || 'Regular'}
                                                     </span>
                                                 </div>
@@ -6387,13 +6387,13 @@ app.get('/', (c) => {
                             <!-- Available Shift Swaps -->
                             \${roleSpecific.availableSwaps.length > 0 ? \`
                                 <div class="glass-card p-6 mb-6">
-                                    <h2 class="text-2xl font-bold text-sa-red mb-4 flex items-center">
+                                    <h2 class="text-2xl font-bold text-pastel-blue mb-4 flex items-center">
                                         <i class="fas fa-exchange-alt mr-3"></i>
                                         Available Shift Swaps
                                     </h2>
                                     <div class="space-y-3">
                                         \${roleSpecific.availableSwaps.map(swap => \`
-                                            <div class="p-4 rounded-xl bg-white border-l-4 border-sa-yellow">
+                                            <div class="p-4 rounded-xl bg-white border-l-4 border-pastel-blue">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex-1">
                                                         <div class="font-bold text-lg">\${swap.first_name} \${swap.last_name} is offering:</div>
@@ -6402,7 +6402,7 @@ app.get('/', (c) => {
                                                             \${new Date(swap.shift_date).toLocaleDateString()} • \${swap.start_time} - \${swap.end_time}
                                                         </div>
                                                     </div>
-                                                    <button class="px-4 py-2 bg-sa-green text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                    <button class="px-4 py-2 bg-pastel-blue-light text-white rounded-lg font-bold hover:shadow-lg transition">
                                                         <i class="fas fa-handshake mr-1"></i> Take Shift
                                                     </button>
                                                 </div>
@@ -6414,7 +6414,7 @@ app.get('/', (c) => {
                             
                             <!-- My Compliance Status -->
                             <div class="glass-card p-6 mb-6">
-                                <h2 class="text-2xl font-bold text-sa-green mb-4 flex items-center">
+                                <h2 class="text-2xl font-bold text-pastel-blue-light mb-4 flex items-center">
                                     <i class="fas fa-clipboard-check mr-3"></i>
                                     My Compliance Status
                                 </h2>
@@ -6422,9 +6422,9 @@ app.get('/', (c) => {
                                     <div class="space-y-3">
                                         \${roleSpecific.myCompliance.map(check => \`
                                             <div class="p-4 rounded-xl bg-white border-l-4 \${
-                                                check.status === 'compliant' ? 'border-sa-green' :
-                                                check.status === 'non_compliant' ? 'border-sa-red' :
-                                                'border-sa-yellow'
+                                                check.status === 'compliant' ? 'border-pastel-blue-light' :
+                                                check.status === 'non_compliant' ? 'border-pastel-blue' :
+                                                'border-pastel-blue'
                                             }">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex-1">
@@ -6434,9 +6434,9 @@ app.get('/', (c) => {
                                                         </div>
                                                     </div>
                                                     <span class="px-4 py-2 rounded-lg font-bold \${
-                                                        check.status === 'compliant' ? 'bg-sa-green/10 text-sa-green' :
-                                                        check.status === 'non_compliant' ? 'bg-sa-red/10 text-sa-red' :
-                                                        'bg-sa-yellow/10 text-sa-yellow'
+                                                        check.status === 'compliant' ? 'bg-pastel-blue-light/10 text-pastel-blue-light' :
+                                                        check.status === 'non_compliant' ? 'bg-pastel-blue/10 text-pastel-blue' :
+                                                        'bg-pastel-blue/10 text-pastel-blue'
                                                     }">
                                                         \${check.status.toUpperCase()}
                                                     </span>
@@ -6454,28 +6454,28 @@ app.get('/', (c) => {
                             
                             <!-- Quick Actions -->
                             <div class="glass-card p-6">
-                                <h3 class="text-xl font-bold text-sa-blue mb-4 flex items-center">
+                                <h3 class="text-xl font-bold text-pastel-blue-dark mb-4 flex items-center">
                                     <i class="fas fa-bolt mr-2"></i>
                                     Quick Actions
                                 </h3>
                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <button onclick="navigateToPage('schedule')" class="p-4 rounded-xl bg-gradient-to-br from-sa-blue/10 to-sa-blue/20 hover:from-sa-blue/20 hover:to-sa-blue/30 border border-sa-blue/30 transition text-center">
-                                        <i class="fas fa-calendar-alt text-3xl text-sa-blue mb-2"></i>
+                                    <button onclick="navigateToPage('schedule')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue-dark/10 to-pastel-blue-dark/20 hover:from-pastel-blue-dark/20 hover:to-pastel-blue-dark/30 border border-pastel-blue-dark/30 transition text-center">
+                                        <i class="fas fa-calendar-alt text-3xl text-pastel-blue-dark mb-2"></i>
                                         <div class="font-bold text-sm">View Schedule</div>
                                     </button>
                                     
-                                    <button onclick="navigateToPage('leave')" class="p-4 rounded-xl bg-gradient-to-br from-sa-green/10 to-sa-green/20 hover:from-sa-green/20 hover:to-sa-green/30 border border-sa-green/30 transition text-center">
-                                        <i class="fas fa-paper-plane text-3xl text-sa-green mb-2"></i>
+                                    <button onclick="navigateToPage('leave')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue-light/10 to-pastel-blue-light/20 hover:from-pastel-blue-light/20 hover:to-pastel-blue-light/30 border border-pastel-blue-light/30 transition text-center">
+                                        <i class="fas fa-paper-plane text-3xl text-pastel-blue-light mb-2"></i>
                                         <div class="font-bold text-sm">Request Leave</div>
                                     </button>
                                     
-                                    <button onclick="navigateToPage('shiftSwaps')" class="p-4 rounded-xl bg-gradient-to-br from-sa-yellow/10 to-sa-yellow/20 hover:from-sa-yellow/20 hover:to-sa-yellow/30 border border-sa-yellow/30 transition text-center">
-                                        <i class="fas fa-exchange-alt text-3xl text-sa-yellow mb-2"></i>
+                                    <button onclick="navigateToPage('shiftSwaps')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue/10 to-pastel-blue/20 hover:from-pastel-blue/20 hover:to-pastel-blue/30 border border-pastel-blue/30 transition text-center">
+                                        <i class="fas fa-exchange-alt text-3xl text-pastel-blue mb-2"></i>
                                         <div class="font-bold text-sm">Swap Shift</div>
                                     </button>
                                     
-                                    <button onclick="navigateToPage('myCompliance')" class="p-4 rounded-xl bg-gradient-to-br from-sa-red/10 to-sa-red/20 hover:from-sa-red/20 hover:to-sa-red/30 border border-sa-red/30 transition text-center">
-                                        <i class="fas fa-shield-alt text-3xl text-sa-red mb-2"></i>
+                                    <button onclick="navigateToPage('myCompliance')" class="p-4 rounded-xl bg-gradient-to-br from-pastel-blue/10 to-pastel-blue/20 hover:from-pastel-blue/20 hover:to-pastel-blue/30 border border-pastel-blue/30 transition text-center">
+                                        <i class="fas fa-shield-alt text-3xl text-pastel-blue mb-2"></i>
                                         <div class="font-bold text-sm">My Compliance</div>
                                     </button>
                                 </div>
@@ -6486,18 +6486,18 @@ app.get('/', (c) => {
                     mainContent.innerHTML = dashboardHTML;
                 }
             }).catch(error => {
-                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading dashboard</p></div>';
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><p class="text-gray-600">Error loading dashboard</p></div>';
             });
         }
         
         function loadLeaderboardPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading leaderboard...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading leaderboard...</p></div>';
             
             axios.get('/api/leaderboard?type=points').then(response => {
                 if (response.data.success) {
                     const leaders = response.data.data;
-                    let leaderHTML = '<div class="glass-card p-6 mb-6"><h2 class="text-3xl font-bold text-sa-blue mb-6"><i class="fas fa-trophy mr-3 text-sa-yellow"></i>Top Performers - Overall Points</h2><div class="space-y-4">';
+                    let leaderHTML = '<div class="glass-card p-6 mb-6"><h2 class="text-3xl font-bold text-pastel-blue-dark mb-6"><i class="fas fa-trophy mr-3 text-pastel-blue"></i>Top Performers - Overall Points</h2><div class="space-y-4">';
                     
                     leaders.forEach((leader, idx) => {
                         const rankClass = idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : 'glass-card'));
@@ -6505,7 +6505,7 @@ app.get('/', (c) => {
                         
                         leaderHTML += '<div class="' + rankClass + ' p-4 rounded-xl flex items-center justify-between">' +
                             '<div class="flex items-center gap-4">' +
-                                '<div class="text-4xl font-bold ' + (idx < 3 ? 'text-white' : 'text-sa-blue') + '">' + (idx + 1) + '</div>' +
+                                '<div class="text-4xl font-bold ' + (idx < 3 ? 'text-white' : 'text-pastel-blue-dark') + '">' + (idx + 1) + '</div>' +
                                 '<div class="text-3xl">' + medal + '</div>' +
                                 '<div>' +
                                     '<div class="font-bold text-lg ' + (idx < 3 ? 'text-white' : 'text-gray-800') + '">' + leader.name + '</div>' +
@@ -6513,7 +6513,7 @@ app.get('/', (c) => {
                                 '</div>' +
                             '</div>' +
                             '<div class="text-right">' +
-                                '<div class="text-2xl font-bold ' + (idx < 3 ? 'text-white' : 'text-sa-green') + '">' + leader.points.toLocaleString() + ' pts</div>' +
+                                '<div class="text-2xl font-bold ' + (idx < 3 ? 'text-white' : 'text-pastel-blue-light') + '">' + leader.points.toLocaleString() + ' pts</div>' +
                                 '<div class="text-sm ' + (idx < 3 ? 'text-white/80' : 'text-gray-600') + '">Rank: #' + leader.rank + '</div>' +
                             '</div>' +
                         '</div>';
@@ -6522,22 +6522,22 @@ app.get('/', (c) => {
                     leaderHTML += '</div></div>';
                     mainContent.innerHTML = leaderHTML;
                 } else {
-                    mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><h3 class="text-2xl font-bold">Failed to load leaderboard</h3></div>';
+                    mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><h3 class="text-2xl font-bold">Failed to load leaderboard</h3></div>';
                 }
             }).catch(error => {
                 console.error('Error loading leaderboard:', error);
-                mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><h3 class="text-2xl font-bold">Error loading leaderboard</h3></div>';
+                mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><h3 class="text-2xl font-bold">Error loading leaderboard</h3></div>';
             });
         }
         
         function loadEmployeesPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading employees...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading employees...</p></div>';
             
             axios.get('/api/employees?per_page=20').then(response => {
                 if (response.data.success) {
                     const employees = response.data.data;
-                    let empHTML = '<div class="mb-6"><h2 class="text-3xl font-bold text-sa-blue"><i class="fas fa-users mr-3"></i>People & Talent Management</h2><p class="text-gray-600 mt-2">' + response.data.meta.total + ' total employees</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+                    let empHTML = '<div class="mb-6"><h2 class="text-3xl font-bold text-pastel-blue-dark"><i class="fas fa-users mr-3"></i>People & Talent Management</h2><p class="text-gray-600 mt-2">' + response.data.meta.total + ' total employees</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
                     
                     employees.forEach(emp => {
                         empHTML += '<div class="glass-card p-4 hover:scale-102 transition">' +
@@ -6548,7 +6548,7 @@ app.get('/', (c) => {
                                     '<p class="text-xs text-gray-500">' + (emp.department_name || 'No Department') + '</p>' +
                                 '</div>' +
                                 '<div class="text-right">' +
-                                    '<span class="px-2 py-1 bg-sa-green text-white text-xs rounded-full font-bold">' + emp.employment_type + '</span>' +
+                                    '<span class="px-2 py-1 bg-pastel-blue-light text-white text-xs rounded-full font-bold">' + emp.employment_type + '</span>' +
                                     '<p class="text-xs text-gray-500 mt-1">' + emp.employee_number + '</p>' +
                                 '</div>' +
                             '</div>' +
@@ -6562,25 +6562,25 @@ app.get('/', (c) => {
                     empHTML += '</div>';
                     mainContent.innerHTML = empHTML;
                 } else {
-                    mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><h3 class="text-2xl font-bold">Failed to load employees</h3></div>';
+                    mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><h3 class="text-2xl font-bold">Failed to load employees</h3></div>';
                 }
             }).catch(error => {
                 console.error('Error loading employees:', error);
-                mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><h3 class="text-2xl font-bold">Error loading employees</h3></div>';
+                mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><h3 class="text-2xl font-bold">Error loading employees</h3></div>';
             });
         }
         
         function loadSchedulePage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading shifts...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading shifts...</p></div>';
             
             axios.get('/api/shifts').then(response => {
                 if (response.data.success) {
                     const shifts = response.data.data;
-                    let shiftHTML = '<div class="mb-6"><h2 class="text-3xl font-bold text-sa-green"><i class="fas fa-calendar-alt mr-3"></i>Today\'s Shift Schedule</h2><p class="text-gray-600 mt-2">' + shifts.length + ' shifts scheduled</p></div><div class="space-y-4">';
+                    let shiftHTML = '<div class="mb-6"><h2 class="text-3xl font-bold text-pastel-blue-light"><i class="fas fa-calendar-alt mr-3"></i>Today\'s Shift Schedule</h2><p class="text-gray-600 mt-2">' + shifts.length + ' shifts scheduled</p></div><div class="space-y-4">';
                     
                     shifts.forEach(shift => {
-                        const statusColor = shift.status === 'Completed' ? 'bg-sa-green' : (shift.status === 'In Progress' ? 'bg-sa-blue' : 'bg-gray-400');
+                        const statusColor = shift.status === 'Completed' ? 'bg-pastel-blue-light' : (shift.status === 'In Progress' ? 'bg-pastel-blue-dark' : 'bg-gray-400');
                         
                         shiftHTML += '<div class="glass-card p-4">' +
                             '<div class="flex items-start justify-between">' +
@@ -6593,7 +6593,7 @@ app.get('/', (c) => {
                                     '<p class="text-sm text-gray-600"><i class="fas fa-briefcase mr-2"></i>' + (shift.department_name || 'No Department') + '</p>' +
                                 '</div>' +
                                 '<div class="text-right">' +
-                                    '<p class="text-sm font-bold text-sa-blue">' + shift.start_time + ' - ' + shift.end_time + '</p>' +
+                                    '<p class="text-sm font-bold text-pastel-blue-dark">' + shift.start_time + ' - ' + shift.end_time + '</p>' +
                                     '<p class="text-xs text-gray-500">' + shift.duration_hours + ' hours</p>' +
                                     '<p class="text-xs text-gray-600 mt-1">' + shift.shift_type + '</p>' +
                                 '</div>' +
@@ -6604,39 +6604,39 @@ app.get('/', (c) => {
                     shiftHTML += '</div>';
                     mainContent.innerHTML = shiftHTML;
                 } else {
-                    mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><h3 class="text-2xl font-bold">Failed to load shifts</h3></div>';
+                    mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><h3 class="text-2xl font-bold">Failed to load shifts</h3></div>';
                 }
             }).catch(error => {
                 console.error('Error loading shifts:', error);
-                mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><h3 class="text-2xl font-bold">Error loading shifts</h3></div>';
+                mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><h3 class="text-2xl font-bold">Error loading shifts</h3></div>';
             });
         }
         
         function loadSocialPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading social feed...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading social feed...</p></div>';
             
             axios.get('/api/social/posts').then(response => {
                 if (response.data.success) {
                     const posts = response.data.data;
-                    let socialHTML = '<div class="mb-6"><h2 class="text-3xl font-bold text-sa-red"><i class="fas fa-comments mr-3"></i>Social Feed</h2><p class="text-gray-600 mt-2">Company-wide updates and collaboration</p></div><div class="space-y-4">';
+                    let socialHTML = '<div class="mb-6"><h2 class="text-3xl font-bold text-pastel-blue"><i class="fas fa-comments mr-3"></i>Social Feed</h2><p class="text-gray-600 mt-2">Company-wide updates and collaboration</p></div><div class="space-y-4">';
                     
                     posts.forEach(post => {
                         socialHTML += '<div class="glass-card p-6">' +
                             '<div class="flex items-start gap-4 mb-4">' +
-                                '<div class="w-12 h-12 rounded-full bg-gradient-to-br from-sa-blue to-sa-green flex items-center justify-center text-white font-bold text-xl">' +
+                                '<div class="w-12 h-12 rounded-full bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-light flex items-center justify-center text-white font-bold text-xl">' +
                                     post.author_name.charAt(0) +
                                 '</div>' +
                                 '<div class="flex-1">' +
                                     '<h4 class="font-bold text-gray-800">' + post.author_name + '</h4>' +
                                     '<p class="text-xs text-gray-500">' + (post.author_title || 'Team Member') + ' • ' + new Date(post.created_at).toLocaleString() + '</p>' +
                                 '</div>' +
-                                '<span class="px-3 py-1 bg-sa-blue/10 text-sa-blue text-xs rounded-full font-semibold">' + post.post_type + '</span>' +
+                                '<span class="px-3 py-1 bg-pastel-blue-dark/10 text-pastel-blue-dark text-xs rounded-full font-semibold">' + post.post_type + '</span>' +
                             '</div>' +
                             '<p class="text-gray-700 mb-4">' + post.content + '</p>' +
                             '<div class="flex items-center gap-6 text-sm text-gray-600">' +
-                                '<button class="flex items-center gap-2 hover:text-sa-red transition"><i class="fas fa-heart"></i><span>' + post.likes_count + ' likes</span></button>' +
-                                '<button class="flex items-center gap-2 hover:text-sa-blue transition"><i class="fas fa-comment"></i><span>' + post.comments_count + ' comments</span></button>' +
+                                '<button class="flex items-center gap-2 hover:text-pastel-blue transition"><i class="fas fa-heart"></i><span>' + post.likes_count + ' likes</span></button>' +
+                                '<button class="flex items-center gap-2 hover:text-pastel-blue-dark transition"><i class="fas fa-comment"></i><span>' + post.comments_count + ' comments</span></button>' +
                             '</div>' +
                         '</div>';
                     });
@@ -6644,24 +6644,24 @@ app.get('/', (c) => {
                     socialHTML += '</div>';
                     mainContent.innerHTML = socialHTML;
                 } else {
-                    mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><h3 class="text-2xl font-bold">Failed to load social feed</h3></div>';
+                    mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><h3 class="text-2xl font-bold">Failed to load social feed</h3></div>';
                 }
             }).catch(error => {
                 console.error('Error loading social feed:', error);
-                mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><h3 class="text-2xl font-bold">Error loading social feed</h3></div>';
+                mainContent.innerHTML = '<div class="glass-card p-12 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><h3 class="text-2xl font-bold">Error loading social feed</h3></div>';
             });
         }
         
         function loadTrainingPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = '<div class="glass-card p-12 text-center">' +
-                '<i class="fas fa-graduation-cap text-6xl text-sa-yellow mb-4"></i>' +
+                '<i class="fas fa-graduation-cap text-6xl text-pastel-blue mb-4"></i>' +
                 '<h2 class="text-3xl font-bold text-gray-800 mb-2">Skills & Training</h2>' +
                 '<p class="text-gray-600 mb-6">Coming Soon: Training modules, skills tracking, and SETA compliance</p>' +
                 '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">' +
-                    '<div class="p-4 bg-sa-blue/10 rounded-xl"><i class="fas fa-book text-3xl text-sa-blue mb-2"></i><p class="font-bold">Training Modules</p></div>' +
-                    '<div class="p-4 bg-sa-green/10 rounded-xl"><i class="fas fa-certificate text-3xl text-sa-green mb-2"></i><p class="font-bold">Certifications</p></div>' +
-                    '<div class="p-4 bg-sa-yellow/10 rounded-xl"><i class="fas fa-chart-line text-3xl text-sa-yellow mb-2"></i><p class="font-bold">Skills Progress</p></div>' +
+                    '<div class="p-4 bg-pastel-blue-dark/10 rounded-xl"><i class="fas fa-book text-3xl text-pastel-blue-dark mb-2"></i><p class="font-bold">Training Modules</p></div>' +
+                    '<div class="p-4 bg-pastel-blue-light/10 rounded-xl"><i class="fas fa-certificate text-3xl text-pastel-blue-light mb-2"></i><p class="font-bold">Certifications</p></div>' +
+                    '<div class="p-4 bg-pastel-blue/10 rounded-xl"><i class="fas fa-chart-line text-3xl text-pastel-blue mb-2"></i><p class="font-bold">Skills Progress</p></div>' +
                 '</div>' +
             '</div>';
         }
@@ -6669,13 +6669,13 @@ app.get('/', (c) => {
         function loadRewardsPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = '<div class="glass-card p-12 text-center">' +
-                '<i class="fas fa-gift text-6xl text-sa-red mb-4"></i>' +
+                '<i class="fas fa-gift text-6xl text-pastel-blue mb-4"></i>' +
                 '<h2 class="text-3xl font-bold text-gray-800 mb-2">Rewards Store</h2>' +
                 '<p class="text-gray-600 mb-6">Redeem your ZuZa Coins for awesome rewards!</p>' +
                 '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">' +
-                    '<div class="p-6 bg-gradient-to-br from-sa-blue to-sa-green text-white rounded-xl"><i class="fas fa-coffee text-4xl mb-3"></i><h3 class="font-bold text-xl mb-2">Free Coffee</h3><p class="text-sm mb-3">50 ZuZa Coins</p><button class="px-4 py-2 bg-white text-sa-blue rounded-lg font-bold">Redeem</button></div>' +
-                    '<div class="p-6 bg-gradient-to-br from-sa-green to-sa-yellow text-white rounded-xl"><i class="fas fa-parking text-4xl mb-3"></i><h3 class="font-bold text-xl mb-2">Premium Parking</h3><p class="text-sm mb-3">100 ZuZa Coins</p><button class="px-4 py-2 bg-white text-sa-green rounded-lg font-bold">Redeem</button></div>' +
-                    '<div class="p-6 bg-gradient-to-br from-sa-red to-sa-yellow text-white rounded-xl"><i class="fas fa-tshirt text-4xl mb-3"></i><h3 class="font-bold text-xl mb-2">Company Merch</h3><p class="text-sm mb-3">200 ZuZa Coins</p><button class="px-4 py-2 bg-white text-sa-red rounded-lg font-bold">Redeem</button></div>' +
+                    '<div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-light text-white rounded-xl"><i class="fas fa-coffee text-4xl mb-3"></i><h3 class="font-bold text-xl mb-2">Free Coffee</h3><p class="text-sm mb-3">50 ZuZa Coins</p><button class="px-4 py-2 bg-white text-pastel-blue-dark rounded-lg font-bold">Redeem</button></div>' +
+                    '<div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue text-white rounded-xl"><i class="fas fa-parking text-4xl mb-3"></i><h3 class="font-bold text-xl mb-2">Premium Parking</h3><p class="text-sm mb-3">100 ZuZa Coins</p><button class="px-4 py-2 bg-white text-pastel-blue-light rounded-lg font-bold">Redeem</button></div>' +
+                    '<div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue text-white rounded-xl"><i class="fas fa-tshirt text-4xl mb-3"></i><h3 class="font-bold text-xl mb-2">Company Merch</h3><p class="text-sm mb-3">200 ZuZa Coins</p><button class="px-4 py-2 bg-white text-pastel-blue rounded-lg font-bold">Redeem</button></div>' +
                 '</div>' +
             '</div>';
         }
@@ -6725,12 +6725,12 @@ app.get('/', (c) => {
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <h2 class="text-3xl font-bold">
-                                    <i class="fas fa-map-marked-alt mr-3 text-sa-green"></i>
+                                    <i class="fas fa-map-marked-alt mr-3 text-pastel-blue-light"></i>
                                     <span class="sa-gradient bg-clip-text text-transparent">Team Locations Dashboard</span>
                                 </h2>
                                 <p class="text-gray-600 mt-1">Real-time geolocation tracking across South Africa</p>
                             </div>
-                            <button onclick="loadStats(); loadGeoLocationDashboard();" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:scale-105 transition">
+                            <button onclick="loadStats(); loadGeoLocationDashboard();" class="px-6 py-3 bg-gradient-to-r from-pastel-blue-light to-pastel-blue-dark text-white rounded-xl font-bold hover:scale-105 transition">
                                 <i class="fas fa-sync-alt mr-2"></i> Refresh
                             </button>
                         </div>
@@ -6738,55 +6738,55 @@ app.get('/', (c) => {
                     
                     <!-- Statistics Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div class="glass-card p-6 border-l-4 border-sa-blue">
+                        <div class="glass-card p-6 border-l-4 border-pastel-blue-dark">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-gray-600 text-sm font-medium">Total Workers</p>
-                                    <p class="text-3xl font-bold text-sa-blue mt-1">\${totalWorkers}</p>
+                                    <p class="text-3xl font-bold text-pastel-blue-dark mt-1">\${totalWorkers}</p>
                                 </div>
-                                <i class="fas fa-users text-5xl text-sa-blue opacity-20"></i>
+                                <i class="fas fa-users text-5xl text-pastel-blue-dark opacity-20"></i>
                             </div>
                         </div>
                         
-                        <div class="glass-card p-6 border-l-4 border-sa-green">
+                        <div class="glass-card p-6 border-l-4 border-pastel-blue-light">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-gray-600 text-sm font-medium">Currently Active</p>
-                                    <p class="text-3xl font-bold text-sa-green mt-1">\${activeWorkers}</p>
+                                    <p class="text-3xl font-bold text-pastel-blue-light mt-1">\${activeWorkers}</p>
                                     <div class="flex items-center gap-1 mt-1">
-                                        <div class="w-2 h-2 bg-sa-green rounded-full animate-pulse"></div>
-                                        <span class="text-xs text-sa-green font-bold">LIVE</span>
+                                        <div class="w-2 h-2 bg-pastel-blue-light rounded-full animate-pulse"></div>
+                                        <span class="text-xs text-pastel-blue-light font-bold">LIVE</span>
                                     </div>
                                 </div>
-                                <i class="fas fa-user-check text-5xl text-sa-green opacity-20"></i>
+                                <i class="fas fa-user-check text-5xl text-pastel-blue-light opacity-20"></i>
                             </div>
                         </div>
                         
-                        <div class="glass-card p-6 border-l-4 border-sa-yellow">
+                        <div class="glass-card p-6 border-l-4 border-pastel-blue">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-gray-600 text-sm font-medium">On Break</p>
-                                    <p class="text-3xl font-bold text-sa-yellow mt-1">\${onBreakWorkers}</p>
+                                    <p class="text-3xl font-bold text-pastel-blue mt-1">\${onBreakWorkers}</p>
                                 </div>
-                                <i class="fas fa-coffee text-5xl text-sa-yellow opacity-20"></i>
+                                <i class="fas fa-coffee text-5xl text-pastel-blue opacity-20"></i>
                             </div>
                         </div>
                         
-                        <div class="glass-card p-6 border-l-4 border-sa-red">
+                        <div class="glass-card p-6 border-l-4 border-pastel-blue">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-gray-600 text-sm font-medium">Locations</p>
-                                    <p class="text-3xl font-bold text-sa-red mt-1">\${locationCount}</p>
+                                    <p class="text-3xl font-bold text-pastel-blue mt-1">\${locationCount}</p>
                                     <p class="text-xs text-gray-500 mt-1">Across 9 provinces</p>
                                 </div>
-                                <i class="fas fa-map-marker-alt text-5xl text-sa-red opacity-20"></i>
+                                <i class="fas fa-map-marker-alt text-5xl text-pastel-blue opacity-20"></i>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Location Cards Grid -->
                     <div class="glass-card p-6 mb-6">
-                        <h3 class="text-xl font-bold text-sa-blue mb-4">
+                        <h3 class="text-xl font-bold text-pastel-blue-dark mb-4">
                             <i class="fas fa-building mr-2"></i>
                             Locations Overview
                         </h3>
@@ -6819,20 +6819,20 @@ app.get('/', (c) => {
                     
                     card.innerHTML = '<div class="flex items-start justify-between mb-4">' +
                         '<div>' +
-                            '<h3 class="text-lg font-bold text-sa-blue">' + loc.name + '</h3>' +
+                            '<h3 class="text-lg font-bold text-pastel-blue-dark">' + loc.name + '</h3>' +
                             '<p class="text-sm text-gray-600"><i class="fas fa-map-marker-alt mr-1"></i>' + loc.province + ', ' + loc.city + '</p>' +
                             gpsText +
                         '</div>' +
                         '<div class="text-right">' +
-                            '<div class="text-3xl font-bold text-sa-green">' + workers.length + '</div>' +
+                            '<div class="text-3xl font-bold text-pastel-blue-light">' + workers.length + '</div>' +
                             '<div class="text-xs text-gray-600">Total Workers</div>' +
                         '</div>' +
                     '</div>' +
                     '<div class="flex items-center justify-between text-sm">' +
                         '<div class="flex items-center gap-3">' +
                             '<span class="flex items-center gap-1">' +
-                                '<div class="w-2 h-2 bg-sa-green rounded-full animate-pulse"></div>' +
-                                '<span class="font-bold text-sa-green">' + clockedInCount + '</span>' +
+                                '<div class="w-2 h-2 bg-pastel-blue-light rounded-full animate-pulse"></div>' +
+                                '<span class="font-bold text-pastel-blue-light">' + clockedInCount + '</span>' +
                                 '<span class="text-gray-600">Active</span>' +
                             '</span>' +
                             '<span class="flex items-center gap-1">' +
@@ -6841,7 +6841,7 @@ app.get('/', (c) => {
                                 '<span class="text-gray-600">Offline</span>' +
                             '</span>' +
                         '</div>' +
-                        '<button class="text-sa-blue hover:text-sa-green transition">' +
+                        '<button class="text-pastel-blue-dark hover:text-pastel-blue-light transition">' +
                             '<i class="fas fa-arrow-right"></i>' +
                         '</button>' +
                     '</div>';
@@ -6853,10 +6853,10 @@ app.get('/', (c) => {
                 console.error('Failed to load geolocation dashboard:', error);
                 mainContent.innerHTML = \`
                     <div class="glass-card p-12 text-center">
-                        <i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i>
+                        <i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i>
                         <h3 class="text-2xl font-bold text-gray-800 mb-2">Failed to Load Dashboard</h3>
                         <p class="text-gray-600 mb-4">Could not fetch team location data</p>
-                        <button onclick="loadGeoLocationDashboard()" class="px-6 py-3 bg-sa-blue text-white rounded-xl font-bold hover:scale-105 transition">
+                        <button onclick="loadGeoLocationDashboard()" class="px-6 py-3 bg-pastel-blue-dark text-white rounded-xl font-bold hover:scale-105 transition">
                             Try Again
                         </button>
                     </div>
@@ -6873,7 +6873,7 @@ app.get('/', (c) => {
                     '<i class="fas fa-arrow-left mr-2"></i> Back to Locations' +
                 '</button>' +
                 '<h2 class="text-3xl font-bold">' +
-                    '<i class="fas fa-building mr-3 text-sa-green"></i>' +
+                    '<i class="fas fa-building mr-3 text-pastel-blue-light"></i>' +
                     '<span class="sa-gradient bg-clip-text text-transparent">' + locationName + '</span>' +
                 '</h2>' +
                 '<p class="text-gray-600 mt-1">' + workers.length + ' workers at this location</p>' +
@@ -6884,7 +6884,7 @@ app.get('/', (c) => {
             
             workers.forEach(worker => {
                 const statusBadge = worker.clock_in_time && !worker.clock_out_time
-                    ? '<span class="px-2 py-1 bg-sa-green text-white text-xs rounded-full font-bold"><i class="fas fa-circle text-white mr-1" style="font-size: 6px;"></i>Active</span>'
+                    ? '<span class="px-2 py-1 bg-pastel-blue-light text-white text-xs rounded-full font-bold"><i class="fas fa-circle text-white mr-1" style="font-size: 6px;"></i>Active</span>'
                     : '<span class="px-2 py-1 bg-gray-400 text-white text-xs rounded-full font-bold">Offline</span>';
                 
                 const gpsInfo = worker.clock_in_latitude && worker.clock_in_longitude
@@ -6926,26 +6926,26 @@ app.get('/', (c) => {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = \`
                 <div class="glass-card p-8">
-                    <h2 class="text-3xl font-bold text-sa-blue mb-4">
-                        <i class="fas fa-user-graduate mr-3 text-sa-green"></i>
+                    <h2 class="text-3xl font-bold text-pastel-blue-dark mb-4">
+                        <i class="fas fa-user-graduate mr-3 text-pastel-blue-light"></i>
                         Interns Management (SETA/YES/NYS)
                     </h2>
                     <p class="text-gray-600 mb-6">Centralized management of SA accredited intern programs with comprehensive tracking and reporting.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                        <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                        <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl">
                             <div class="text-4xl font-bold mb-2">24</div>
                             <div class="text-sm opacity-90">SETA Interns</div>
                         </div>
-                        <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                        <div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue-light/80 text-white rounded-xl">
                             <div class="text-4xl font-bold mb-2">12</div>
                             <div class="text-sm opacity-90">YES Program</div>
                         </div>
-                        <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                        <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                             <div class="text-4xl font-bold mb-2">8</div>
                             <div class="text-sm opacity-90">NYS Participants</div>
                         </div>
-                        <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                        <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                             <div class="text-4xl font-bold mb-2">5</div>
                             <div class="text-sm opacity-90">Self-Funded</div>
                         </div>
@@ -6964,47 +6964,47 @@ app.get('/', (c) => {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = \`
                 <div class="glass-card p-8">
-                    <h2 class="text-3xl font-bold text-sa-red mb-4">
+                    <h2 class="text-3xl font-bold text-pastel-blue mb-4">
                         <i class="fas fa-shield-alt mr-3"></i>
                         Compliance Manager Dashboard
                     </h2>
                     <p class="text-gray-600 mb-6">Real-time monitoring of BCEA, EEA, and COIDA compliance with automated alerts and reporting.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                        <div class="p-6 border-l-4 border-sa-green bg-white rounded-xl">
+                        <div class="p-6 border-l-4 border-pastel-blue-light bg-white rounded-xl">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="text-sm text-gray-600 mb-1">BCEA Compliance</div>
-                                    <div class="text-4xl font-bold text-sa-green">94%</div>
+                                    <div class="text-4xl font-bold text-pastel-blue-light">94%</div>
                                 </div>
-                                <i class="fas fa-check-circle text-5xl text-sa-green opacity-20"></i>
+                                <i class="fas fa-check-circle text-5xl text-pastel-blue-light opacity-20"></i>
                             </div>
                         </div>
-                        <div class="p-6 border-l-4 border-sa-yellow bg-white rounded-xl">
+                        <div class="p-6 border-l-4 border-pastel-blue bg-white rounded-xl">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="text-sm text-gray-600 mb-1">EEA Progress</div>
-                                    <div class="text-4xl font-bold text-sa-yellow">78%</div>
+                                    <div class="text-4xl font-bold text-pastel-blue">78%</div>
                                 </div>
-                                <i class="fas fa-exclamation-triangle text-5xl text-sa-yellow opacity-20"></i>
+                                <i class="fas fa-exclamation-triangle text-5xl text-pastel-blue opacity-20"></i>
                             </div>
                         </div>
-                        <div class="p-6 border-l-4 border-sa-red bg-white rounded-xl">
+                        <div class="p-6 border-l-4 border-pastel-blue bg-white rounded-xl">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="text-sm text-gray-600 mb-1">At-Risk Items</div>
-                                    <div class="text-4xl font-bold text-sa-red">3</div>
+                                    <div class="text-4xl font-bold text-pastel-blue">3</div>
                                 </div>
-                                <i class="fas fa-times-circle text-5xl text-sa-red opacity-20"></i>
+                                <i class="fas fa-times-circle text-5xl text-pastel-blue opacity-20"></i>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="bg-sa-red/10 border border-sa-red/30 rounded-xl p-6 mb-6">
+                    <div class="bg-pastel-blue/10 border border-pastel-blue/30 rounded-xl p-6 mb-6">
                         <div class="flex items-start gap-3">
-                            <i class="fas fa-exclamation-triangle text-2xl text-sa-red"></i>
+                            <i class="fas fa-exclamation-triangle text-2xl text-pastel-blue"></i>
                             <div class="flex-1">
-                                <h3 class="font-bold text-sa-red mb-2">Compliance Alerts</h3>
+                                <h3 class="font-bold text-pastel-blue mb-2">Compliance Alerts</h3>
                                 <ul class="space-y-2 text-sm text-gray-700">
                                     <li>• 2 employees exceeding BCEA working hours limits</li>
                                     <li>• Annual EEA report due in 14 days</li>
@@ -7025,63 +7025,63 @@ app.get('/', (c) => {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = \`
                 <div class="glass-card p-8">
-                    <h2 class="text-3xl font-bold text-sa-blue mb-4">
-                        <i class="fas fa-clipboard-check mr-3 text-sa-green"></i>
+                    <h2 class="text-3xl font-bold text-pastel-blue-dark mb-4">
+                        <i class="fas fa-clipboard-check mr-3 text-pastel-blue-light"></i>
                         My Compliance Dashboard
                     </h2>
                     <p class="text-gray-600 mb-6">Your personalized compliance checklist and responsibilities.</p>
                     
                     <div class="space-y-4">
-                        <div class="p-4 bg-sa-green/10 border-l-4 border-sa-green rounded-lg flex items-center justify-between">
+                        <div class="p-4 bg-pastel-blue-light/10 border-l-4 border-pastel-blue-light rounded-lg flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <i class="fas fa-check-circle text-2xl text-sa-green"></i>
+                                <i class="fas fa-check-circle text-2xl text-pastel-blue-light"></i>
                                 <div>
                                     <div class="font-bold">Safety Training Certificate</div>
                                     <div class="text-sm text-gray-600">Valid until: Dec 2025</div>
                                 </div>
                             </div>
-                            <span class="px-3 py-1 bg-sa-green text-white text-xs rounded-full font-bold">Compliant</span>
+                            <span class="px-3 py-1 bg-pastel-blue-light text-white text-xs rounded-full font-bold">Compliant</span>
                         </div>
                         
-                        <div class="p-4 bg-sa-green/10 border-l-4 border-sa-green rounded-lg flex items-center justify-between">
+                        <div class="p-4 bg-pastel-blue-light/10 border-l-4 border-pastel-blue-light rounded-lg flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <i class="fas fa-check-circle text-2xl text-sa-green"></i>
+                                <i class="fas fa-check-circle text-2xl text-pastel-blue-light"></i>
                                 <div>
                                     <div class="font-bold">Time Sheets Submitted</div>
                                     <div class="text-sm text-gray-600">Last week: Approved</div>
                                 </div>
                             </div>
-                            <span class="px-3 py-1 bg-sa-green text-white text-xs rounded-full font-bold">Up to Date</span>
+                            <span class="px-3 py-1 bg-pastel-blue-light text-white text-xs rounded-full font-bold">Up to Date</span>
                         </div>
                         
-                        <div class="p-4 bg-sa-yellow/10 border-l-4 border-sa-yellow rounded-lg flex items-center justify-between">
+                        <div class="p-4 bg-pastel-blue/10 border-l-4 border-pastel-blue rounded-lg flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <i class="fas fa-exclamation-triangle text-2xl text-sa-yellow"></i>
+                                <i class="fas fa-exclamation-triangle text-2xl text-pastel-blue"></i>
                                 <div>
                                     <div class="font-bold">Annual Leave Balance</div>
                                     <div class="text-sm text-gray-600">14 days available - Use before March</div>
                                 </div>
                             </div>
-                            <span class="px-3 py-1 bg-sa-yellow text-white text-xs rounded-full font-bold">Action Needed</span>
+                            <span class="px-3 py-1 bg-pastel-blue text-white text-xs rounded-full font-bold">Action Needed</span>
                         </div>
                         
-                        <div class="p-4 bg-sa-red/10 border-l-4 border-sa-red rounded-lg flex items-center justify-between">
+                        <div class="p-4 bg-pastel-blue/10 border-l-4 border-pastel-blue rounded-lg flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <i class="fas fa-times-circle text-2xl text-sa-red"></i>
+                                <i class="fas fa-times-circle text-2xl text-pastel-blue"></i>
                                 <div>
                                     <div class="font-bold">Performance Review</div>
                                     <div class="text-sm text-gray-600">Due: 3 days overdue</div>
                                 </div>
                             </div>
-                            <span class="px-3 py-1 bg-sa-red text-white text-xs rounded-full font-bold">Overdue</span>
+                            <span class="px-3 py-1 bg-pastel-blue text-white text-xs rounded-full font-bold">Overdue</span>
                         </div>
                     </div>
                     
-                    <div class="mt-8 p-6 bg-sa-blue/10 rounded-xl">
+                    <div class="mt-8 p-6 bg-pastel-blue-dark/10 rounded-xl">
                         <div class="flex items-center gap-3">
-                            <i class="fas fa-info-circle text-2xl text-sa-blue"></i>
+                            <i class="fas fa-info-circle text-2xl text-pastel-blue-dark"></i>
                             <div>
-                                <div class="font-bold text-sa-blue mb-1">Know Your Rights</div>
+                                <div class="font-bold text-pastel-blue-dark mb-1">Know Your Rights</div>
                                 <p class="text-sm text-gray-700">All compliance requirements are based on SA labour laws (BCEA, EEA, Skills Development Act)</p>
                             </div>
                         </div>
@@ -7094,46 +7094,46 @@ app.get('/', (c) => {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = \`
                 <div class="glass-card p-8">
-                    <h2 class="text-3xl font-bold text-sa-blue mb-4">
+                    <h2 class="text-3xl font-bold text-pastel-blue-dark mb-4">
                         <i class="fas fa-clock mr-3"></i>
                         Time Tracking & Attendance
                     </h2>
                     <p class="text-gray-600 mb-6">GPS-verified clock-in system with automatic time calculation and payroll integration.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div class="p-8 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-2xl">
+                        <div class="p-8 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-2xl">
                             <div class="text-center mb-6">
                                 <div class="text-6xl font-bold mb-2" id="currentTime">${new Date().toLocaleTimeString()}</div>
                                 <div class="text-lg opacity-90">${new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
                             </div>
-                            <button class="w-full py-4 bg-white text-sa-blue font-bold text-xl rounded-xl hover:scale-105 transition">
+                            <button class="w-full py-4 bg-white text-pastel-blue-dark font-bold text-xl rounded-xl hover:scale-105 transition">
                                 <i class="fas fa-sign-in-alt mr-2"></i>
                                 Clock In
                             </button>
                         </div>
                         
                         <div class="space-y-4">
-                            <div class="p-6 bg-white border-l-4 border-sa-green rounded-xl">
+                            <div class="p-6 bg-white border-l-4 border-pastel-blue-light rounded-xl">
                                 <div class="flex items-center gap-3">
-                                    <i class="fas fa-map-marker-alt text-2xl text-sa-green"></i>
+                                    <i class="fas fa-map-marker-alt text-2xl text-pastel-blue-light"></i>
                                     <div>
                                         <div class="font-bold">GPS Verification</div>
                                         <div class="text-sm text-gray-600">Location automatically validated</div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-6 bg-white border-l-4 border-sa-blue rounded-xl">
+                            <div class="p-6 bg-white border-l-4 border-pastel-blue-dark rounded-xl">
                                 <div class="flex items-center gap-3">
-                                    <i class="fas fa-calculator text-2xl text-sa-blue"></i>
+                                    <i class="fas fa-calculator text-2xl text-pastel-blue-dark"></i>
                                     <div>
                                         <div class="font-bold">Real-Time Hours</div>
                                         <div class="text-sm text-gray-600">Precise payroll calculation</div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-6 bg-white border-l-4 border-sa-yellow rounded-xl">
+                            <div class="p-6 bg-white border-l-4 border-pastel-blue rounded-xl">
                                 <div class="flex items-center gap-3">
-                                    <i class="fas fa-shield-alt text-2xl text-sa-yellow"></i>
+                                    <i class="fas fa-shield-alt text-2xl text-pastel-blue"></i>
                                     <div>
                                         <div class="font-bold">Fraud Prevention</div>
                                         <div class="text-sm text-gray-600">GPS + timestamp validation</div>
@@ -7159,31 +7159,31 @@ app.get('/', (c) => {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = \`
                 <div class="glass-card p-8">
-                    <h2 class="text-3xl font-bold text-sa-blue mb-4">
-                        <i class="fas fa-umbrella-beach mr-3 text-sa-yellow"></i>
+                    <h2 class="text-3xl font-bold text-pastel-blue-dark mb-4">
+                        <i class="fas fa-umbrella-beach mr-3 text-pastel-blue"></i>
                         Leave Management (BCEA-Compliant)
                     </h2>
                     <p class="text-gray-600 mb-6">Comprehensive leave tracking for all SA leave types with automated approval workflows.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                        <div class="p-6 bg-white border-l-4 border-sa-blue rounded-xl">
+                        <div class="p-6 bg-white border-l-4 border-pastel-blue-dark rounded-xl">
                             <div class="text-sm text-gray-600 mb-1">Annual Leave</div>
-                            <div class="text-3xl font-bold text-sa-blue">14</div>
+                            <div class="text-3xl font-bold text-pastel-blue-dark">14</div>
                             <div class="text-xs text-gray-500 mt-1">days available</div>
                         </div>
-                        <div class="p-6 bg-white border-l-4 border-sa-green rounded-xl">
+                        <div class="p-6 bg-white border-l-4 border-pastel-blue-light rounded-xl">
                             <div class="text-sm text-gray-600 mb-1">Sick Leave</div>
-                            <div class="text-3xl font-bold text-sa-green">12</div>
+                            <div class="text-3xl font-bold text-pastel-blue-light">12</div>
                             <div class="text-xs text-gray-500 mt-1">days available</div>
                         </div>
-                        <div class="p-6 bg-white border-l-4 border-sa-yellow rounded-xl">
+                        <div class="p-6 bg-white border-l-4 border-pastel-blue rounded-xl">
                             <div class="text-sm text-gray-600 mb-1">Family Resp.</div>
-                            <div class="text-3xl font-bold text-sa-yellow">3</div>
+                            <div class="text-3xl font-bold text-pastel-blue">3</div>
                             <div class="text-xs text-gray-500 mt-1">days available</div>
                         </div>
-                        <div class="p-6 bg-white border-l-4 border-sa-red rounded-xl">
+                        <div class="p-6 bg-white border-l-4 border-pastel-blue rounded-xl">
                             <div class="text-sm text-gray-600 mb-1">Maternity</div>
-                            <div class="text-3xl font-bold text-sa-red">120</div>
+                            <div class="text-3xl font-bold text-pastel-blue">120</div>
                             <div class="text-xs text-gray-500 mt-1">days (4 months)</div>
                         </div>
                         <div class="p-6 bg-white border-l-4 border-gray-400 rounded-xl">
@@ -7193,7 +7193,7 @@ app.get('/', (c) => {
                         </div>
                     </div>
                     
-                    <button class="w-full py-4 bg-gradient-to-r from-sa-blue to-sa-green text-white font-bold text-lg rounded-xl hover:scale-105 transition mb-6">
+                    <button class="w-full py-4 bg-gradient-to-r from-pastel-blue-dark to-pastel-blue-light text-white font-bold text-lg rounded-xl hover:scale-105 transition mb-6">
                         <i class="fas fa-plus mr-2"></i>
                         Request Leave
                     </button>
@@ -7209,19 +7209,19 @@ app.get('/', (c) => {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = \`
                 <div class="glass-card p-8">
-                    <h2 class="text-3xl font-bold text-sa-blue mb-4">
-                        <i class="fas fa-user-plus mr-3 text-sa-green"></i>
+                    <h2 class="text-3xl font-bold text-pastel-blue-dark mb-4">
+                        <i class="fas fa-user-plus mr-3 text-pastel-blue-light"></i>
                         Employee Onboarding
                     </h2>
                     <p class="text-gray-600 mb-6">Structured 5-step onboarding process built for South African requirements.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                        <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl text-center">
+                        <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl text-center">
                             <div class="text-4xl mb-2">1</div>
                             <div class="text-sm opacity-90">Personal Info</div>
                             <div class="text-xs mt-2">SA ID Validation</div>
                         </div>
-                        <div class="p-6 bg-white border-2 border-sa-blue rounded-xl text-center">
+                        <div class="p-6 bg-white border-2 border-pastel-blue-dark rounded-xl text-center">
                             <div class="text-4xl mb-2 text-gray-400">2</div>
                             <div class="text-sm text-gray-600">Employment</div>
                             <div class="text-xs mt-2 text-gray-500">Contract Details</div>
@@ -7243,7 +7243,7 @@ app.get('/', (c) => {
                         </div>
                     </div>
                     
-                    <button class="w-full py-4 bg-gradient-to-r from-sa-blue to-sa-green text-white font-bold text-lg rounded-xl hover:scale-105 transition mb-6">
+                    <button class="w-full py-4 bg-gradient-to-r from-pastel-blue-dark to-pastel-blue-light text-white font-bold text-lg rounded-xl hover:scale-105 transition mb-6">
                         <i class="fas fa-user-plus mr-2"></i>
                         Start New Employee Onboarding
                     </button>
@@ -7259,27 +7259,27 @@ app.get('/', (c) => {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = \`
                 <div class="glass-card p-8">
-                    <h2 class="text-3xl font-bold text-sa-blue mb-4">
-                        <i class="fas fa-chart-line mr-3 text-sa-green"></i>
+                    <h2 class="text-3xl font-bold text-pastel-blue-dark mb-4">
+                        <i class="fas fa-chart-line mr-3 text-pastel-blue-light"></i>
                         Analytics & Business Intelligence
                     </h2>
                     <p class="text-gray-600 mb-6">Data-driven insights for smarter workforce management decisions.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="p-6 bg-white border-l-4 border-sa-blue rounded-xl">
+                        <div class="p-6 bg-white border-l-4 border-pastel-blue-dark rounded-xl">
                             <div class="text-sm text-gray-600 mb-2">Productivity Score</div>
-                            <div class="text-4xl font-bold text-sa-blue mb-2">87%</div>
-                            <div class="text-xs text-sa-green">↑ 12% vs last month</div>
+                            <div class="text-4xl font-bold text-pastel-blue-dark mb-2">87%</div>
+                            <div class="text-xs text-pastel-blue-light">↑ 12% vs last month</div>
                         </div>
-                        <div class="p-6 bg-white border-l-4 border-sa-green rounded-xl">
+                        <div class="p-6 bg-white border-l-4 border-pastel-blue-light rounded-xl">
                             <div class="text-sm text-gray-600 mb-2">Labor Cost Efficiency</div>
-                            <div class="text-4xl font-bold text-sa-green">R2.4M</div>
-                            <div class="text-xs text-sa-green">↓ 8% cost reduction</div>
+                            <div class="text-4xl font-bold text-pastel-blue-light">R2.4M</div>
+                            <div class="text-xs text-pastel-blue-light">↓ 8% cost reduction</div>
                         </div>
-                        <div class="p-6 bg-white border-l-4 border-sa-yellow rounded-xl">
+                        <div class="p-6 bg-white border-l-4 border-pastel-blue rounded-xl">
                             <div class="text-sm text-gray-600 mb-2">Staffing Utilization</div>
-                            <div class="text-4xl font-bold text-sa-yellow">92%</div>
-                            <div class="text-xs text-sa-red">↓ 3% vs last month</div>
+                            <div class="text-4xl font-bold text-pastel-blue">92%</div>
+                            <div class="text-xs text-pastel-blue">↓ 3% vs last month</div>
                         </div>
                     </div>
                     
@@ -7309,57 +7309,57 @@ app.get('/', (c) => {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
             mainContent.innerHTML = \`
                 <div class="glass-card p-8">
-                    <h2 class="text-3xl font-bold text-sa-blue mb-4">
+                    <h2 class="text-3xl font-bold text-pastel-blue-dark mb-4">
                         <i class="fas fa-user-cog mr-3"></i>
                         User Management & Security
                     </h2>
                     <p class="text-gray-600 mb-6">Enterprise-grade role-based access control with granular permissions (POPIA-compliant).</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                        <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                        <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl">
                             <div class="text-4xl font-bold mb-2">5</div>
                             <div class="text-sm opacity-90">System Roles</div>
                         </div>
-                        <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                        <div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue-light/80 text-white rounded-xl">
                             <div class="text-4xl font-bold mb-2">15+</div>
                             <div class="text-sm opacity-90">Permission Toggles</div>
                         </div>
-                        <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                        <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                             <div class="text-4xl font-bold mb-2">100%</div>
                             <div class="text-sm opacity-90">POPIA Compliant</div>
                         </div>
-                        <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                        <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                             <div class="text-4xl font-bold mb-2">Full</div>
                             <div class="text-sm opacity-90">Audit Trails</div>
                         </div>
                     </div>
                     
                     <div class="space-y-4 mb-6">
-                        <div class="p-4 bg-white border-l-4 border-sa-blue rounded-lg">
+                        <div class="p-4 bg-white border-l-4 border-pastel-blue-dark rounded-lg">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="font-bold">Super Administrator</div>
                                     <div class="text-sm text-gray-600">Full system access and configuration</div>
                                 </div>
-                                <span class="px-3 py-1 bg-sa-red text-white text-xs rounded-full font-bold">Restricted</span>
+                                <span class="px-3 py-1 bg-pastel-blue text-white text-xs rounded-full font-bold">Restricted</span>
                             </div>
                         </div>
-                        <div class="p-4 bg-white border-l-4 border-sa-green rounded-lg">
+                        <div class="p-4 bg-white border-l-4 border-pastel-blue-light rounded-lg">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="font-bold">HR Manager</div>
                                     <div class="text-sm text-gray-600">Employee data, compliance, reporting</div>
                                 </div>
-                                <span class="px-3 py-1 bg-sa-green text-white text-xs rounded-full font-bold">Active</span>
+                                <span class="px-3 py-1 bg-pastel-blue-light text-white text-xs rounded-full font-bold">Active</span>
                             </div>
                         </div>
-                        <div class="p-4 bg-white border-l-4 border-sa-blue rounded-lg">
+                        <div class="p-4 bg-white border-l-4 border-pastel-blue-dark rounded-lg">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="font-bold">Department Manager</div>
                                     <div class="text-sm text-gray-600">Team management, scheduling, performance</div>
                                 </div>
-                                <span class="px-3 py-1 bg-sa-blue text-white text-xs rounded-full font-bold">Active</span>
+                                <span class="px-3 py-1 bg-pastel-blue-dark text-white text-xs rounded-full font-bold">Active</span>
                             </div>
                         </div>
                         <div class="p-4 bg-white border-l-4 border-gray-400 rounded-lg">
@@ -7383,7 +7383,7 @@ app.get('/', (c) => {
         // ========== SHIFT SWAPS PAGE ==========
         function loadShiftSwapsPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading shift swaps...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading shift swaps...</p></div>';
             
             axios.get('/api/shift-swaps').then(response => {
                 if (response.data.success) {
@@ -7392,36 +7392,36 @@ app.get('/', (c) => {
                     mainContent.innerHTML = \`
                         <div class="glass-card p-8 mb-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-3xl font-bold text-sa-blue">
+                                <h2 class="text-3xl font-bold text-pastel-blue-dark">
                                     <i class="fas fa-exchange-alt mr-3"></i>
                                     Shift Swaps & Trades
                                 </h2>
-                                <button onclick="openShiftSwapModal()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                <button onclick="openShiftSwapModal()" class="px-6 py-3 bg-gradient-to-r from-pastel-blue-light to-pastel-blue-dark text-white rounded-xl font-bold hover:shadow-lg transition">
                                     <i class="fas fa-plus mr-2"></i> Request Swap
                                 </button>
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${swaps.filter(s => s.status === 'pending').length}</div>
                                     <div class="text-sm opacity-90">Pending Requests</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue-light/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${swaps.filter(s => s.status === 'accepted').length}</div>
                                     <div class="text-sm opacity-90">Accepted</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${swaps.filter(s => s.status === 'approved_by_manager').length}</div>
                                     <div class="text-sm opacity-90">Manager Approved</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${swaps.filter(s => s.status === 'declined').length}</div>
                                     <div class="text-sm opacity-90">Declined</div>
                                 </div>
                             </div>
                             
                             <div class="mb-6 flex gap-2">
-                                <button onclick="filterSwaps('all')" class="px-4 py-2 rounded-lg bg-sa-blue text-white font-bold swap-filter-btn" data-filter="all">All</button>
+                                <button onclick="filterSwaps('all')" class="px-4 py-2 rounded-lg bg-pastel-blue-dark text-white font-bold swap-filter-btn" data-filter="all">All</button>
                                 <button onclick="filterSwaps('pending')" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 swap-filter-btn" data-filter="pending">Pending</button>
                                 <button onclick="filterSwaps('accepted')" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 swap-filter-btn" data-filter="accepted">Accepted</button>
                                 <button onclick="filterSwaps('approved_by_manager')" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 swap-filter-btn" data-filter="approved_by_manager">Manager Approved</button>
@@ -7431,19 +7431,19 @@ app.get('/', (c) => {
                             <div id="swapsList" class="space-y-4">
                                 \${swaps.map(swap => \`
                                     <div class="swap-item p-6 bg-white rounded-xl border-l-4 \${
-                                        swap.status === 'pending' ? 'border-sa-yellow' :
-                                        swap.status === 'accepted' ? 'border-sa-green' :
-                                        swap.status === 'approved_by_manager' ? 'border-sa-blue' :
-                                        'border-sa-red'
+                                        swap.status === 'pending' ? 'border-pastel-blue' :
+                                        swap.status === 'accepted' ? 'border-pastel-blue-light' :
+                                        swap.status === 'approved_by_manager' ? 'border-pastel-blue-dark' :
+                                        'border-pastel-blue'
                                     }" data-status="\${swap.status}">
                                         <div class="flex items-start justify-between">
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-3 mb-3">
                                                     <span class="px-3 py-1 rounded-full text-xs font-bold \${
-                                                        swap.status === 'pending' ? 'bg-sa-yellow text-white' :
-                                                        swap.status === 'accepted' ? 'bg-sa-green text-white' :
-                                                        swap.status === 'approved_by_manager' ? 'bg-sa-blue text-white' :
-                                                        'bg-sa-red text-white'
+                                                        swap.status === 'pending' ? 'bg-pastel-blue text-white' :
+                                                        swap.status === 'accepted' ? 'bg-pastel-blue-light text-white' :
+                                                        swap.status === 'approved_by_manager' ? 'bg-pastel-blue-dark text-white' :
+                                                        'bg-pastel-blue text-white'
                                                     }">\${swap.status.replace(/_/g, ' ').toUpperCase()}</span>
                                                     <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-200">\${swap.swap_type.toUpperCase()}</span>
                                                 </div>
@@ -7464,14 +7464,14 @@ app.get('/', (c) => {
                                             </div>
                                             <div class="flex flex-col gap-2 ml-6">
                                                 \${swap.status === 'pending' ? \`
-                                                    <button onclick="handleSwapAction(\${swap.id}, 'accept')" class="px-4 py-2 bg-sa-green text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                    <button onclick="handleSwapAction(\${swap.id}, 'accept')" class="px-4 py-2 bg-pastel-blue-light text-white rounded-lg font-bold hover:shadow-lg transition">
                                                         <i class="fas fa-check mr-2"></i> Accept
                                                     </button>
-                                                    <button onclick="handleSwapAction(\${swap.id}, 'decline')" class="px-4 py-2 bg-sa-red text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                    <button onclick="handleSwapAction(\${swap.id}, 'decline')" class="px-4 py-2 bg-pastel-blue text-white rounded-lg font-bold hover:shadow-lg transition">
                                                         <i class="fas fa-times mr-2"></i> Decline
                                                     </button>
                                                 \` : swap.status === 'accepted' ? \`
-                                                    <button onclick="handleSwapAction(\${swap.id}, 'approve')" class="px-4 py-2 bg-sa-blue text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                    <button onclick="handleSwapAction(\${swap.id}, 'approve')" class="px-4 py-2 bg-pastel-blue-dark text-white rounded-lg font-bold hover:shadow-lg transition">
                                                         <i class="fas fa-user-check mr-2"></i> Manager Approve
                                                     </button>
                                                 \` : ''}
@@ -7484,17 +7484,17 @@ app.get('/', (c) => {
                     \`;
                 }
             }).catch(error => {
-                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading shift swaps</p></div>';
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><p class="text-gray-600">Error loading shift swaps</p></div>';
             });
         }
         
         window.filterSwaps = function(status) {
             document.querySelectorAll('.swap-filter-btn').forEach(btn => {
-                btn.classList.remove('bg-sa-blue', 'text-white');
+                btn.classList.remove('bg-pastel-blue-dark', 'text-white');
                 btn.classList.add('bg-gray-200', 'text-gray-700');
             });
             event.target.classList.remove('bg-gray-200', 'text-gray-700');
-            event.target.classList.add('bg-sa-blue', 'text-white');
+            event.target.classList.add('bg-pastel-blue-dark', 'text-white');
             
             document.querySelectorAll('.swap-item').forEach(item => {
                 if (status === 'all' || item.dataset.status === status) {
@@ -7525,7 +7525,7 @@ app.get('/', (c) => {
         // ========== TEAM MESSAGING PAGE ==========
         function loadMessagingPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading messages...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading messages...</p></div>';
             
             axios.get('/api/messages').then(response => {
                 if (response.data.success) {
@@ -7534,29 +7534,29 @@ app.get('/', (c) => {
                     mainContent.innerHTML = \`
                         <div class="glass-card p-8 mb-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-3xl font-bold text-sa-blue">
+                                <h2 class="text-3xl font-bold text-pastel-blue-dark">
                                     <i class="fas fa-comments-alt mr-3"></i>
                                     Team Messaging
                                 </h2>
-                                <button onclick="openMessageComposer()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                <button onclick="openMessageComposer()" class="px-6 py-3 bg-gradient-to-r from-pastel-blue-light to-pastel-blue-dark text-white rounded-xl font-bold hover:shadow-lg transition">
                                     <i class="fas fa-paper-plane mr-2"></i> New Message
                                 </button>
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${messages.length}</div>
                                     <div class="text-sm opacity-90">Total Messages</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${messages.filter(m => m.is_urgent).length}</div>
                                     <div class="text-sm opacity-90">Urgent</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${messages.filter(m => m.is_pinned).length}</div>
                                     <div class="text-sm opacity-90">Pinned</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue-light/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${messages.filter(m => m.has_attachments).length}</div>
                                     <div class="text-sm opacity-90">With Attachments</div>
                                 </div>
@@ -7564,13 +7564,13 @@ app.get('/', (c) => {
                             
                             <div class="space-y-4">
                                 \${messages.map(msg => \`
-                                    <div class="p-6 bg-white rounded-xl border-l-4 \${msg.is_urgent ? 'border-sa-red' : msg.is_pinned ? 'border-sa-yellow' : 'border-sa-blue'}">
+                                    <div class="p-6 bg-white rounded-xl border-l-4 \${msg.is_urgent ? 'border-pastel-blue' : msg.is_pinned ? 'border-pastel-blue' : 'border-pastel-blue-dark'}">
                                         <div class="flex items-start justify-between mb-3">
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-3 mb-2">
                                                     <h3 class="text-xl font-bold text-gray-800">\${msg.subject}</h3>
-                                                    \${msg.is_urgent ? '<span class="px-3 py-1 bg-sa-red text-white rounded-full text-xs font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> URGENT</span>' : ''}
-                                                    \${msg.is_pinned ? '<span class="px-3 py-1 bg-sa-yellow text-white rounded-full text-xs font-bold"><i class="fas fa-thumbtack mr-1"></i> PINNED</span>' : ''}
+                                                    \${msg.is_urgent ? '<span class="px-3 py-1 bg-pastel-blue text-white rounded-full text-xs font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> URGENT</span>' : ''}
+                                                    \${msg.is_pinned ? '<span class="px-3 py-1 bg-pastel-blue text-white rounded-full text-xs font-bold"><i class="fas fa-thumbtack mr-1"></i> PINNED</span>' : ''}
                                                 </div>
                                                 <div class="flex items-center gap-4 text-sm text-gray-600 mb-3">
                                                     <span><i class="fas fa-user mr-1"></i> \${msg.sender_name}</span>
@@ -7580,7 +7580,7 @@ app.get('/', (c) => {
                                             </div>
                                         </div>
                                         <div class="text-gray-700 mb-3">\${msg.message}</div>
-                                        \${msg.has_attachments ? '<div class="flex items-center gap-2 text-sm text-sa-blue"><i class="fas fa-paperclip mr-1"></i> <span>Has attachments</span></div>' : ''}
+                                        \${msg.has_attachments ? '<div class="flex items-center gap-2 text-sm text-pastel-blue-dark"><i class="fas fa-paperclip mr-1"></i> <span>Has attachments</span></div>' : ''}
                                     </div>
                                 \`).join('')}
                             </div>
@@ -7588,7 +7588,7 @@ app.get('/', (c) => {
                     \`;
                 }
             }).catch(error => {
-                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading messages</p></div>';
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><p class="text-gray-600">Error loading messages</p></div>';
             });
         }
         
@@ -7599,7 +7599,7 @@ app.get('/', (c) => {
         // ========== DOCUMENTS PAGE ==========
         function loadDocumentsPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading documents...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading documents...</p></div>';
             
             axios.get('/api/documents').then(response => {
                 if (response.data.success) {
@@ -7608,29 +7608,29 @@ app.get('/', (c) => {
                     mainContent.innerHTML = \`
                         <div class="glass-card p-8 mb-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-3xl font-bold text-sa-blue">
+                                <h2 class="text-3xl font-bold text-pastel-blue-dark">
                                     <i class="fas fa-folder-open mr-3"></i>
                                     Document Management
                                 </h2>
-                                <button onclick="openDocumentUploader()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                <button onclick="openDocumentUploader()" class="px-6 py-3 bg-gradient-to-r from-pastel-blue-light to-pastel-blue-dark text-white rounded-xl font-bold hover:shadow-lg transition">
                                     <i class="fas fa-cloud-upload-alt mr-2"></i> Upload Document
                                 </button>
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${documents.length}</div>
                                     <div class="text-sm opacity-90">Total Documents</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue-light/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${documents.filter(d => !d.requires_signature || d.signed_at).length}</div>
                                     <div class="text-sm opacity-90">Signed/No Signature</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${documents.filter(d => d.requires_signature && !d.signed_at).length}</div>
                                     <div class="text-sm opacity-90">Pending Signature</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${documents.filter(d => d.expires_at && new Date(d.expires_at) < new Date()).length}</div>
                                     <div class="text-sm opacity-90">Expired</div>
                                 </div>
@@ -7638,7 +7638,7 @@ app.get('/', (c) => {
                             
                             <div class="overflow-x-auto">
                                 <table class="w-full bg-white rounded-xl overflow-hidden">
-                                    <thead class="bg-gradient-to-r from-sa-blue to-sa-green text-white">
+                                    <thead class="bg-gradient-to-r from-pastel-blue-dark to-pastel-blue-light text-white">
                                         <tr>
                                             <th class="px-6 py-4 text-left">Document Name</th>
                                             <th class="px-6 py-4 text-left">Employee</th>
@@ -7654,7 +7654,7 @@ app.get('/', (c) => {
                                             <tr class="hover:bg-gray-50 transition">
                                                 <td class="px-6 py-4">
                                                     <div class="flex items-center gap-3">
-                                                        <i class="fas fa-file-pdf text-sa-red text-2xl"></i>
+                                                        <i class="fas fa-file-pdf text-pastel-blue text-2xl"></i>
                                                         <span class="font-bold">\${doc.document_name}</span>
                                                     </div>
                                                 </td>
@@ -7665,24 +7665,24 @@ app.get('/', (c) => {
                                                 <td class="px-6 py-4">
                                                     \${doc.requires_signature ? 
                                                         (doc.signed_at ? 
-                                                            '<span class="px-3 py-1 bg-sa-green text-white rounded-full text-xs font-bold"><i class="fas fa-check mr-1"></i> Signed</span>' : 
-                                                            '<span class="px-3 py-1 bg-sa-yellow text-white rounded-full text-xs font-bold"><i class="fas fa-clock mr-1"></i> Pending</span>'
+                                                            '<span class="px-3 py-1 bg-pastel-blue-light text-white rounded-full text-xs font-bold"><i class="fas fa-check mr-1"></i> Signed</span>' : 
+                                                            '<span class="px-3 py-1 bg-pastel-blue text-white rounded-full text-xs font-bold"><i class="fas fa-clock mr-1"></i> Pending</span>'
                                                         ) : 
-                                                        '<span class="px-3 py-1 bg-sa-blue text-white rounded-full text-xs font-bold">No Signature Required</span>'
+                                                        '<span class="px-3 py-1 bg-pastel-blue-dark text-white rounded-full text-xs font-bold">No Signature Required</span>'
                                                     }
                                                 </td>
                                                 <td class="px-6 py-4 text-sm text-gray-600">\${new Date(doc.uploaded_at).toLocaleDateString()}</td>
                                                 <td class="px-6 py-4 text-sm">
                                                     \${doc.expires_at ? 
                                                         (new Date(doc.expires_at) < new Date() ? 
-                                                            '<span class="text-sa-red font-bold">EXPIRED</span>' : 
+                                                            '<span class="text-pastel-blue font-bold">EXPIRED</span>' : 
                                                             new Date(doc.expires_at).toLocaleDateString()
                                                         ) : 
                                                         '<span class="text-gray-400">No Expiry</span>'
                                                     }
                                                 </td>
                                                 <td class="px-6 py-4 text-center">
-                                                    <button class="px-3 py-1 bg-sa-blue text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
+                                                    <button class="px-3 py-1 bg-pastel-blue-dark text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
                                                         <i class="fas fa-download"></i>
                                                     </button>
                                                 </td>
@@ -7695,7 +7695,7 @@ app.get('/', (c) => {
                     \`;
                 }
             }).catch(error => {
-                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading documents</p></div>';
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><p class="text-gray-600">Error loading documents</p></div>';
             });
         }
         
@@ -7706,7 +7706,7 @@ app.get('/', (c) => {
         // ========== PAYROLL EXPORT PAGE ==========
         function loadPayrollPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading payroll...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading payroll...</p></div>';
             
             axios.get('/api/payroll/batches').then(response => {
                 if (response.data.success) {
@@ -7715,29 +7715,29 @@ app.get('/', (c) => {
                     mainContent.innerHTML = \`
                         <div class="glass-card p-8 mb-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-3xl font-bold text-sa-blue">
+                                <h2 class="text-3xl font-bold text-pastel-blue-dark">
                                     <i class="fas fa-dollar-sign mr-3"></i>
                                     Payroll Export
                                 </h2>
-                                <button onclick="createPayrollBatch()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                <button onclick="createPayrollBatch()" class="px-6 py-3 bg-gradient-to-r from-pastel-blue-light to-pastel-blue-dark text-white rounded-xl font-bold hover:shadow-lg transition">
                                     <i class="fas fa-plus mr-2"></i> New Payroll Batch
                                 </button>
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${batches.length}</div>
                                     <div class="text-sm opacity-90">Total Batches</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${batches.filter(b => b.status === 'draft').length}</div>
                                     <div class="text-sm opacity-90">Draft</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue-light/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${batches.filter(b => b.status === 'approved').length}</div>
                                     <div class="text-sm opacity-90">Approved</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">R\${batches.reduce((sum, b) => sum + parseFloat(b.total_amount || 0), 0).toFixed(2)}</div>
                                     <div class="text-sm opacity-90">Total Value</div>
                                 </div>
@@ -7745,7 +7745,7 @@ app.get('/', (c) => {
                             
                             <div class="overflow-x-auto">
                                 <table class="w-full bg-white rounded-xl overflow-hidden">
-                                    <thead class="bg-gradient-to-r from-sa-blue to-sa-green text-white">
+                                    <thead class="bg-gradient-to-r from-pastel-blue-dark to-pastel-blue-light text-white">
                                         <tr>
                                             <th class="px-6 py-4 text-left">Batch Name</th>
                                             <th class="px-6 py-4 text-left">Period</th>
@@ -7762,23 +7762,23 @@ app.get('/', (c) => {
                                                 <td class="px-6 py-4 font-bold">\${batch.batch_name}</td>
                                                 <td class="px-6 py-4">\${batch.period_start} to \${batch.period_end}</td>
                                                 <td class="px-6 py-4">\${batch.employee_count}</td>
-                                                <td class="px-6 py-4 font-bold text-sa-green">R\${parseFloat(batch.total_amount || 0).toFixed(2)}</td>
+                                                <td class="px-6 py-4 font-bold text-pastel-blue-light">R\${parseFloat(batch.total_amount || 0).toFixed(2)}</td>
                                                 <td class="px-6 py-4">
                                                     <span class="px-3 py-1 rounded-full text-xs font-bold \${
-                                                        batch.status === 'draft' ? 'bg-sa-yellow text-white' :
-                                                        batch.status === 'approved' ? 'bg-sa-green text-white' :
-                                                        batch.status === 'exported' ? 'bg-sa-blue text-white' :
+                                                        batch.status === 'draft' ? 'bg-pastel-blue text-white' :
+                                                        batch.status === 'approved' ? 'bg-pastel-blue-light text-white' :
+                                                        batch.status === 'exported' ? 'bg-pastel-blue-dark text-white' :
                                                         'bg-gray-200 text-gray-700'
                                                     }">\${batch.status.toUpperCase()}</span>
                                                 </td>
                                                 <td class="px-6 py-4 text-sm text-gray-600">\${new Date(batch.created_at).toLocaleDateString()}</td>
                                                 <td class="px-6 py-4 text-center">
                                                     <div class="flex gap-2 justify-center">
-                                                        <button onclick="exportPayroll(\${batch.id})" class="px-3 py-1 bg-sa-green text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
+                                                        <button onclick="exportPayroll(\${batch.id})" class="px-3 py-1 bg-pastel-blue-light text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
                                                             <i class="fas fa-download mr-1"></i> Export
                                                         </button>
                                                         \${batch.status === 'draft' ? \`
-                                                            <button onclick="approvePayroll(\${batch.id})" class="px-3 py-1 bg-sa-blue text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
+                                                            <button onclick="approvePayroll(\${batch.id})" class="px-3 py-1 bg-pastel-blue-dark text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
                                                                 <i class="fas fa-check mr-1"></i> Approve
                                                             </button>
                                                         \` : ''}
@@ -7793,7 +7793,7 @@ app.get('/', (c) => {
                     \`;
                 }
             }).catch(error => {
-                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading payroll</p></div>';
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><p class="text-gray-600">Error loading payroll</p></div>';
             });
         }
         
@@ -7813,7 +7813,7 @@ app.get('/', (c) => {
         // ========== LABOR FORECASTING PAGE ==========
         function loadForecastingPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading forecasts...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading forecasts...</p></div>';
             
             axios.get('/api/forecasts').then(response => {
                 if (response.data.success) {
@@ -7822,7 +7822,7 @@ app.get('/', (c) => {
                     mainContent.innerHTML = \`
                         <div class="glass-card p-8 mb-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-3xl font-bold text-sa-blue">
+                                <h2 class="text-3xl font-bold text-pastel-blue-dark">
                                     <i class="fas fa-brain mr-3"></i>
                                     AI Labor Forecasting
                                 </h2>
@@ -7832,15 +7832,15 @@ app.get('/', (c) => {
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${forecasts.length}</div>
                                     <div class="text-sm opacity-90">Forecasted Days</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue-light/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${Math.round(forecasts.reduce((sum, f) => sum + f.predicted_customer_count, 0) / forecasts.length)}</div>
                                     <div class="text-sm opacity-90">Avg Customers/Day</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${Math.round(forecasts.reduce((sum, f) => sum + f.recommended_staff_count, 0) / forecasts.length)}</div>
                                     <div class="text-sm opacity-90">Avg Staff Needed</div>
                                 </div>
@@ -7850,9 +7850,9 @@ app.get('/', (c) => {
                                 </div>
                             </div>
                             
-                            <div class="mb-6 p-4 bg-blue-50 border-l-4 border-sa-blue rounded-lg">
+                            <div class="mb-6 p-4 bg-blue-50 border-l-4 border-pastel-blue-dark rounded-lg">
                                 <div class="flex items-center gap-3 mb-2">
-                                    <i class="fas fa-lightbulb text-sa-yellow text-2xl"></i>
+                                    <i class="fas fa-lightbulb text-pastel-blue text-2xl"></i>
                                     <h3 class="font-bold text-lg">AI Insights</h3>
                                 </div>
                                 <p class="text-gray-700">Machine learning models analyze historical data, seasonal patterns, weather, and local events to predict customer demand and optimal staffing levels.</p>
@@ -7881,27 +7881,27 @@ app.get('/', (c) => {
                                                     <td class="px-6 py-4">\${forecast.location_name}</td>
                                                     <td class="px-6 py-4">
                                                         <div class="flex items-center gap-2">
-                                                            <i class="fas fa-users text-sa-blue"></i>
+                                                            <i class="fas fa-users text-pastel-blue-dark"></i>
                                                             <span class="font-bold text-lg">\${forecast.predicted_customer_count}</span>
                                                         </div>
                                                     </td>
                                                     <td class="px-6 py-4">
                                                         <div class="flex items-center gap-2">
-                                                            <i class="fas fa-user-tie text-sa-green"></i>
+                                                            <i class="fas fa-user-tie text-pastel-blue-light"></i>
                                                             <span class="font-bold text-lg">\${forecast.recommended_staff_count}</span>
                                                         </div>
                                                     </td>
                                                     <td class="px-6 py-4">
                                                         <div class="flex flex-wrap gap-1">
                                                             \${Object.entries(skillMix).map(([skill, count]) => \`
-                                                                <span class="px-2 py-1 bg-sa-blue/10 text-sa-blue rounded text-xs font-bold">\${skill}: \${count}</span>
+                                                                <span class="px-2 py-1 bg-pastel-blue-dark/10 text-pastel-blue-dark rounded text-xs font-bold">\${skill}: \${count}</span>
                                                             \`).join('')}
                                                         </div>
                                                     </td>
                                                     <td class="px-6 py-4">
                                                         <div class="flex items-center gap-3">
                                                             <div class="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
-                                                                <div class="h-full bg-gradient-to-r from-sa-green to-sa-blue rounded-full" style="width: \${confidence}%"></div>
+                                                                <div class="h-full bg-gradient-to-r from-pastel-blue-light to-pastel-blue-dark rounded-full" style="width: \${confidence}%"></div>
                                                             </div>
                                                             <span class="font-bold text-sm">\${confidence}%</span>
                                                         </div>
@@ -7916,14 +7916,14 @@ app.get('/', (c) => {
                     \`;
                 }
             }).catch(error => {
-                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading forecasts</p></div>';
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><p class="text-gray-600">Error loading forecasts</p></div>';
             });
         }
         
         // ========== ATTENDANCE RULES PAGE ==========
         function loadAttendanceRulesPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading attendance rules...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading attendance rules...</p></div>';
             
             Promise.all([
                 axios.get('/api/attendance/rules'),
@@ -7936,44 +7936,44 @@ app.get('/', (c) => {
                     mainContent.innerHTML = \`
                         <div class="glass-card p-8 mb-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-3xl font-bold text-sa-blue">
+                                <h2 class="text-3xl font-bold text-pastel-blue-dark">
                                     <i class="fas fa-gavel mr-3"></i>
                                     Attendance Rules & Violations
                                 </h2>
-                                <button onclick="createAttendanceRule()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                <button onclick="createAttendanceRule()" class="px-6 py-3 bg-gradient-to-r from-pastel-blue-light to-pastel-blue-dark text-white rounded-xl font-bold hover:shadow-lg transition">
                                     <i class="fas fa-plus mr-2"></i> New Rule
                                 </button>
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${rules.filter(r => r.is_active).length}</div>
                                     <div class="text-sm opacity-90">Active Rules</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${violations.length}</div>
                                     <div class="text-sm opacity-90">Total Violations</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${violations.reduce((sum, v) => sum + (v.penalty_points || 0), 0)}</div>
                                     <div class="text-sm opacity-90">Penalty Points</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue-light/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">R\${violations.reduce((sum, v) => sum + parseFloat(v.pay_deduction || 0), 0).toFixed(2)}</div>
                                     <div class="text-sm opacity-90">Total Deductions</div>
                                 </div>
                             </div>
                             
-                            <h3 class="text-2xl font-bold text-gray-800 mb-4"><i class="fas fa-list-check mr-2 text-sa-blue"></i> Active Rules</h3>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4"><i class="fas fa-list-check mr-2 text-pastel-blue-dark"></i> Active Rules</h3>
                             <div class="space-y-4 mb-8">
                                 \${rules.filter(r => r.is_active).map(rule => {
                                     const config = rule.rule_config ? JSON.parse(rule.rule_config) : {};
                                     
                                     return \`
                                         <div class="p-6 bg-white rounded-xl border-l-4 \${
-                                            rule.rule_type === 'late_arrival' ? 'border-sa-yellow' :
-                                            rule.rule_type === 'early_departure' ? 'border-sa-red' :
-                                            'border-sa-blue'
+                                            rule.rule_type === 'late_arrival' ? 'border-pastel-blue' :
+                                            rule.rule_type === 'early_departure' ? 'border-pastel-blue' :
+                                            'border-pastel-blue-dark'
                                         }">
                                             <div class="flex items-start justify-between">
                                                 <div class="flex-1">
@@ -7985,21 +7985,21 @@ app.get('/', (c) => {
                                                     <div class="grid grid-cols-3 gap-4">
                                                         <div class="p-3 bg-gray-50 rounded-lg">
                                                             <div class="text-sm text-gray-600">Penalty Points</div>
-                                                            <div class="text-2xl font-bold text-sa-red">\${rule.penalty_points}</div>
+                                                            <div class="text-2xl font-bold text-pastel-blue">\${rule.penalty_points}</div>
                                                         </div>
                                                         <div class="p-3 bg-gray-50 rounded-lg">
                                                             <div class="text-sm text-gray-600">Auto Deduct Pay</div>
-                                                            <div class="text-2xl font-bold \${rule.auto_deduct_pay ? 'text-sa-red' : 'text-sa-green'}">
+                                                            <div class="text-2xl font-bold \${rule.auto_deduct_pay ? 'text-pastel-blue' : 'text-pastel-blue-light'}">
                                                                 <i class="fas fa-\${rule.auto_deduct_pay ? 'check' : 'times'}"></i>
                                                             </div>
                                                         </div>
                                                         <div class="p-3 bg-gray-50 rounded-lg">
                                                             <div class="text-sm text-gray-600">Threshold</div>
-                                                            <div class="text-lg font-bold text-sa-blue">\${config.grace_minutes || config.threshold_minutes || 0} min</div>
+                                                            <div class="text-lg font-bold text-pastel-blue-dark">\${config.grace_minutes || config.threshold_minutes || 0} min</div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button onclick="toggleRule(\${rule.id}, false)" class="ml-4 px-4 py-2 bg-sa-red text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                <button onclick="toggleRule(\${rule.id}, false)" class="ml-4 px-4 py-2 bg-pastel-blue text-white rounded-lg font-bold hover:shadow-lg transition">
                                                     <i class="fas fa-pause mr-2"></i> Disable
                                                 </button>
                                             </div>
@@ -8008,10 +8008,10 @@ app.get('/', (c) => {
                                 }).join('')}
                             </div>
                             
-                            <h3 class="text-2xl font-bold text-gray-800 mb-4"><i class="fas fa-exclamation-triangle mr-2 text-sa-red"></i> Recent Violations</h3>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4"><i class="fas fa-exclamation-triangle mr-2 text-pastel-blue"></i> Recent Violations</h3>
                             <div class="overflow-x-auto">
                                 <table class="w-full bg-white rounded-xl overflow-hidden">
-                                    <thead class="bg-gradient-to-r from-sa-red to-sa-yellow text-white">
+                                    <thead class="bg-gradient-to-r from-pastel-blue to-pastel-blue text-white">
                                         <tr>
                                             <th class="px-6 py-4 text-left">Employee</th>
                                             <th class="px-6 py-4 text-left">Rule</th>
@@ -8028,15 +8028,15 @@ app.get('/', (c) => {
                                                 <td class="px-6 py-4">\${violation.rule_name}</td>
                                                 <td class="px-6 py-4">\${new Date(violation.violation_date).toLocaleDateString()}</td>
                                                 <td class="px-6 py-4">
-                                                    <span class="px-3 py-1 bg-sa-red text-white rounded-full text-sm font-bold">
+                                                    <span class="px-3 py-1 bg-pastel-blue text-white rounded-full text-sm font-bold">
                                                         \${violation.penalty_points} pts
                                                     </span>
                                                 </td>
-                                                <td class="px-6 py-4 font-bold text-sa-red">R\${parseFloat(violation.pay_deduction || 0).toFixed(2)}</td>
+                                                <td class="px-6 py-4 font-bold text-pastel-blue">R\${parseFloat(violation.pay_deduction || 0).toFixed(2)}</td>
                                                 <td class="px-6 py-4">
                                                     <span class="px-3 py-1 rounded-full text-xs font-bold \${
-                                                        violation.is_disputed ? 'bg-sa-yellow text-white' :
-                                                        violation.is_resolved ? 'bg-sa-green text-white' :
+                                                        violation.is_disputed ? 'bg-pastel-blue text-white' :
+                                                        violation.is_resolved ? 'bg-pastel-blue-light text-white' :
                                                         'bg-gray-200 text-gray-700'
                                                     }">
                                                         \${violation.is_disputed ? 'DISPUTED' : violation.is_resolved ? 'RESOLVED' : 'ACTIVE'}
@@ -8051,7 +8051,7 @@ app.get('/', (c) => {
                     \`;
                 }
             }).catch(error => {
-                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading attendance rules</p></div>';
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><p class="text-gray-600">Error loading attendance rules</p></div>';
             });
         }
         
@@ -8066,7 +8066,7 @@ app.get('/', (c) => {
         // ========== BUDGET TRACKING PAGE ==========
         function loadBudgetsPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading budgets...</p></div>';
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-pastel-blue-dark mb-4"></i><p class="text-gray-600">Loading budgets...</p></div>';
             
             axios.get('/api/budgets').then(response => {
                 if (response.data.success) {
@@ -8075,29 +8075,29 @@ app.get('/', (c) => {
                     mainContent.innerHTML = \`
                         <div class="glass-card p-8 mb-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-3xl font-bold text-sa-blue">
+                                <h2 class="text-3xl font-bold text-pastel-blue-dark">
                                     <i class="fas fa-chart-pie mr-3"></i>
                                     Labor Budget Tracking
                                 </h2>
-                                <button onclick="createBudgetPeriod()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                <button onclick="createBudgetPeriod()" class="px-6 py-3 bg-gradient-to-r from-pastel-blue-light to-pastel-blue-dark text-white rounded-xl font-bold hover:shadow-lg transition">
                                     <i class="fas fa-plus mr-2"></i> New Budget Period
                                 </button>
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-dark to-pastel-blue-dark/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">\${budgets.length}</div>
                                     <div class="text-sm opacity-90">Active Budgets</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue-light to-pastel-blue-light/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">R\${budgets.reduce((sum, b) => sum + parseFloat(b.budgeted_amount || 0), 0).toFixed(2)}</div>
                                     <div class="text-sm opacity-90">Total Budget</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">R\${budgets.reduce((sum, b) => sum + parseFloat(b.actual_amount || 0), 0).toFixed(2)}</div>
                                     <div class="text-sm opacity-90">Actual Spend</div>
                                 </div>
-                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                <div class="p-6 bg-gradient-to-br from-pastel-blue to-pastel-blue/80 text-white rounded-xl">
                                     <div class="text-4xl font-bold mb-2">R\${budgets.reduce((sum, b) => sum + parseFloat(b.variance_amount || 0), 0).toFixed(2)}</div>
                                     <div class="text-sm opacity-90">Variance</div>
                                 </div>
@@ -8105,7 +8105,7 @@ app.get('/', (c) => {
                             
                             <div class="overflow-x-auto">
                                 <table class="w-full bg-white rounded-xl overflow-hidden">
-                                    <thead class="bg-gradient-to-r from-sa-blue to-sa-green text-white">
+                                    <thead class="bg-gradient-to-r from-pastel-blue-dark to-pastel-blue-light text-white">
                                         <tr>
                                             <th class="px-6 py-4 text-left">Period</th>
                                             <th class="px-6 py-4 text-left">Location</th>
@@ -8133,10 +8133,10 @@ app.get('/', (c) => {
                                                     <td class="px-6 py-4 font-bold">R\${actual.toFixed(2)}</td>
                                                     <td class="px-6 py-4">
                                                         <div class="flex items-center gap-2">
-                                                            <span class="font-bold \${isOverBudget ? 'text-sa-red' : 'text-sa-green'}">
+                                                            <span class="font-bold \${isOverBudget ? 'text-pastel-blue' : 'text-pastel-blue-light'}">
                                                                 R\${Math.abs(variance).toFixed(2)}
                                                             </span>
-                                                            <span class="px-2 py-1 rounded text-xs font-bold \${isOverBudget ? 'bg-sa-red text-white' : 'bg-sa-green text-white'}">
+                                                            <span class="px-2 py-1 rounded text-xs font-bold \${isOverBudget ? 'bg-pastel-blue text-white' : 'bg-pastel-blue-light text-white'}">
                                                                 \${isOverBudget ? '+' : ''}\${variancePercent}%
                                                             </span>
                                                         </div>
@@ -8144,12 +8144,12 @@ app.get('/', (c) => {
                                                     <td class="px-6 py-4">
                                                         <div class="flex items-center gap-2">
                                                             <div class="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
-                                                                <div class="h-full \${isOverBudget ? 'bg-sa-red' : 'bg-sa-green'} rounded-full" 
+                                                                <div class="h-full \${isOverBudget ? 'bg-pastel-blue' : 'bg-pastel-blue-light'} rounded-full" 
                                                                      style="width: \${Math.min(100, Math.abs(variancePercent))}%"></div>
                                                             </div>
                                             \${isOverBudget ? 
-                                                                '<i class="fas fa-exclamation-triangle text-sa-red"></i>' : 
-                                                                '<i class="fas fa-check-circle text-sa-green"></i>'
+                                                                '<i class="fas fa-exclamation-triangle text-pastel-blue"></i>' : 
+                                                                '<i class="fas fa-check-circle text-pastel-blue-light"></i>'
                                                             }
                                                         </div>
                                                     </td>
@@ -8163,7 +8163,7 @@ app.get('/', (c) => {
                     \`;
                 }
             }).catch(error => {
-                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading budgets</p></div>';
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-pastel-blue mb-4"></i><p class="text-gray-600">Error loading budgets</p></div>';
             });
         }
         
