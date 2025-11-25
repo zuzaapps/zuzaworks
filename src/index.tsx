@@ -395,6 +395,298 @@ app.patch('/api/auth/users/:userId/activate', requireAuth, requireRole('executiv
 });
 
 // ============================================================================
+// SHIFTS & SCHEDULING APIs
+// ============================================================================
+
+// Get all shifts
+app.get('/api/shifts', async (c) => {
+  const { DB } = c.env;
+  try {
+    const shifts = await DB.prepare(`
+      SELECT s.*, e.first_name || ' ' || e.last_name as employee_name, l.location_name
+      FROM shifts s
+      LEFT JOIN employees e ON s.employee_id = e.id
+      LEFT JOIN locations l ON s.location_id = l.id
+      ORDER BY s.shift_date DESC, s.start_time
+      LIMIT 100
+    `).all();
+    return c.json({ success: true, data: shifts.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch shifts', message: error.message }, 500);
+  }
+});
+
+// Get shift swaps
+app.get('/api/shift-swaps', async (c) => {
+  const { DB } = c.env;
+  try {
+    const swaps = await DB.prepare(`
+      SELECT ss.*, 
+        e1.first_name || ' ' || e1.last_name as requesting_employee,
+        e2.first_name || ' ' || e2.last_name as target_employee,
+        s.shift_date, s.start_time, s.end_time
+      FROM shift_swaps ss
+      LEFT JOIN employees e1 ON ss.requesting_employee_id = e1.id
+      LEFT JOIN employees e2 ON ss.target_employee_id = e2.id
+      LEFT JOIN shifts s ON ss.shift_id = s.id
+      ORDER BY ss.requested_at DESC
+      LIMIT 50
+    `).all();
+    return c.json({ success: true, data: swaps.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch shift swaps', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
+// TIME TRACKING APIs
+// ============================================================================
+
+// Get time entries
+app.get('/api/time-entries', async (c) => {
+  const { DB } = c.env;
+  try {
+    const entries = await DB.prepare(`
+      SELECT te.*, e.first_name || ' ' || e.last_name as employee_name, l.location_name
+      FROM time_entries te
+      LEFT JOIN employees e ON te.employee_id = e.id
+      LEFT JOIN locations l ON te.location_id = l.id
+      ORDER BY te.clock_in DESC
+      LIMIT 100
+    `).all();
+    return c.json({ success: true, data: entries.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch time entries', message: error.message }, 500);
+  }
+});
+
+// Get attendance violations
+app.get('/api/attendance/violations', async (c) => {
+  const { DB } = c.env;
+  try {
+    const violations = await DB.prepare(`
+      SELECT av.*, e.first_name || ' ' || e.last_name as employee_name, ar.name as rule_name
+      FROM attendance_violations av
+      LEFT JOIN employees e ON av.employee_id = e.id
+      LEFT JOIN attendance_rules ar ON av.rule_id = ar.id
+      ORDER BY av.created_at DESC
+      LIMIT 50
+    `).all();
+    return c.json({ success: true, data: violations.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch violations', message: error.message }, 500);
+  }
+});
+
+// Get attendance rules
+app.get('/api/attendance/rules', async (c) => {
+  const { DB } = c.env;
+  try {
+    const rules = await DB.prepare(`SELECT * FROM attendance_rules WHERE is_active = 1`).all();
+    return c.json({ success: true, data: rules.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch rules', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
+// LEAVE MANAGEMENT APIs
+// ============================================================================
+
+// Get leave requests
+app.get('/api/leave/requests', async (c) => {
+  const { DB } = c.env;
+  try {
+    const requests = await DB.prepare(`
+      SELECT lr.*, e.first_name || ' ' || e.last_name as employee_name, lt.name as leave_type_name
+      FROM leave_requests lr
+      LEFT JOIN employees e ON lr.employee_id = e.id
+      LEFT JOIN leave_types lt ON lr.leave_type_id = lt.id
+      ORDER BY lr.requested_at DESC
+      LIMIT 100
+    `).all();
+    return c.json({ success: true, data: requests.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch leave requests', message: error.message }, 500);
+  }
+});
+
+// Get leave types
+app.get('/api/leave/types', async (c) => {
+  const { DB } = c.env;
+  try {
+    const types = await DB.prepare(`SELECT * FROM leave_types WHERE is_active = 1`).all();
+    return c.json({ success: true, data: types.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch leave types', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
+// COMPLIANCE & COIDA APIs  
+// ============================================================================
+
+// Get COIDA incidents
+app.get('/api/coida/incidents', async (c) => {
+  const { DB } = c.env;
+  try {
+    const incidents = await DB.prepare(`
+      SELECT ci.*, e.first_name || ' ' || e.last_name as employee_name, l.location_name
+      FROM coida_incidents ci
+      LEFT JOIN employees e ON ci.employee_id = e.id
+      LEFT JOIN locations l ON ci.location_id = l.id
+      ORDER BY ci.incident_date DESC
+      LIMIT 100
+    `).all();
+    return c.json({ success: true, data: incidents.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch incidents', message: error.message }, 500);
+  }
+});
+
+// Get safety training
+app.get('/api/safety/training', async (c) => {
+  const { DB } = c.env;
+  try {
+    const training = await DB.prepare(`
+      SELECT st.*, e.first_name || ' ' || e.last_name as employee_name
+      FROM safety_training st
+      LEFT JOIN employees e ON st.employee_id = e.id
+      ORDER BY st.training_date DESC
+      LIMIT 100
+    `).all();
+    return c.json({ success: true, data: training.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch safety training', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
+// ONBOARDING APIs
+// ============================================================================
+
+// Get onboarding checklists
+app.get('/api/onboarding/checklists', async (c) => {
+  const { DB } = c.env;
+  try {
+    const checklists = await DB.prepare(`
+      SELECT oc.*, e.first_name || ' ' || e.last_name as employee_name
+      FROM onboarding_checklists oc
+      LEFT JOIN employees e ON oc.employee_id = e.id
+      ORDER BY oc.due_date ASC
+      LIMIT 100
+    `).all();
+    return c.json({ success: true, data: checklists.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch onboarding checklists', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
+// DOCUMENTS APIs
+// ============================================================================
+
+// Get documents
+app.get('/api/documents', async (c) => {
+  const { DB } = c.env;
+  try {
+    const documents = await DB.prepare(`
+      SELECT d.*, e.first_name || ' ' || e.last_name as employee_name
+      FROM documents d
+      LEFT JOIN employees e ON d.employee_id = e.id
+      ORDER BY d.uploaded_at DESC
+      LIMIT 100
+    `).all();
+    return c.json({ success: true, data: documents.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch documents', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
+// MESSAGING APIs
+// ============================================================================
+
+// Get messages
+app.get('/api/messages', async (c) => {
+  const { DB } = c.env;
+  try {
+    const messages = await DB.prepare(`
+      SELECT m.*, 
+        u1.first_name || ' ' || u1.last_name as sender_name,
+        u2.first_name || ' ' || u2.last_name as recipient_name
+      FROM messages m
+      LEFT JOIN users u1 ON m.sender_id = u1.id
+      LEFT JOIN users u2 ON m.recipient_id = u2.id
+      ORDER BY m.sent_at DESC
+      LIMIT 100
+    `).all();
+    return c.json({ success: true, data: messages.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch messages', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
+// PAYROLL APIs
+// ============================================================================
+
+// Get payroll batches
+app.get('/api/payroll/batches', async (c) => {
+  const { DB } = c.env;
+  try {
+    const batches = await DB.prepare(`
+      SELECT pb.*, u.first_name || ' ' || u.last_name as created_by_name
+      FROM payroll_batches pb
+      LEFT JOIN users u ON pb.created_by = u.id
+      ORDER BY pb.created_at DESC
+      LIMIT 50
+    `).all();
+    return c.json({ success: true, data: batches.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch payroll batches', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
+// BUDGETS & FORECASTING APIs
+// ============================================================================
+
+// Get budgets
+app.get('/api/budgets', async (c) => {
+  const { DB } = c.env;
+  try {
+    const budgets = await DB.prepare(`
+      SELECT b.*, d.name as department_name
+      FROM budgets b
+      LEFT JOIN departments d ON b.department_id = d.id
+      ORDER BY b.budget_year DESC, b.budget_month DESC
+      LIMIT 100
+    `).all();
+    return c.json({ success: true, data: budgets.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch budgets', message: error.message }, 500);
+  }
+});
+
+// Get forecasts
+app.get('/api/forecasts', async (c) => {
+  const { DB } = c.env;
+  try {
+    const forecasts = await DB.prepare(`
+      SELECT f.*, d.name as department_name
+      FROM forecasts f
+      LEFT JOIN departments d ON f.department_id = d.id
+      ORDER BY f.created_at DESC
+      LIMIT 50
+    `).all();
+    return c.json({ success: true, data: forecasts.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch forecasts', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
 // GAMIFICATION APIs
 // ============================================================================
 
@@ -3803,8 +4095,8 @@ app.get('/api/employees', async (c) => {
   const status = c.req.query('status') || 'Active';
   
   try {
-    let whereClause = 'WHERE e.is_active = 1';
-    const params: any[] = [];
+    let whereClause = 'WHERE e.employment_status = ?';
+    const params: any[] = [status];
     
     if (search) {
       whereClause += ` AND (e.first_name LIKE ? OR e.last_name LIKE ? OR e.email LIKE ? OR e.employee_number LIKE ?)`;
