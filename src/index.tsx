@@ -1543,6 +1543,74 @@ app.post('/api/interns/register', async (c) => {
   }
 });
 
+// Get intern dashboard analytics (MUST come before :internId route)
+app.get('/api/interns/dashboard', async (c) => {
+  const { DB } = c.env;
+  const role = c.req.query('role') || 'coordinator';
+  
+  try {
+    // Get overview stats
+    const stats = await DB.prepare(`
+      SELECT 
+        COUNT(*) as total_interns,
+        SUM(CASE WHEN intern_status = 'active' THEN 1 ELSE 0 END) as total_active_interns,
+        SUM(CASE WHEN intern_status = 'completed' THEN 1 ELSE 0 END) as graduated_interns,
+        SUM(CASE WHEN legal_status = 'learner' THEN 1 ELSE 0 END) as learner_status,
+        SUM(CASE WHEN legal_status = 'employee' THEN 1 ELSE 0 END) as employee_status
+      FROM interns
+    `).first();
+    
+    // Get program breakdown
+    const programBreakdown = await DB.prepare(`
+      SELECT 
+        ip.program_name,
+        ip.program_type,
+        COUNT(i.id) as intern_count,
+        SUM(CASE WHEN i.intern_status = 'active' THEN 1 ELSE 0 END) as active_interns
+      FROM intern_programs ip
+      LEFT JOIN interns i ON ip.id = i.program_id
+      WHERE ip.is_active = 1
+      GROUP BY ip.id, ip.program_name, ip.program_type
+      ORDER BY active_interns DESC
+    `).all();
+    
+    // Get status breakdown
+    const statusBreakdown = await DB.prepare(`
+      SELECT 
+        intern_status,
+        COUNT(*) as count
+      FROM interns
+      GROUP BY intern_status
+      ORDER BY count DESC
+    `).all();
+    
+    // Get recent interns (last 10)
+    const recentInterns = await DB.prepare(`
+      SELECT 
+        i.first_name || ' ' || i.last_name as intern_name,
+        ip.program_name,
+        i.start_date,
+        i.intern_status
+      FROM interns i
+      LEFT JOIN intern_programs ip ON i.program_id = ip.id
+      ORDER BY i.created_at DESC
+      LIMIT 10
+    `).all();
+    
+    return c.json({
+      success: true,
+      data: {
+        ...stats,
+        by_program: programBreakdown.results,
+        by_status: statusBreakdown.results,
+        recent_interns: recentInterns.results
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch dashboard', message: error.message }, 500);
+  }
+});
+
 // Get all interns (with filters)
 app.get('/api/interns', async (c) => {
   const { DB } = c.env;
@@ -1951,77 +2019,6 @@ app.post('/api/interns/:internId/complete', async (c) => {
     });
   } catch (error: any) {
     return c.json({ success: false, error: 'Failed to complete program', message: error.message }, 500);
-  }
-});
-
-// Get intern dashboard (role-specific)
-app.get('/api/interns/dashboard', async (c) => {
-  const { DB } = c.env;
-  const role = c.req.query('role') || 'coordinator';
-  
-  try {
-    // Get overview stats
-    const stats = await DB.prepare(`
-      SELECT 
-        COUNT(*) as total_interns,
-        SUM(CASE WHEN intern_status = 'active' THEN 1 ELSE 0 END) as active_interns,
-        SUM(CASE WHEN intern_status = 'completed' THEN 1 ELSE 0 END) as graduated_interns,
-        SUM(CASE WHEN legal_status = 'learner' THEN 1 ELSE 0 END) as learner_status,
-        SUM(CASE WHEN legal_status = 'employee' THEN 1 ELSE 0 END) as employee_status
-      FROM interns
-    `).first();
-    
-    // Get program breakdown
-    const programBreakdown = await DB.prepare(`
-      SELECT 
-        ip.program_name,
-        ip.program_type,
-        COUNT(i.id) as intern_count,
-        SUM(CASE WHEN i.intern_status = 'active' THEN 1 ELSE 0 END) as active_count
-      FROM intern_programs ip
-      LEFT JOIN interns i ON ip.id = i.program_id
-      WHERE ip.is_active = 1
-      GROUP BY ip.id
-      ORDER BY active_count DESC
-    `).all();
-    
-    // Get upcoming deadlines
-    const upcomingDeadlines = await DB.prepare(`
-      SELECT 
-        'SETA Quarterly Report' as type,
-        next_quarterly_report_due as due_date,
-        CAST((JULIANDAY(next_quarterly_report_due) - JULIANDAY('now')) AS INTEGER) as days_until_due
-      FROM seta_registrations
-      WHERE next_quarterly_report_due >= DATE('now')
-      ORDER BY next_quarterly_report_due ASC
-      LIMIT 10
-    `).all();
-    
-    // Get recent completions
-    const recentCompletions = await DB.prepare(`
-      SELECT 
-        i.first_name || ' ' || i.last_name as intern_name,
-        ip.program_name,
-        ic.completion_date,
-        ic.employment_status
-      FROM intern_completions ic
-      LEFT JOIN interns i ON ic.intern_id = i.id
-      LEFT JOIN intern_programs ip ON i.program_id = ip.id
-      ORDER BY ic.completion_date DESC
-      LIMIT 10
-    `).all();
-    
-    return c.json({
-      success: true,
-      data: {
-        stats,
-        program_breakdown: programBreakdown.results,
-        upcoming_deadlines: upcomingDeadlines.results,
-        recent_completions: recentCompletions.results
-      }
-    });
-  } catch (error: any) {
-    return c.json({ success: false, error: 'Failed to fetch dashboard', message: error.message }, 500);
   }
 });
 
