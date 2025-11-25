@@ -1426,6 +1426,1186 @@ app.get('/api/compliance/violations/working-time', async (c) => {
 });
 
 // ============================================================================
+// INTERNS MANAGEMENT APIs
+// ============================================================================
+// Complete lifecycle management for SETA/YES/NYS/Self-funded interns
+// Handles: Registration, Stipends, Assessments, Mentorship, SETA Grants, Graduation
+
+// Get all intern programs
+app.get('/api/interns/programs', async (c) => {
+  const { DB } = c.env;
+  const isActive = c.req.query('is_active');
+  const programType = c.req.query('program_type');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (isActive !== undefined) {
+      whereClause += ' AND is_active = ?';
+      params.push(isActive === 'true' ? 1 : 0);
+    }
+    
+    if (programType) {
+      whereClause += ' AND program_type = ?';
+      params.push(programType);
+    }
+    
+    const programs = await DB.prepare(`
+      SELECT 
+        ip.*,
+        u1.first_name || ' ' || u1.last_name as manager_name,
+        u2.first_name || ' ' || u2.last_name as coordinator_name,
+        (SELECT COUNT(*) FROM interns WHERE program_id = ip.id AND intern_status = 'active') as active_interns,
+        (SELECT COUNT(*) FROM interns WHERE program_id = ip.id AND intern_status = 'completed') as graduated_interns
+      FROM intern_programs ip
+      LEFT JOIN users u1 ON ip.program_manager = u1.id
+      LEFT JOIN users u2 ON ip.training_coordinator = u2.id
+      WHERE ${whereClause}
+      ORDER BY ip.is_active DESC, ip.start_date DESC
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: programs.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch intern programs', message: error.message }, 500);
+  }
+});
+
+// Register new intern
+app.post('/api/interns/register', async (c) => {
+  const { DB } = c.env;
+  const data = await c.req.json();
+  
+  try {
+    // Insert intern record
+    const internResult = await DB.prepare(`
+      INSERT INTO interns (
+        first_name, last_name, id_number, date_of_birth, gender, race, disability_status,
+        email, phone, physical_address,
+        program_id, intake_cohort, intern_status, legal_status,
+        application_date, start_date, expected_end_date,
+        highest_qualification, qualification_institution,
+        bank_name, account_number, account_type, branch_code, tax_number,
+        data_consent, data_consent_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.first_name, data.last_name, data.id_number, data.date_of_birth,
+      data.gender, data.race, data.disability_status,
+      data.email, data.phone, data.physical_address,
+      data.program_id, data.intake_cohort, 'registered', data.legal_status,
+      data.application_date, data.start_date, data.expected_end_date,
+      data.highest_qualification, data.qualification_institution,
+      data.bank_name, data.account_number, data.account_type, data.branch_code, data.tax_number,
+      1, new Date().toISOString().split('T')[0]
+    ).run();
+    
+    const internId = internResult.meta.last_row_id;
+    
+    // If SETA program, create SETA registration
+    if (data.program_type && data.program_type.startsWith('seta_')) {
+      await DB.prepare(`
+        INSERT INTO seta_registrations (
+          intern_id, program_id, seta_name, registration_date, registration_status
+        ) VALUES (?, ?, ?, DATE('now'), 'pending')
+      `).bind(internId, data.program_id, data.seta_name || 'UNKNOWN').run();
+    }
+    
+    // If YES program, create YES registration
+    if (data.program_type === 'yes_program') {
+      await DB.prepare(`
+        INSERT INTO yes_registrations (
+          intern_id, registration_date, registration_status
+        ) VALUES (?, DATE('now'), 'pending')
+      `).bind(internId).run();
+    }
+    
+    // If NYS program, create NYS registration
+    if (data.program_type === 'nys_program') {
+      await DB.prepare(`
+        INSERT INTO nys_registrations (
+          intern_id, nys_program_type, registration_date, registration_status
+        ) VALUES (?, ?, DATE('now'), 'pending')
+      `).bind(internId, data.nys_program_type || 'nyda_programme').run();
+    }
+    
+    return c.json({ 
+      success: true, 
+      data: { intern_id: internId },
+      message: 'Intern registered successfully' 
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to register intern', message: error.message }, 500);
+  }
+});
+
+// Get all interns (with filters)
+app.get('/api/interns', async (c) => {
+  const { DB } = c.env;
+  const status = c.req.query('status');
+  const programId = c.req.query('program_id');
+  const legalStatus = c.req.query('legal_status');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (status) {
+      whereClause += ' AND i.intern_status = ?';
+      params.push(status);
+    }
+    
+    if (programId) {
+      whereClause += ' AND i.program_id = ?';
+      params.push(programId);
+    }
+    
+    if (legalStatus) {
+      whereClause += ' AND i.legal_status = ?';
+      params.push(legalStatus);
+    }
+    
+    const interns = await DB.prepare(`
+      SELECT 
+        i.*,
+        ip.program_name,
+        ip.program_type,
+        CASE 
+          WHEN sr.id IS NOT NULL THEN 'SETA'
+          WHEN yr.id IS NOT NULL THEN 'YES'
+          WHEN nr.id IS NOT NULL THEN 'NYS'
+          ELSE 'Self-Funded'
+        END as funding_type,
+        sr.registration_status as seta_status,
+        yr.registration_status as yes_status,
+        nr.registration_status as nys_status
+      FROM interns i
+      LEFT JOIN intern_programs ip ON i.program_id = ip.id
+      LEFT JOIN seta_registrations sr ON i.id = sr.intern_id
+      LEFT JOIN yes_registrations yr ON i.id = yr.intern_id
+      LEFT JOIN nys_registrations nr ON i.id = nr.intern_id
+      WHERE ${whereClause}
+      ORDER BY i.start_date DESC
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: interns.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch interns', message: error.message }, 500);
+  }
+});
+
+// Get single intern details
+app.get('/api/interns/:internId', async (c) => {
+  const { DB } = c.env;
+  const internId = c.req.param('internId');
+  
+  try {
+    const intern = await DB.prepare(`
+      SELECT 
+        i.*,
+        ip.program_name,
+        ip.program_type,
+        ip.seta_name,
+        ip.qualification_title
+      FROM interns i
+      LEFT JOIN intern_programs ip ON i.program_id = ip.id
+      WHERE i.id = ?
+    `).bind(internId).first();
+    
+    if (!intern) {
+      return c.json({ success: false, error: 'Intern not found' }, 404);
+    }
+    
+    // Get SETA registration if applicable
+    const setaReg = await DB.prepare(`
+      SELECT * FROM seta_registrations WHERE intern_id = ?
+    `).bind(internId).first();
+    
+    // Get YES registration if applicable
+    const yesReg = await DB.prepare(`
+      SELECT * FROM yes_registrations WHERE intern_id = ?
+    `).bind(internId).first();
+    
+    // Get learning plan
+    const learningPlan = await DB.prepare(`
+      SELECT * FROM intern_learning_plans 
+      WHERE intern_id = ? AND status = 'active'
+      ORDER BY created_date DESC LIMIT 1
+    `).bind(internId).first();
+    
+    // Get recent assessments
+    const assessments = await DB.prepare(`
+      SELECT * FROM intern_assessments
+      WHERE intern_id = ?
+      ORDER BY assessment_date DESC
+      LIMIT 5
+    `).bind(internId).all();
+    
+    return c.json({ 
+      success: true, 
+      data: {
+        intern,
+        seta_registration: setaReg,
+        yes_registration: yesReg,
+        learning_plan: learningPlan,
+        recent_assessments: assessments.results
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch intern details', message: error.message }, 500);
+  }
+});
+
+// Process monthly stipend payment
+app.post('/api/interns/stipend/pay', async (c) => {
+  const { DB } = c.env;
+  const data = await c.req.json();
+  
+  try {
+    // Check if payment already exists
+    const existing = await DB.prepare(`
+      SELECT id FROM intern_stipend_payments
+      WHERE intern_id = ? AND payment_month = ? AND payment_year = ?
+    `).bind(data.intern_id, data.payment_month, data.payment_year).first();
+    
+    if (existing) {
+      return c.json({ success: false, error: 'Payment already recorded for this month' }, 400);
+    }
+    
+    // Calculate net amount
+    const grossAmount = data.basic_stipend + (data.transport_allowance || 0) + (data.meal_allowance || 0);
+    const totalDeductions = (data.paye_deducted || 0) + (data.uif_deducted || 0);
+    const netAmount = grossAmount - totalDeductions;
+    
+    // Insert payment record
+    const result = await DB.prepare(`
+      INSERT INTO intern_stipend_payments (
+        intern_id, payment_month, payment_year, payment_date,
+        basic_stipend, transport_allowance, meal_allowance, gross_amount,
+        paye_deducted, uif_deducted, total_deductions, net_amount,
+        payment_method, payment_reference
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.intern_id, data.payment_month, data.payment_year, data.payment_date,
+      data.basic_stipend, data.transport_allowance || 0, data.meal_allowance || 0, grossAmount,
+      data.paye_deducted || 0, data.uif_deducted || 0, totalDeductions, netAmount,
+      data.payment_method || 'eft', data.payment_reference
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      data: { payment_id: result.meta.last_row_id, net_amount: netAmount },
+      message: 'Stipend payment recorded' 
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to record payment', message: error.message }, 500);
+  }
+});
+
+// Get stipend payment history
+app.get('/api/interns/:internId/stipends', async (c) => {
+  const { DB } = c.env;
+  const internId = c.req.param('internId');
+  
+  try {
+    const payments = await DB.prepare(`
+      SELECT * FROM intern_stipend_payments
+      WHERE intern_id = ?
+      ORDER BY payment_year DESC, payment_month DESC
+    `).bind(internId).all();
+    
+    return c.json({ success: true, data: payments.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch stipend history', message: error.message }, 500);
+  }
+});
+
+// Record mentorship session
+app.post('/api/interns/mentorship/session', async (c) => {
+  const { DB } = c.env;
+  const data = await c.req.json();
+  
+  try {
+    const result = await DB.prepare(`
+      INSERT INTO intern_mentorship_sessions (
+        intern_id, mentor_id, session_date, session_duration_minutes, session_type,
+        topics_discussed, challenges_raised, support_provided, action_items,
+        progress_rating, progress_notes, next_session_scheduled
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.intern_id, data.mentor_id, data.session_date, data.session_duration_minutes, data.session_type,
+      data.topics_discussed, data.challenges_raised, data.support_provided, data.action_items,
+      data.progress_rating, data.progress_notes, data.next_session_scheduled
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      data: { session_id: result.meta.last_row_id },
+      message: 'Mentorship session recorded' 
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to record session', message: error.message }, 500);
+  }
+});
+
+// Get mentorship sessions for intern
+app.get('/api/interns/:internId/mentorship', async (c) => {
+  const { DB } = c.env;
+  const internId = c.req.param('internId');
+  
+  try {
+    const sessions = await DB.prepare(`
+      SELECT 
+        ims.*,
+        e.first_name || ' ' || e.last_name as mentor_name
+      FROM intern_mentorship_sessions ims
+      LEFT JOIN employees e ON ims.mentor_id = e.id
+      WHERE ims.intern_id = ?
+      ORDER BY ims.session_date DESC
+    `).bind(internId).all();
+    
+    return c.json({ success: true, data: sessions.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch mentorship sessions', message: error.message }, 500);
+  }
+});
+
+// Record assessment
+app.post('/api/interns/assessment', async (c) => {
+  const { DB } = c.env;
+  const data = await c.req.json();
+  
+  try {
+    const result = await DB.prepare(`
+      INSERT INTO intern_assessments (
+        intern_id, assessment_type, assessment_date, assessed_by,
+        competencies_assessed, overall_rating, technical_skills_rating, 
+        soft_skills_rating, workplace_behavior_rating,
+        strengths, areas_for_improvement, recommendations, outcome
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.intern_id, data.assessment_type, data.assessment_date, data.assessed_by,
+      data.competencies_assessed, data.overall_rating, data.technical_skills_rating,
+      data.soft_skills_rating, data.workplace_behavior_rating,
+      data.strengths, data.areas_for_improvement, data.recommendations, data.outcome
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      data: { assessment_id: result.meta.last_row_id },
+      message: 'Assessment recorded successfully' 
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to record assessment', message: error.message }, 500);
+  }
+});
+
+// Get assessments for intern
+app.get('/api/interns/:internId/assessments', async (c) => {
+  const { DB } = c.env;
+  const internId = c.req.param('internId');
+  
+  try {
+    const assessments = await DB.prepare(`
+      SELECT 
+        ia.*,
+        u.first_name || ' ' || u.last_name as assessor_name
+      FROM intern_assessments ia
+      LEFT JOIN users u ON ia.assessed_by = u.id
+      WHERE ia.intern_id = ?
+      ORDER BY ia.assessment_date DESC
+    `).bind(internId).all();
+    
+    return c.json({ success: true, data: assessments.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch assessments', message: error.message }, 500);
+  }
+});
+
+// Get SETA grant tracking
+app.get('/api/interns/seta/grants', async (c) => {
+  const { DB } = c.env;
+  const programId = c.req.query('program_id');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (programId) {
+      whereClause += ' AND sr.program_id = ?';
+      params.push(programId);
+    }
+    
+    const grants = await DB.prepare(`
+      SELECT 
+        i.first_name || ' ' || i.last_name as intern_name,
+        i.id_number,
+        ip.program_name,
+        sr.seta_name,
+        sr.registration_status,
+        sr.commencement_grant_claimed,
+        sr.commencement_grant_amount,
+        sr.progress_grant_claimed,
+        sr.progress_grant_amount,
+        sr.completion_grant_claimed,
+        sr.completion_grant_amount,
+        sr.total_grant_received,
+        sr.last_quarterly_report_date,
+        sr.next_quarterly_report_due
+      FROM seta_registrations sr
+      LEFT JOIN interns i ON sr.intern_id = i.id
+      LEFT JOIN intern_programs ip ON sr.program_id = ip.id
+      WHERE ${whereClause}
+      ORDER BY sr.registration_date DESC
+    `).bind(...params).all();
+    
+    // Calculate totals
+    const totals = grants.results.reduce((acc: any, grant: any) => {
+      acc.total_grants_claimed += (grant.total_grant_received || 0);
+      acc.commencement_count += grant.commencement_grant_claimed ? 1 : 0;
+      acc.progress_count += grant.progress_grant_claimed ? 1 : 0;
+      acc.completion_count += grant.completion_grant_claimed ? 1 : 0;
+      return acc;
+    }, { total_grants_claimed: 0, commencement_count: 0, progress_count: 0, completion_count: 0 });
+    
+    return c.json({ 
+      success: true, 
+      data: {
+        grants: grants.results,
+        totals
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch SETA grants', message: error.message }, 500);
+  }
+});
+
+// Get interns ready for graduation
+app.get('/api/interns/graduation/ready', async (c) => {
+  const { DB } = c.env;
+  
+  try {
+    const ready = await DB.prepare(`
+      SELECT 
+        i.*,
+        ip.program_name,
+        ip.program_type,
+        (SELECT COUNT(*) FROM intern_assessments 
+         WHERE intern_id = i.id AND outcome = 'competent') as competent_assessments,
+        (SELECT COUNT(*) FROM intern_assessments 
+         WHERE intern_id = i.id) as total_assessments
+      FROM interns i
+      LEFT JOIN intern_programs ip ON i.program_id = ip.id
+      WHERE i.intern_status = 'active'
+        AND DATE(i.expected_end_date) <= DATE('now', '+30 days')
+      ORDER BY i.expected_end_date ASC
+    `).all();
+    
+    return c.json({ success: true, data: ready.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch graduation-ready interns', message: error.message }, 500);
+  }
+});
+
+// Complete intern program (graduation)
+app.post('/api/interns/:internId/complete', async (c) => {
+  const { DB } = c.env;
+  const internId = c.req.param('internId');
+  const data = await c.req.json();
+  
+  try {
+    // Update intern status
+    await DB.prepare(`
+      UPDATE interns 
+      SET intern_status = 'completed', actual_end_date = ?
+      WHERE id = ?
+    `).bind(data.completion_date, internId).run();
+    
+    // Insert completion record
+    const result = await DB.prepare(`
+      INSERT INTO intern_completions (
+        intern_id, completion_date, completion_status,
+        qualification_achieved, qualification_title, certificate_number,
+        skills_acquired, competencies_achieved,
+        final_assessment_rating, final_assessment_notes,
+        employment_status, employment_start_date, job_title,
+        reference_provided
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      internId, data.completion_date, data.completion_status,
+      data.qualification_achieved || 0, data.qualification_title, data.certificate_number,
+      data.skills_acquired, data.competencies_achieved,
+      data.final_assessment_rating, data.final_assessment_notes,
+      data.employment_status, data.employment_start_date, data.job_title,
+      data.reference_provided || 0
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      data: { completion_id: result.meta.last_row_id },
+      message: 'Intern program completed successfully' 
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to complete program', message: error.message }, 500);
+  }
+});
+
+// Get intern dashboard (role-specific)
+app.get('/api/interns/dashboard', async (c) => {
+  const { DB } = c.env;
+  const role = c.req.query('role') || 'coordinator';
+  
+  try {
+    // Get overview stats
+    const stats = await DB.prepare(`
+      SELECT 
+        COUNT(*) as total_interns,
+        SUM(CASE WHEN intern_status = 'active' THEN 1 ELSE 0 END) as active_interns,
+        SUM(CASE WHEN intern_status = 'completed' THEN 1 ELSE 0 END) as graduated_interns,
+        SUM(CASE WHEN legal_status = 'learner' THEN 1 ELSE 0 END) as learner_status,
+        SUM(CASE WHEN legal_status = 'employee' THEN 1 ELSE 0 END) as employee_status
+      FROM interns
+    `).first();
+    
+    // Get program breakdown
+    const programBreakdown = await DB.prepare(`
+      SELECT 
+        ip.program_name,
+        ip.program_type,
+        COUNT(i.id) as intern_count,
+        SUM(CASE WHEN i.intern_status = 'active' THEN 1 ELSE 0 END) as active_count
+      FROM intern_programs ip
+      LEFT JOIN interns i ON ip.id = i.program_id
+      WHERE ip.is_active = 1
+      GROUP BY ip.id
+      ORDER BY active_count DESC
+    `).all();
+    
+    // Get upcoming deadlines
+    const upcomingDeadlines = await DB.prepare(`
+      SELECT 
+        'SETA Quarterly Report' as type,
+        next_quarterly_report_due as due_date,
+        CAST((JULIANDAY(next_quarterly_report_due) - JULIANDAY('now')) AS INTEGER) as days_until_due
+      FROM seta_registrations
+      WHERE next_quarterly_report_due >= DATE('now')
+      ORDER BY next_quarterly_report_due ASC
+      LIMIT 10
+    `).all();
+    
+    // Get recent completions
+    const recentCompletions = await DB.prepare(`
+      SELECT 
+        i.first_name || ' ' || i.last_name as intern_name,
+        ip.program_name,
+        ic.completion_date,
+        ic.employment_status
+      FROM intern_completions ic
+      LEFT JOIN interns i ON ic.intern_id = i.id
+      LEFT JOIN intern_programs ip ON i.program_id = ip.id
+      ORDER BY ic.completion_date DESC
+      LIMIT 10
+    `).all();
+    
+    return c.json({
+      success: true,
+      data: {
+        stats,
+        program_breakdown: programBreakdown.results,
+        upcoming_deadlines: upcomingDeadlines.results,
+        recent_completions: recentCompletions.results
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch dashboard', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
+// INTERN COMPLIANCE MONITORING APIs
+// ============================================================================
+// Automated monitoring for SETA, YES, NYS compliance checkpoints
+// Links to intern_compliance_checkpoints.sql (52 checkpoints)
+
+// Get intern-specific compliance dashboard
+app.get('/api/interns/compliance/dashboard', async (c) => {
+  const { DB } = c.env;
+  try {
+    // Get INTERNS_MANAGEMENT category ID
+    const categoryResult = await DB.prepare(`
+      SELECT id FROM compliance_categories WHERE code = 'INTERNS_MANAGEMENT'
+    `).first();
+    
+    if (!categoryResult) {
+      return c.json({ success: false, error: 'Interns compliance category not found' }, 404);
+    }
+    
+    const categoryId = categoryResult.id;
+    
+    // Count total checkpoints
+    const totalCheckpoints = await DB.prepare(`
+      SELECT COUNT(*) as count FROM compliance_checkpoints WHERE category_id = ?
+    `).bind(categoryId).first();
+    
+    // Count active interns
+    const activeInterns = await DB.prepare(`
+      SELECT COUNT(*) as count FROM interns WHERE intern_status = 'active'
+    `).first();
+    
+    // Count critical alerts (due within 7 days)
+    const criticalAlerts = await DB.prepare(`
+      SELECT COUNT(*) as count FROM compliance_alerts ca
+      JOIN compliance_checkpoints cc ON ca.checkpoint_id = cc.id
+      WHERE cc.category_id = ? 
+        AND ca.status = 'new'
+        AND ca.due_date <= DATE('now', '+7 days')
+    `).bind(categoryId).first();
+    
+    // Count pending compliance tasks
+    const pendingTasks = await DB.prepare(`
+      SELECT COUNT(*) as count FROM organization_compliance_status ocs
+      JOIN compliance_checkpoints cc ON ocs.checkpoint_id = cc.id
+      WHERE cc.category_id = ? AND ocs.status = 'pending'
+    `).bind(categoryId).first();
+    
+    // Get upcoming deadlines (next 30 days)
+    const upcomingDeadlines = await DB.prepare(`
+      SELECT 
+        ca.id,
+        ca.title,
+        ca.due_date,
+        ca.severity,
+        cc.code as checkpoint_code,
+        cc.responsible_role
+      FROM compliance_alerts ca
+      JOIN compliance_checkpoints cc ON ca.checkpoint_id = cc.id
+      WHERE cc.category_id = ?
+        AND ca.status = 'new'
+        AND ca.due_date BETWEEN DATE('now') AND DATE('now', '+30 days')
+      ORDER BY ca.due_date ASC
+      LIMIT 10
+    `).bind(categoryId).all();
+    
+    // SETA grants summary
+    const setaGrants = await DB.prepare(`
+      SELECT 
+        COUNT(*) as total_registrations,
+        SUM(CASE WHEN commencement_grant_claimed = 1 THEN 1 ELSE 0 END) as commencement_claimed,
+        SUM(CASE WHEN progress_grant_claimed = 1 THEN 1 ELSE 0 END) as progress_claimed,
+        SUM(CASE WHEN completion_grant_claimed = 1 THEN 1 ELSE 0 END) as completion_claimed,
+        SUM(total_grant_received) as total_grants_received
+      FROM seta_registrations
+    `).first();
+    
+    // YES participants summary
+    const yesParticipants = await DB.prepare(`
+      SELECT 
+        COUNT(*) as total_participants,
+        SUM(b_bbee_points_claimed) as total_bbbee_points
+      FROM yes_registrations
+    `).first();
+    
+    return c.json({
+      success: true,
+      data: {
+        overview: {
+          total_checkpoints: totalCheckpoints?.count || 0,
+          active_interns: activeInterns?.count || 0,
+          critical_alerts: criticalAlerts?.count || 0,
+          pending_tasks: pendingTasks?.count || 0
+        },
+        upcoming_deadlines: upcomingDeadlines.results,
+        seta_grants: setaGrants,
+        yes_participants: yesParticipants
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch intern compliance dashboard', message: error.message }, 500);
+  }
+});
+
+// Get all intern compliance checkpoints with filters
+app.get('/api/interns/compliance/checkpoints', async (c) => {
+  const { DB } = c.env;
+  try {
+    const checkType = c.req.query('check_type'); // registration, report, financial, assessment, etc.
+    const frequency = c.req.query('frequency'); // monthly, quarterly, annually, once_per_intern
+    const responsible = c.req.query('responsible_role');
+    const automated = c.req.query('is_automated'); // 0 or 1
+    
+    let query = `
+      SELECT 
+        cc.id,
+        cc.code,
+        cc.title,
+        cc.description,
+        cc.check_type,
+        cc.frequency,
+        cc.responsible_role,
+        cc.days_before_alert,
+        cc.is_automated,
+        cc.penalty_amount_min,
+        cc.penalty_amount_max,
+        cc.penalty_description,
+        cc.compliance_status_field,
+        cat.name as category_name
+      FROM compliance_checkpoints cc
+      JOIN compliance_categories cat ON cc.category_id = cat.id
+      WHERE cat.code = 'INTERNS_MANAGEMENT'
+    `;
+    
+    const params: any[] = [];
+    
+    if (checkType) {
+      query += ` AND cc.check_type = ?`;
+      params.push(checkType);
+    }
+    
+    if (frequency) {
+      query += ` AND cc.frequency = ?`;
+      params.push(frequency);
+    }
+    
+    if (responsible) {
+      query += ` AND cc.responsible_role = ?`;
+      params.push(responsible);
+    }
+    
+    if (automated !== undefined) {
+      query += ` AND cc.is_automated = ?`;
+      params.push(parseInt(automated));
+    }
+    
+    query += ` ORDER BY cc.check_type, cc.frequency`;
+    
+    const checkpoints = await DB.prepare(query).bind(...params).all();
+    
+    return c.json({ success: true, data: checkpoints.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch compliance checkpoints', message: error.message }, 500);
+  }
+});
+
+// Get compliance status for specific intern
+app.get('/api/interns/:internId/compliance', async (c) => {
+  const { DB } = c.env;
+  try {
+    const internId = c.req.param('internId');
+    
+    // Get intern details with program info
+    const intern = await DB.prepare(`
+      SELECT 
+        i.*,
+        ip.program_name,
+        ip.program_type,
+        ip.seta_name
+      FROM interns i
+      LEFT JOIN intern_programs ip ON i.program_id = ip.id
+      WHERE i.id = ?
+    `).bind(internId).first();
+    
+    if (!intern) {
+      return c.json({ success: false, error: 'Intern not found' }, 404);
+    }
+    
+    // Get SETA compliance status if applicable
+    let setaStatus = null;
+    if (intern.program_type?.startsWith('seta_')) {
+      setaStatus = await DB.prepare(`
+        SELECT 
+          sr.*,
+          CASE 
+            WHEN sr.next_quarterly_report_due <= DATE('now') THEN 'overdue'
+            WHEN sr.next_quarterly_report_due <= DATE('now', '+30 days') THEN 'due_soon'
+            ELSE 'on_track'
+          END as reporting_status
+        FROM seta_registrations sr
+        WHERE sr.intern_id = ?
+      `).bind(internId).first();
+    }
+    
+    // Get YES compliance status if applicable
+    let yesStatus = null;
+    if (intern.program_type === 'yes_program') {
+      yesStatus = await DB.prepare(`
+        SELECT 
+          yr.*,
+          CASE 
+            WHEN yr.last_monthly_report_date < DATE('now', 'start of month', '-1 month') THEN 'overdue'
+            WHEN yr.b_bbee_certificate_expiry_date <= DATE('now', '+60 days') THEN 'renewal_due'
+            ELSE 'on_track'
+          END as reporting_status
+        FROM yes_registrations yr
+        WHERE yr.intern_id = ?
+      `).bind(internId).first();
+    }
+    
+    // Get learning plan status
+    const learningPlan = await DB.prepare(`
+      SELECT 
+        ilp.*,
+        CASE 
+          WHEN ilp.last_review_date IS NULL OR ilp.last_review_date < DATE('now', '-90 days') THEN 'review_overdue'
+          WHEN ilp.last_review_date < DATE('now', '-60 days') THEN 'review_due_soon'
+          ELSE 'on_track'
+        END as review_status
+      FROM intern_learning_plans ilp
+      WHERE ilp.intern_id = ? AND ilp.status = 'active'
+    `).bind(internId).first();
+    
+    // Get recent assessments
+    const assessments = await DB.prepare(`
+      SELECT 
+        ia.assessment_type,
+        ia.assessment_date,
+        ia.overall_rating,
+        ia.outcome,
+        e.first_name || ' ' || e.last_name as assessor_name
+      FROM intern_assessments ia
+      LEFT JOIN employees e ON ia.assessor_id = e.id
+      WHERE ia.intern_id = ?
+      ORDER BY ia.assessment_date DESC
+      LIMIT 5
+    `).bind(internId).all();
+    
+    // Get stipend payment status
+    const lastStipend = await DB.prepare(`
+      SELECT 
+        payment_year,
+        payment_month,
+        basic_stipend,
+        net_amount,
+        payment_date,
+        CASE 
+          WHEN payment_date IS NULL THEN 'pending'
+          WHEN payment_date > DATE(payment_year || '-' || printf('%02d', payment_month) || '-25') THEN 'late'
+          ELSE 'on_time'
+        END as payment_status
+      FROM intern_stipend_payments
+      WHERE intern_id = ?
+      ORDER BY payment_year DESC, payment_month DESC
+      LIMIT 1
+    `).bind(internId).first();
+    
+    // Get pending compliance alerts
+    const alerts = await DB.prepare(`
+      SELECT 
+        ca.id,
+        ca.title,
+        ca.alert_type,
+        ca.severity,
+        ca.due_date,
+        cc.responsible_role
+      FROM compliance_alerts ca
+      JOIN compliance_checkpoints cc ON ca.checkpoint_id = cc.id
+      WHERE ca.related_intern_id = ? AND ca.status = 'new'
+      ORDER BY ca.due_date ASC
+    `).bind(internId).all();
+    
+    return c.json({
+      success: true,
+      data: {
+        intern: intern,
+        seta_status: setaStatus,
+        yes_status: yesStatus,
+        learning_plan: learningPlan,
+        recent_assessments: assessments.results,
+        last_stipend: lastStipend,
+        pending_alerts: alerts.results
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch intern compliance status', message: error.message }, 500);
+  }
+});
+
+// Run automated compliance scan for all active interns
+app.post('/api/interns/compliance/scan', async (c) => {
+  const { DB } = c.env;
+  try {
+    const results = {
+      scanned_interns: 0,
+      alerts_created: 0,
+      issues_found: []
+    };
+    
+    // Get all active interns
+    const activeInterns = await DB.prepare(`
+      SELECT i.*, ip.program_type 
+      FROM interns i
+      JOIN intern_programs ip ON i.program_id = ip.id
+      WHERE i.intern_status = 'active'
+    `).all();
+    
+    results.scanned_interns = activeInterns.results.length;
+    
+    for (const intern of activeInterns.results) {
+      // Check SETA quarterly reports
+      if (intern.program_type?.startsWith('seta_')) {
+        const setaReg = await DB.prepare(`
+          SELECT * FROM seta_registrations WHERE intern_id = ?
+        `).bind(intern.id).first();
+        
+        if (setaReg && setaReg.next_quarterly_report_due) {
+          const dueDate = new Date(setaReg.next_quarterly_report_due);
+          const today = new Date();
+          const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysUntilDue <= 30 && daysUntilDue > 0) {
+            // Create alert
+            await DB.prepare(`
+              INSERT INTO compliance_alerts (
+                checkpoint_id, alert_type, severity, title, description, due_date, 
+                related_intern_id, status, created_at
+              )
+              SELECT 
+                id, 'seta_quarterly_report', 'warning',
+                'SETA Quarterly Report Due for ' || ?,
+                'Quarterly progress report must be submitted to SETA',
+                ?, ?, 'new', CURRENT_TIMESTAMP
+              FROM compliance_checkpoints 
+              WHERE code = 'INTERN_SETA_QUARTERLY_REPORT'
+            `).bind(intern.first_name + ' ' + intern.last_name, setaReg.next_quarterly_report_due, intern.id).run();
+            
+            results.alerts_created++;
+            results.issues_found.push({
+              intern_id: intern.id,
+              issue: 'SETA quarterly report due',
+              due_date: setaReg.next_quarterly_report_due
+            });
+          }
+        }
+      }
+      
+      // Check YES monthly reports
+      if (intern.program_type === 'yes_program') {
+        const yesReg = await DB.prepare(`
+          SELECT * FROM yes_registrations WHERE intern_id = ?
+        `).bind(intern.id).first();
+        
+        if (yesReg) {
+          const lastReport = yesReg.last_monthly_report_date ? new Date(yesReg.last_monthly_report_date) : null;
+          const today = new Date();
+          
+          if (!lastReport || (today.getTime() - lastReport.getTime()) > (35 * 24 * 60 * 60 * 1000)) {
+            // Create alert
+            await DB.prepare(`
+              INSERT INTO compliance_alerts (
+                checkpoint_id, alert_type, severity, title, description, due_date,
+                related_intern_id, status, created_at
+              )
+              SELECT 
+                id, 'yes_monthly_report', 'critical',
+                'YES Monthly Report Overdue for ' || ?,
+                'Monthly attendance report must be submitted to YES Hub',
+                DATE('now', '+7 days'), ?, 'new', CURRENT_TIMESTAMP
+              FROM compliance_checkpoints
+              WHERE code = 'INTERN_YES_MONTHLY_REPORT'
+            `).bind(intern.first_name + ' ' + intern.last_name, intern.id).run();
+            
+            results.alerts_created++;
+            results.issues_found.push({
+              intern_id: intern.id,
+              issue: 'YES monthly report overdue'
+            });
+          }
+        }
+      }
+      
+      // Check stipend payments (current month)
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      
+      const stipendCheck = await DB.prepare(`
+        SELECT * FROM intern_stipend_payments 
+        WHERE intern_id = ? AND payment_year = ? AND payment_month = ?
+      `).bind(intern.id, currentYear, currentMonth).first();
+      
+      if (!stipendCheck && new Date().getDate() > 20) {
+        // Create alert for missing stipend payment
+        await DB.prepare(`
+          INSERT INTO compliance_alerts (
+            checkpoint_id, alert_type, severity, title, description, due_date,
+            related_intern_id, status, created_at
+          )
+          SELECT 
+            id, 'stipend_payment_due', 'critical',
+            'Stipend Payment Due for ' || ?,
+            'Monthly stipend must be processed by 25th',
+            DATE('now', '+5 days'), ?, 'new', CURRENT_TIMESTAMP
+          FROM compliance_checkpoints
+          WHERE code = 'INTERN_STIPEND_MONTHLY_PAYMENT'
+        `).bind(intern.first_name + ' ' + intern.last_name, intern.id).run();
+        
+        results.alerts_created++;
+        results.issues_found.push({
+          intern_id: intern.id,
+          issue: 'Stipend payment pending for current month'
+        });
+      }
+      
+      // Check learning plan reviews (quarterly)
+      const learningPlan = await DB.prepare(`
+        SELECT * FROM intern_learning_plans 
+        WHERE intern_id = ? AND status = 'active'
+      `).bind(intern.id).first();
+      
+      if (learningPlan && learningPlan.last_review_date) {
+        const lastReview = new Date(learningPlan.last_review_date);
+        const today = new Date();
+        const daysSinceReview = Math.ceil((today.getTime() - lastReview.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceReview > 90) {
+          // Create alert for overdue learning plan review
+          await DB.prepare(`
+            INSERT INTO compliance_alerts (
+              checkpoint_id, alert_type, severity, title, description, due_date,
+              related_intern_id, status, created_at
+            )
+            SELECT 
+              id, 'learning_plan_review', 'warning',
+              'Learning Plan Review Overdue for ' || ?,
+              'Learning plan must be reviewed quarterly',
+              DATE('now', '+7 days'), ?, 'new', CURRENT_TIMESTAMP
+            FROM compliance_checkpoints
+            WHERE code = 'INTERN_LEARNING_PLAN_QUARTERLY_REVIEW'
+          `).bind(intern.first_name + ' ' + intern.last_name, intern.id).run();
+          
+          results.alerts_created++;
+          results.issues_found.push({
+            intern_id: intern.id,
+            issue: 'Learning plan review overdue',
+            days_overdue: daysSinceReview - 90
+          });
+        }
+      }
+      
+      // Check graduation readiness (60 days before expected end)
+      if (intern.expected_end_date) {
+        const endDate = new Date(intern.expected_end_date);
+        const today = new Date();
+        const daysUntilEnd = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysUntilEnd <= 60 && daysUntilEnd > 0) {
+          // Create alert for graduation readiness
+          await DB.prepare(`
+            INSERT INTO compliance_alerts (
+              checkpoint_id, alert_type, severity, title, description, due_date,
+              related_intern_id, status, created_at
+            )
+            SELECT 
+              id, 'graduation_readiness', 'warning',
+              'Graduation Readiness Review for ' || ?,
+              'Conduct graduation readiness review 60 days before completion',
+              DATE('now', '+7 days'), ?, 'new', CURRENT_TIMESTAMP
+            FROM compliance_checkpoints
+            WHERE code = 'INTERN_GRADUATION_READINESS'
+          `).bind(intern.first_name + ' ' + intern.last_name, intern.id).run();
+          
+          results.alerts_created++;
+          results.issues_found.push({
+            intern_id: intern.id,
+            issue: 'Approaching graduation',
+            days_until_completion: daysUntilEnd
+          });
+        }
+      }
+    }
+    
+    return c.json({
+      success: true,
+      message: 'Compliance scan completed',
+      data: results
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Compliance scan failed', message: error.message }, 500);
+  }
+});
+
+// Get compliance alerts for role
+app.get('/api/interns/compliance/alerts', async (c) => {
+  const { DB } = c.env;
+  try {
+    const role = c.req.query('role'); // training_coordinator, hr_manager, payroll_admin
+    const severity = c.req.query('severity'); // critical, warning, info
+    const status = c.req.query('status') || 'new'; // new, acknowledged, resolved
+    
+    let query = `
+      SELECT 
+        ca.id,
+        ca.alert_type,
+        ca.severity,
+        ca.title,
+        ca.description,
+        ca.due_date,
+        ca.status,
+        ca.created_at,
+        cc.responsible_role,
+        cc.code as checkpoint_code,
+        i.first_name || ' ' || i.last_name as intern_name,
+        i.id as intern_id,
+        ip.program_name
+      FROM compliance_alerts ca
+      JOIN compliance_checkpoints cc ON ca.checkpoint_id = cc.id
+      LEFT JOIN interns i ON ca.related_intern_id = i.id
+      LEFT JOIN intern_programs ip ON i.program_id = ip.id
+      JOIN compliance_categories cat ON cc.category_id = cat.id
+      WHERE cat.code = 'INTERNS_MANAGEMENT'
+    `;
+    
+    const params: any[] = [];
+    
+    if (role) {
+      query += ` AND cc.responsible_role = ?`;
+      params.push(role);
+    }
+    
+    if (severity) {
+      query += ` AND ca.severity = ?`;
+      params.push(severity);
+    }
+    
+    if (status) {
+      query += ` AND ca.status = ?`;
+      params.push(status);
+    }
+    
+    query += ` ORDER BY ca.severity DESC, ca.due_date ASC`;
+    
+    const alerts = await DB.prepare(query).bind(...params).all();
+    
+    return c.json({ success: true, data: alerts.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch compliance alerts', message: error.message }, 500);
+  }
+});
+
+// Acknowledge/resolve compliance alert
+app.put('/api/interns/compliance/alerts/:alertId', async (c) => {
+  const { DB } = c.env;
+  try {
+    const alertId = c.req.param('alertId');
+    const data = await c.req.json();
+    
+    const result = await DB.prepare(`
+      UPDATE compliance_alerts
+      SET status = ?,
+          acknowledged_by = ?,
+          acknowledged_at = CURRENT_TIMESTAMP,
+          resolution_notes = ?
+      WHERE id = ?
+    `).bind(data.status, data.acknowledged_by, data.resolution_notes || null, alertId).run();
+    
+    if (result.meta.changes === 0) {
+      return c.json({ success: false, error: 'Alert not found' }, 404);
+    }
+    
+    return c.json({ success: true, message: 'Alert updated successfully' });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to update alert', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
 // EXISTING APIs (keeping all previous endpoints)
 // ============================================================================
 
