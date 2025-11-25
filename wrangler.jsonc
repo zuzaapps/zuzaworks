@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "zuzaworksos-production",
-      "database_id": "" // Will be filled after creating database
+      "database_id": "171c31c3-f2ef-40f3-9bca-1e80ff744d86"
     }
   ]
   // AI Worker Configuration (for Digital Twin features)
