@@ -919,6 +919,435 @@ app.post('/api/gamification/award', async (c) => {
 });
 
 // ============================================================================
+// COMPLIANCE MANAGEMENT APIs
+// ============================================================================
+// Comprehensive SA Labour Law Compliance Monitoring System
+// Covers 16 legislative categories with 50+ critical checkpoints
+
+// Get compliance overview/dashboard (role-specific)
+app.get('/api/compliance/overview', async (c) => {
+  const { DB } = c.env;
+  const roleFilter = c.req.query('role') || 'employee';
+  
+  try {
+    // Calculate overall compliance score
+    const totalCheckpoints = await DB.prepare(`
+      SELECT COUNT(*) as count FROM compliance_checkpoints WHERE is_active = 1
+    `).first();
+    
+    const compliantChecks = await DB.prepare(`
+      SELECT COUNT(*) as count FROM organization_compliance_status 
+      WHERE status = 'compliant'
+    `).first();
+    
+    const complianceScore = totalCheckpoints && totalCheckpoints.count > 0
+      ? Math.round((compliantChecks.count / totalCheckpoints.count) * 100)
+      : 0;
+    
+    // Get category-level compliance
+    const categoryStats = await DB.prepare(`
+      SELECT 
+        cc.code,
+        cc.name,
+        cc.risk_level,
+        COUNT(cp.id) as total_checks,
+        SUM(CASE WHEN ocs.status = 'compliant' THEN 1 ELSE 0 END) as compliant_checks,
+        SUM(CASE WHEN ocs.status = 'non_compliant' THEN 1 ELSE 0 END) as non_compliant_checks,
+        SUM(CASE WHEN ocs.status = 'pending' THEN 1 ELSE 0 END) as pending_checks
+      FROM compliance_categories cc
+      LEFT JOIN compliance_checkpoints cp ON cc.id = cp.category_id AND cp.is_active = 1
+      LEFT JOIN organization_compliance_status ocs ON cp.id = ocs.checkpoint_id
+      WHERE cc.is_active = 1
+      GROUP BY cc.id
+      ORDER BY cc.risk_level DESC, cc.name ASC
+    `).all();
+    
+    // Get critical alerts (expiring soon, overdue)
+    const criticalAlerts = await DB.prepare(`
+      SELECT 
+        ca.*,
+        cc.name as category_name,
+        cp.title as checkpoint_title
+      FROM compliance_alerts ca
+      LEFT JOIN compliance_categories cc ON ca.category_id = cc.id
+      LEFT JOIN compliance_checkpoints cp ON ca.checkpoint_id = cp.id
+      WHERE ca.status IN ('new', 'acknowledged')
+        AND ca.severity IN ('critical', 'warning')
+      ORDER BY 
+        CASE ca.severity WHEN 'critical' THEN 1 WHEN 'warning' THEN 2 ELSE 3 END,
+        ca.due_date ASC
+      LIMIT 20
+    `).all();
+    
+    // Get upcoming deadlines (next 30 days)
+    const upcomingDeadlines = await DB.prepare(`
+      SELECT 
+        sr.report_type,
+        sr.submission_deadline,
+        sr.status,
+        CAST((JULIANDAY(sr.submission_deadline) - JULIANDAY('now')) AS INTEGER) as days_until_due
+      FROM statutory_reports sr
+      WHERE sr.status IN ('not_started', 'in_progress')
+        AND sr.submission_deadline >= DATE('now')
+        AND sr.submission_deadline <= DATE('now', '+30 days')
+      ORDER BY sr.submission_deadline ASC
+      LIMIT 10
+    `).all();
+    
+    // Recent violations
+    const recentViolations = await DB.prepare(`
+      SELECT 
+        wtv.violation_type,
+        wtv.violation_date,
+        wtv.severity,
+        COUNT(*) as violation_count
+      FROM working_time_violations wtv
+      WHERE wtv.resolved = 0
+        AND wtv.violation_date >= DATE('now', '-30 days')
+      GROUP BY wtv.violation_type, wtv.violation_date, wtv.severity
+      ORDER BY wtv.violation_date DESC
+      LIMIT 10
+    `).all();
+    
+    return c.json({
+      success: true,
+      data: {
+        compliance_score: complianceScore,
+        total_checkpoints: totalCheckpoints?.count || 0,
+        compliant_checks: compliantChecks?.count || 0,
+        categories: categoryStats.results,
+        critical_alerts: criticalAlerts.results,
+        upcoming_deadlines: upcomingDeadlines.results,
+        recent_violations: recentViolations.results
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch compliance overview', message: error.message }, 500);
+  }
+});
+
+// Get all compliance checkpoints (filterable)
+app.get('/api/compliance/checkpoints', async (c) => {
+  const { DB } = c.env;
+  const categoryCode = c.req.query('category');
+  const status = c.req.query('status');
+  
+  try {
+    let whereClause = 'WHERE cp.is_active = 1';
+    const params: any[] = [];
+    
+    if (categoryCode) {
+      whereClause += ' AND cc.code = ?';
+      params.push(categoryCode);
+    }
+    
+    if (status) {
+      whereClause += ' AND ocs.status = ?';
+      params.push(status);
+    }
+    
+    const checkpoints = await DB.prepare(`
+      SELECT 
+        cp.*,
+        cc.name as category_name,
+        cc.code as category_code,
+        ocs.status as compliance_status,
+        ocs.compliance_date,
+        ocs.expiry_date,
+        ocs.next_review_date,
+        ocs.notes as compliance_notes
+      FROM compliance_checkpoints cp
+      LEFT JOIN compliance_categories cc ON cp.category_id = cc.id
+      LEFT JOIN organization_compliance_status ocs ON cp.id = ocs.checkpoint_id
+      ${whereClause}
+      ORDER BY cc.risk_level DESC, cp.check_type, cp.title ASC
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: checkpoints.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch checkpoints', message: error.message }, 500);
+  }
+});
+
+// Get employee-specific compliance status
+app.get('/api/compliance/employee/:employeeId', async (c) => {
+  const { DB } = c.env;
+  const employeeId = c.req.param('employeeId');
+  
+  try {
+    // Get employee compliance checks
+    const employeeCompliance = await DB.prepare(`
+      SELECT 
+        ecs.*,
+        cp.title as checkpoint_title,
+        cp.description as checkpoint_description,
+        cp.check_type,
+        cc.name as category_name
+      FROM employee_compliance_status ecs
+      LEFT JOIN compliance_checkpoints cp ON ecs.checkpoint_id = cp.id
+      LEFT JOIN compliance_categories cc ON cp.category_id = cc.id
+      WHERE ecs.employee_id = ?
+      ORDER BY 
+        CASE ecs.status 
+          WHEN 'non_compliant' THEN 1 
+          WHEN 'pending' THEN 2 
+          WHEN 'in_progress' THEN 3 
+          ELSE 4 
+        END,
+        ecs.expiry_date ASC NULLS LAST
+    `).bind(employeeId).all();
+    
+    // Get employee training records with expiry tracking
+    const trainingRecords = await DB.prepare(`
+      SELECT 
+        etr.*,
+        mt.training_name,
+        mt.frequency_months,
+        CAST((JULIANDAY(etr.expiry_date) - JULIANDAY('now')) AS INTEGER) as days_until_expiry
+      FROM employee_training_records etr
+      LEFT JOIN mandatory_training mt ON etr.training_id = mt.id
+      WHERE etr.employee_id = ?
+        AND (etr.status = 'completed' OR etr.status = 'in_progress')
+      ORDER BY etr.expiry_date ASC NULLS LAST
+    `).bind(employeeId).all();
+    
+    // Get professional registrations
+    const professionalRegs = await DB.prepare(`
+      SELECT * FROM employee_professional_registrations
+      WHERE employee_id = ? AND status = 'active'
+      ORDER BY expiry_date ASC NULLS LAST
+    `).bind(employeeId).all();
+    
+    // Get contract status
+    const contractStatus = await DB.prepare(`
+      SELECT * FROM employment_contract_status
+      WHERE employee_id = ?
+    `).bind(employeeId).first();
+    
+    return c.json({
+      success: true,
+      data: {
+        compliance_checks: employeeCompliance.results,
+        training_records: trainingRecords.results,
+        professional_registrations: professionalRegs.results,
+        contract_status: contractStatus || null
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch employee compliance', message: error.message }, 500);
+  }
+});
+
+// Get compliance alerts (for assigned users)
+app.get('/api/compliance/alerts', async (c) => {
+  const { DB } = c.env;
+  const assignedTo = c.req.query('assigned_to');
+  const severity = c.req.query('severity');
+  const status = c.req.query('status') || 'new,acknowledged';
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (assignedTo) {
+      whereClause += ' AND ca.assigned_to = ?';
+      params.push(assignedTo);
+    }
+    
+    if (severity) {
+      whereClause += ' AND ca.severity = ?';
+      params.push(severity);
+    }
+    
+    // Handle comma-separated status values
+    const statusList = status.split(',').map(s => s.trim());
+    if (statusList.length > 0) {
+      const placeholders = statusList.map(() => '?').join(',');
+      whereClause += ` AND ca.status IN (${placeholders})`;
+      params.push(...statusList);
+    }
+    
+    const alerts = await DB.prepare(`
+      SELECT 
+        ca.*,
+        cc.name as category_name,
+        cp.title as checkpoint_title,
+        e.first_name || ' ' || e.last_name as employee_name
+      FROM compliance_alerts ca
+      LEFT JOIN compliance_categories cc ON ca.category_id = cc.id
+      LEFT JOIN compliance_checkpoints cp ON ca.checkpoint_id = cp.id
+      LEFT JOIN employees e ON ca.employee_id = e.id
+      WHERE ${whereClause}
+      ORDER BY 
+        CASE ca.severity WHEN 'critical' THEN 1 WHEN 'warning' THEN 2 ELSE 3 END,
+        ca.due_date ASC NULLS LAST,
+        ca.created_at DESC
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: alerts.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch alerts', message: error.message }, 500);
+  }
+});
+
+// Update compliance status
+app.put('/api/compliance/status/:statusId', async (c) => {
+  const { DB } = c.env;
+  const statusId = c.req.param('statusId');
+  const {  status, compliance_date, expiry_date, notes, evidence_document_path } = await c.req.json();
+  
+  try {
+    await DB.prepare(`
+      UPDATE organization_compliance_status
+      SET status = ?,
+          compliance_date = ?,
+          expiry_date = ?,
+          notes = ?,
+          evidence_document_path = ?,
+          last_checked_at = datetime('now'),
+          updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(status, compliance_date, expiry_date, notes, evidence_document_path, statusId).run();
+    
+    return c.json({ success: true, message: 'Compliance status updated' });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to update status', message: error.message }, 500);
+  }
+});
+
+// Acknowledge/resolve compliance alert
+app.put('/api/compliance/alerts/:alertId', async (c) => {
+  const { DB } = c.env;
+  const alertId = c.req.param('alertId');
+  const { status, resolution_notes, acknowledged_by, resolved_by } = await c.req.json();
+  
+  try {
+    const updates: string[] = ['status = ?'];
+    const params: any[] = [status];
+    
+    if (status === 'acknowledged' && acknowledged_by) {
+      updates.push('acknowledged_at = datetime("now")', 'acknowledged_by = ?');
+      params.push(acknowledged_by);
+    }
+    
+    if (status === 'resolved' && resolved_by) {
+      updates.push('resolved_at = datetime("now")', 'resolved_by = ?', 'resolution_notes = ?');
+      params.push(resolved_by, resolution_notes || '');
+    }
+    
+    params.push(alertId);
+    
+    await DB.prepare(`
+      UPDATE compliance_alerts
+      SET ${updates.join(', ')}
+      WHERE id = ?
+    `).bind(...params).run();
+    
+    return c.json({ success: true, message: 'Alert updated' });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to update alert', message: error.message }, 500);
+  }
+});
+
+// Get statutory payments status
+app.get('/api/compliance/payments', async (c) => {
+  const { DB } = c.env;
+  const status = c.req.query('status');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (status) {
+      whereClause += ' AND status = ?';
+      params.push(status);
+    }
+    
+    const payments = await DB.prepare(`
+      SELECT *,
+        CAST((JULIANDAY(due_date) - JULIANDAY('now')) AS INTEGER) as days_until_due
+      FROM statutory_payments
+      WHERE ${whereClause}
+      ORDER BY due_date ASC
+      LIMIT 50
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: payments.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch payments', message: error.message }, 500);
+  }
+});
+
+// Get statutory reports status
+app.get('/api/compliance/reports', async (c) => {
+  const { DB } = c.env;
+  const status = c.req.query('status');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (status) {
+      whereClause += ' AND status = ?';
+      params.push(status);
+    }
+    
+    const reports = await DB.prepare(`
+      SELECT *,
+        CAST((JULIANDAY(submission_deadline) - JULIANDAY('now')) AS INTEGER) as days_until_due
+      FROM statutory_reports
+      WHERE ${whereClause}
+      ORDER BY submission_deadline ASC
+      LIMIT 50
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: reports.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch reports', message: error.message }, 500);
+  }
+});
+
+// Get working time violations
+app.get('/api/compliance/violations/working-time', async (c) => {
+  const { DB } = c.env;
+  const employeeId = c.req.query('employee_id');
+  const resolved = c.req.query('resolved');
+  
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (employeeId) {
+      whereClause += ' AND wtv.employee_id = ?';
+      params.push(employeeId);
+    }
+    
+    if (resolved !== undefined) {
+      whereClause += ' AND wtv.resolved = ?';
+      params.push(resolved === 'true' ? 1 : 0);
+    }
+    
+    const violations = await DB.prepare(`
+      SELECT 
+        wtv.*,
+        e.first_name || ' ' || e.last_name as employee_name,
+        e.employee_number,
+        d.name as department_name
+      FROM working_time_violations wtv
+      LEFT JOIN employees e ON wtv.employee_id = e.id
+      LEFT JOIN departments d ON e.department_id = d.id
+      WHERE ${whereClause}
+      ORDER BY wtv.violation_date DESC, wtv.severity DESC
+      LIMIT 100
+    `).bind(...params).all();
+    
+    return c.json({ success: true, data: violations.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch violations', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
 // EXISTING APIs (keeping all previous endpoints)
 // ============================================================================
 
