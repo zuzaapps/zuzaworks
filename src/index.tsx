@@ -85,7 +85,7 @@ app.get('/api/dashboard/analytics', async (c) => {
   
   try {
     // Base analytics for all roles
-    const employeeCount = await DB.prepare('SELECT COUNT(*) as count FROM employees WHERE status = ?').bind('active').first();
+    const employeeCount = await DB.prepare('SELECT COUNT(*) as count FROM employees WHERE employment_status = ?').bind('Active').first();
     const shiftsToday = await DB.prepare('SELECT COUNT(*) as count FROM shifts WHERE shift_date = DATE("now")').all();
     const pendingLeave = await DB.prepare('SELECT COUNT(*) as count FROM leave_requests WHERE status = ?').bind('pending').first();
     const recentIncidents = await DB.prepare('SELECT COUNT(*) as count FROM incidents WHERE DATE(incident_date) >= DATE("now", "-30 days")').first();
@@ -98,7 +98,7 @@ app.get('/api/dashboard/analytics', async (c) => {
       const departmentStats = await DB.prepare(`
         SELECT d.name, COUNT(e.id) as employee_count, d.headcount_target
         FROM departments d
-        LEFT JOIN employees e ON d.id = e.department_id AND e.status = 'active'
+        LEFT JOIN employees e ON d.id = e.department_id AND e.employment_status = 'Active'
         GROUP BY d.id
         ORDER BY employee_count DESC
         LIMIT 5
@@ -107,7 +107,7 @@ app.get('/api/dashboard/analytics', async (c) => {
       const locationStats = await DB.prepare(`
         SELECT l.name, l.city, l.province, COUNT(e.id) as employee_count
         FROM locations l
-        LEFT JOIN employees e ON l.id = e.location_id AND e.status = 'active'
+        LEFT JOIN employees e ON l.id = e.location_id AND e.employment_status = 'Active'
         GROUP BY l.id
         ORDER BY employee_count DESC
         LIMIT 9
@@ -172,7 +172,7 @@ app.get('/api/dashboard/analytics', async (c) => {
       const teamSize = await DB.prepare(`
         SELECT COUNT(*) as count 
         FROM employees 
-        WHERE status = 'active' AND department_id IN (
+        WHERE employment_status = 'Active' AND department_id IN (
           SELECT DISTINCT department_id FROM employees WHERE id <= 5
         )
       `).first();
