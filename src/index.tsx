@@ -2278,6 +2278,48 @@ app.get('/', (c) => {
                         <!-- Divider -->
                         <div class="border-t border-gray-200 my-2"></div>
                         
+                        <!-- Advanced Workforce Features -->
+                        <a href="#shift-swaps" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="shift-swaps" onclick="navigateToPage('shiftSwaps'); return false;">
+                            <i class="fas fa-exchange-alt w-6 text-sa-green"></i>
+                            <span class="ml-3">Shift Swaps</span>
+                            <span class="ml-auto text-xs bg-sa-yellow text-white px-2 py-1 rounded-full font-bold">NEW</span>
+                        </a>
+                        
+                        <a href="#messaging" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="messaging" onclick="navigateToPage('messaging'); return false;">
+                            <i class="fas fa-comments-alt w-6 text-sa-blue"></i>
+                            <span class="ml-3">Team Messaging</span>
+                            <span class="ml-auto text-xs bg-sa-red text-white px-2 py-1 rounded-full font-bold">3</span>
+                        </a>
+                        
+                        <a href="#documents" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="documents" onclick="navigateToPage('documents'); return false;">
+                            <i class="fas fa-folder-open w-6 text-sa-yellow"></i>
+                            <span class="ml-3">Documents</span>
+                        </a>
+                        
+                        <a href="#payroll" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="payroll" onclick="navigateToPage('payroll'); return false;">
+                            <i class="fas fa-dollar-sign w-6 text-sa-green"></i>
+                            <span class="ml-3">Payroll Export</span>
+                        </a>
+                        
+                        <a href="#forecasting" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="forecasting" onclick="navigateToPage('forecasting'); return false;">
+                            <i class="fas fa-brain w-6 text-sa-red"></i>
+                            <span class="ml-3">Labor Forecasting</span>
+                            <span class="ml-auto text-xs bg-sa-blue text-white px-2 py-1 rounded-full font-bold">AI</span>
+                        </a>
+                        
+                        <a href="#attendance-rules" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="attendance-rules" onclick="navigateToPage('attendanceRules'); return false;">
+                            <i class="fas fa-gavel w-6 text-sa-red"></i>
+                            <span class="ml-3">Attendance Rules</span>
+                        </a>
+                        
+                        <a href="#budgets" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="budgets" onclick="navigateToPage('budgets'); return false;">
+                            <i class="fas fa-chart-pie w-6 text-sa-green"></i>
+                            <span class="ml-3">Budget Tracking</span>
+                        </a>
+                        
+                        <!-- Divider -->
+                        <div class="border-t border-gray-200 my-2"></div>
+                        
                         <!-- Optional Features -->
                         <a href="#social" class="nav-item flex items-center p-3 rounded-xl hover:bg-sa-blue/10 transition" data-page="social" onclick="navigateToPage('social'); return false;">
                             <i class="fas fa-comments w-6 text-gray-400"></i>
@@ -2737,6 +2779,27 @@ app.get('/', (c) => {
                     break;
                 case 'userManagement':
                     loadUserManagementPage();
+                    break;
+                case 'shiftSwaps':
+                    loadShiftSwapsPage();
+                    break;
+                case 'messaging':
+                    loadMessagingPage();
+                    break;
+                case 'documents':
+                    loadDocumentsPage();
+                    break;
+                case 'payroll':
+                    loadPayrollPage();
+                    break;
+                case 'forecasting':
+                    loadForecastingPage();
+                    break;
+                case 'attendanceRules':
+                    loadAttendanceRulesPage();
+                    break;
+                case 'budgets':
+                    loadBudgetsPage();
                     break;
                 case 'social':
                     loadSocialPage();
@@ -3644,6 +3707,797 @@ app.get('/', (c) => {
                 </div>
             \`;
         }
+        
+        // ========== SHIFT SWAPS PAGE ==========
+        function loadShiftSwapsPage() {
+            const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading shift swaps...</p></div>';
+            
+            axios.get('/api/shift-swaps').then(response => {
+                if (response.data.success) {
+                    const swaps = response.data.data;
+                    
+                    mainContent.innerHTML = \`
+                        <div class="glass-card p-8 mb-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-3xl font-bold text-sa-blue">
+                                    <i class="fas fa-exchange-alt mr-3"></i>
+                                    Shift Swaps & Trades
+                                </h2>
+                                <button onclick="openShiftSwapModal()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                    <i class="fas fa-plus mr-2"></i> Request Swap
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${swaps.filter(s => s.status === 'pending').length}</div>
+                                    <div class="text-sm opacity-90">Pending Requests</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${swaps.filter(s => s.status === 'accepted').length}</div>
+                                    <div class="text-sm opacity-90">Accepted</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${swaps.filter(s => s.status === 'approved_by_manager').length}</div>
+                                    <div class="text-sm opacity-90">Manager Approved</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${swaps.filter(s => s.status === 'declined').length}</div>
+                                    <div class="text-sm opacity-90">Declined</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-6 flex gap-2">
+                                <button onclick="filterSwaps('all')" class="px-4 py-2 rounded-lg bg-sa-blue text-white font-bold swap-filter-btn" data-filter="all">All</button>
+                                <button onclick="filterSwaps('pending')" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 swap-filter-btn" data-filter="pending">Pending</button>
+                                <button onclick="filterSwaps('accepted')" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 swap-filter-btn" data-filter="accepted">Accepted</button>
+                                <button onclick="filterSwaps('approved_by_manager')" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 swap-filter-btn" data-filter="approved_by_manager">Manager Approved</button>
+                                <button onclick="filterSwaps('declined')" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 swap-filter-btn" data-filter="declined">Declined</button>
+                            </div>
+                            
+                            <div id="swapsList" class="space-y-4">
+                                \${swaps.map(swap => \`
+                                    <div class="swap-item p-6 bg-white rounded-xl border-l-4 \${
+                                        swap.status === 'pending' ? 'border-sa-yellow' :
+                                        swap.status === 'accepted' ? 'border-sa-green' :
+                                        swap.status === 'approved_by_manager' ? 'border-sa-blue' :
+                                        'border-sa-red'
+                                    }" data-status="\${swap.status}">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-3 mb-3">
+                                                    <span class="px-3 py-1 rounded-full text-xs font-bold \${
+                                                        swap.status === 'pending' ? 'bg-sa-yellow text-white' :
+                                                        swap.status === 'accepted' ? 'bg-sa-green text-white' :
+                                                        swap.status === 'approved_by_manager' ? 'bg-sa-blue text-white' :
+                                                        'bg-sa-red text-white'
+                                                    }">\${swap.status.replace(/_/g, ' ').toUpperCase()}</span>
+                                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-200">\${swap.swap_type.toUpperCase()}</span>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-6">
+                                                    <div>
+                                                        <div class="text-sm text-gray-600 mb-1">Requesting</div>
+                                                        <div class="font-bold text-lg">\${swap.requesting_employee_name}</div>
+                                                        <div class="text-sm text-gray-600">\${new Date(swap.original_shift_start).toLocaleDateString()} • \${swap.original_shift_start.substring(11, 16)} - \${swap.original_shift_end.substring(11, 16)}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-sm text-gray-600 mb-1">Target Employee</div>
+                                                        <div class="font-bold text-lg">\${swap.target_employee_name || 'Open to All'}</div>
+                                                        <div class="text-sm text-gray-600">\${swap.target_employee_name ? 'Specific swap' : 'Anyone can accept'}</div>
+                                                    </div>
+                                                </div>
+                                                \${swap.reason ? \`<div class="mt-3 p-3 bg-gray-50 rounded-lg"><div class="text-sm text-gray-600">Reason:</div><div class="text-gray-800">\${swap.reason}</div></div>\` : ''}
+                                                <div class="mt-3 text-xs text-gray-500">Expires: \${new Date(swap.expires_at).toLocaleString()}</div>
+                                            </div>
+                                            <div class="flex flex-col gap-2 ml-6">
+                                                \${swap.status === 'pending' ? \`
+                                                    <button onclick="handleSwapAction(\${swap.id}, 'accept')" class="px-4 py-2 bg-sa-green text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                        <i class="fas fa-check mr-2"></i> Accept
+                                                    </button>
+                                                    <button onclick="handleSwapAction(\${swap.id}, 'decline')" class="px-4 py-2 bg-sa-red text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                        <i class="fas fa-times mr-2"></i> Decline
+                                                    </button>
+                                                \` : swap.status === 'accepted' ? \`
+                                                    <button onclick="handleSwapAction(\${swap.id}, 'approve')" class="px-4 py-2 bg-sa-blue text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                        <i class="fas fa-user-check mr-2"></i> Manager Approve
+                                                    </button>
+                                                \` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                \`).join('')}
+                            </div>
+                        </div>
+                    \`;
+                }
+            }).catch(error => {
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading shift swaps</p></div>';
+            });
+        }
+        
+        window.filterSwaps = function(status) {
+            document.querySelectorAll('.swap-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-sa-blue', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            event.target.classList.remove('bg-gray-200', 'text-gray-700');
+            event.target.classList.add('bg-sa-blue', 'text-white');
+            
+            document.querySelectorAll('.swap-item').forEach(item => {
+                if (status === 'all' || item.dataset.status === status) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        };
+        
+        window.handleSwapAction = function(swapId, action) {
+            if (!confirm(\`Are you sure you want to \${action} this swap request?\`)) return;
+            
+            axios.patch(\`/api/shift-swaps/\${swapId}\`, { action }).then(response => {
+                if (response.data.success) {
+                    alert('Swap request updated successfully!');
+                    loadShiftSwapsPage();
+                }
+            }).catch(error => {
+                alert('Error updating swap request');
+            });
+        };
+        
+        window.openShiftSwapModal = function() {
+            alert('Shift swap request form will open here (full form implementation pending)');
+        };
+        
+        // ========== TEAM MESSAGING PAGE ==========
+        function loadMessagingPage() {
+            const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading messages...</p></div>';
+            
+            axios.get('/api/messages').then(response => {
+                if (response.data.success) {
+                    const messages = response.data.data;
+                    
+                    mainContent.innerHTML = \`
+                        <div class="glass-card p-8 mb-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-3xl font-bold text-sa-blue">
+                                    <i class="fas fa-comments-alt mr-3"></i>
+                                    Team Messaging
+                                </h2>
+                                <button onclick="openMessageComposer()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                    <i class="fas fa-paper-plane mr-2"></i> New Message
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${messages.length}</div>
+                                    <div class="text-sm opacity-90">Total Messages</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${messages.filter(m => m.is_urgent).length}</div>
+                                    <div class="text-sm opacity-90">Urgent</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${messages.filter(m => m.is_pinned).length}</div>
+                                    <div class="text-sm opacity-90">Pinned</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${messages.filter(m => m.has_attachments).length}</div>
+                                    <div class="text-sm opacity-90">With Attachments</div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                \${messages.map(msg => \`
+                                    <div class="p-6 bg-white rounded-xl border-l-4 \${msg.is_urgent ? 'border-sa-red' : msg.is_pinned ? 'border-sa-yellow' : 'border-sa-blue'}">
+                                        <div class="flex items-start justify-between mb-3">
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <h3 class="text-xl font-bold text-gray-800">\${msg.subject}</h3>
+                                                    \${msg.is_urgent ? '<span class="px-3 py-1 bg-sa-red text-white rounded-full text-xs font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> URGENT</span>' : ''}
+                                                    \${msg.is_pinned ? '<span class="px-3 py-1 bg-sa-yellow text-white rounded-full text-xs font-bold"><i class="fas fa-thumbtack mr-1"></i> PINNED</span>' : ''}
+                                                </div>
+                                                <div class="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                                                    <span><i class="fas fa-user mr-1"></i> \${msg.sender_name}</span>
+                                                    <span><i class="fas fa-clock mr-1"></i> \${new Date(msg.sent_at).toLocaleString()}</span>
+                                                    <span><i class="fas fa-users mr-1"></i> \${msg.target_type === 'all' ? 'All Employees' : msg.target_type === 'department' ? 'Department' : 'Location'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-gray-700 mb-3">\${msg.message}</div>
+                                        \${msg.has_attachments ? '<div class="flex items-center gap-2 text-sm text-sa-blue"><i class="fas fa-paperclip mr-1"></i> <span>Has attachments</span></div>' : ''}
+                                    </div>
+                                \`).join('')}
+                            </div>
+                        </div>
+                    \`;
+                }
+            }).catch(error => {
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading messages</p></div>';
+            });
+        }
+        
+        window.openMessageComposer = function() {
+            alert('Message composer will open here (full form implementation pending)');
+        };
+        
+        // ========== DOCUMENTS PAGE ==========
+        function loadDocumentsPage() {
+            const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading documents...</p></div>';
+            
+            axios.get('/api/documents').then(response => {
+                if (response.data.success) {
+                    const documents = response.data.data;
+                    
+                    mainContent.innerHTML = \`
+                        <div class="glass-card p-8 mb-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-3xl font-bold text-sa-blue">
+                                    <i class="fas fa-folder-open mr-3"></i>
+                                    Document Management
+                                </h2>
+                                <button onclick="openDocumentUploader()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                    <i class="fas fa-cloud-upload-alt mr-2"></i> Upload Document
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${documents.length}</div>
+                                    <div class="text-sm opacity-90">Total Documents</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${documents.filter(d => !d.requires_signature || d.signed_at).length}</div>
+                                    <div class="text-sm opacity-90">Signed/No Signature</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${documents.filter(d => d.requires_signature && !d.signed_at).length}</div>
+                                    <div class="text-sm opacity-90">Pending Signature</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${documents.filter(d => d.expires_at && new Date(d.expires_at) < new Date()).length}</div>
+                                    <div class="text-sm opacity-90">Expired</div>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full bg-white rounded-xl overflow-hidden">
+                                    <thead class="bg-gradient-to-r from-sa-blue to-sa-green text-white">
+                                        <tr>
+                                            <th class="px-6 py-4 text-left">Document Name</th>
+                                            <th class="px-6 py-4 text-left">Employee</th>
+                                            <th class="px-6 py-4 text-left">Type</th>
+                                            <th class="px-6 py-4 text-left">Status</th>
+                                            <th class="px-6 py-4 text-left">Uploaded</th>
+                                            <th class="px-6 py-4 text-left">Expires</th>
+                                            <th class="px-6 py-4 text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        \${documents.map(doc => \`
+                                            <tr class="hover:bg-gray-50 transition">
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center gap-3">
+                                                        <i class="fas fa-file-pdf text-sa-red text-2xl"></i>
+                                                        <span class="font-bold">\${doc.document_name}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4">\${doc.employee_name}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="px-3 py-1 bg-gray-200 rounded-full text-xs font-bold">\${doc.document_type}</span>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    \${doc.requires_signature ? 
+                                                        (doc.signed_at ? 
+                                                            '<span class="px-3 py-1 bg-sa-green text-white rounded-full text-xs font-bold"><i class="fas fa-check mr-1"></i> Signed</span>' : 
+                                                            '<span class="px-3 py-1 bg-sa-yellow text-white rounded-full text-xs font-bold"><i class="fas fa-clock mr-1"></i> Pending</span>'
+                                                        ) : 
+                                                        '<span class="px-3 py-1 bg-sa-blue text-white rounded-full text-xs font-bold">No Signature Required</span>'
+                                                    }
+                                                </td>
+                                                <td class="px-6 py-4 text-sm text-gray-600">\${new Date(doc.uploaded_at).toLocaleDateString()}</td>
+                                                <td class="px-6 py-4 text-sm">
+                                                    \${doc.expires_at ? 
+                                                        (new Date(doc.expires_at) < new Date() ? 
+                                                            '<span class="text-sa-red font-bold">EXPIRED</span>' : 
+                                                            new Date(doc.expires_at).toLocaleDateString()
+                                                        ) : 
+                                                        '<span class="text-gray-400">No Expiry</span>'
+                                                    }
+                                                </td>
+                                                <td class="px-6 py-4 text-center">
+                                                    <button class="px-3 py-1 bg-sa-blue text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
+                                                        <i class="fas fa-download"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        \`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    \`;
+                }
+            }).catch(error => {
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading documents</p></div>';
+            });
+        }
+        
+        window.openDocumentUploader = function() {
+            alert('Document uploader will open here (R2/S3 integration pending)');
+        };
+        
+        // ========== PAYROLL EXPORT PAGE ==========
+        function loadPayrollPage() {
+            const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading payroll...</p></div>';
+            
+            axios.get('/api/payroll/batches').then(response => {
+                if (response.data.success) {
+                    const batches = response.data.data;
+                    
+                    mainContent.innerHTML = \`
+                        <div class="glass-card p-8 mb-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-3xl font-bold text-sa-blue">
+                                    <i class="fas fa-dollar-sign mr-3"></i>
+                                    Payroll Export
+                                </h2>
+                                <button onclick="createPayrollBatch()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                    <i class="fas fa-plus mr-2"></i> New Payroll Batch
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${batches.length}</div>
+                                    <div class="text-sm opacity-90">Total Batches</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${batches.filter(b => b.status === 'draft').length}</div>
+                                    <div class="text-sm opacity-90">Draft</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${batches.filter(b => b.status === 'approved').length}</div>
+                                    <div class="text-sm opacity-90">Approved</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">R\${batches.reduce((sum, b) => sum + parseFloat(b.total_amount || 0), 0).toFixed(2)}</div>
+                                    <div class="text-sm opacity-90">Total Value</div>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full bg-white rounded-xl overflow-hidden">
+                                    <thead class="bg-gradient-to-r from-sa-blue to-sa-green text-white">
+                                        <tr>
+                                            <th class="px-6 py-4 text-left">Batch Name</th>
+                                            <th class="px-6 py-4 text-left">Period</th>
+                                            <th class="px-6 py-4 text-left">Employees</th>
+                                            <th class="px-6 py-4 text-left">Total Amount</th>
+                                            <th class="px-6 py-4 text-left">Status</th>
+                                            <th class="px-6 py-4 text-left">Created</th>
+                                            <th class="px-6 py-4 text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        \${batches.map(batch => \`
+                                            <tr class="hover:bg-gray-50 transition">
+                                                <td class="px-6 py-4 font-bold">\${batch.batch_name}</td>
+                                                <td class="px-6 py-4">\${batch.period_start} to \${batch.period_end}</td>
+                                                <td class="px-6 py-4">\${batch.employee_count}</td>
+                                                <td class="px-6 py-4 font-bold text-sa-green">R\${parseFloat(batch.total_amount || 0).toFixed(2)}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="px-3 py-1 rounded-full text-xs font-bold \${
+                                                        batch.status === 'draft' ? 'bg-sa-yellow text-white' :
+                                                        batch.status === 'approved' ? 'bg-sa-green text-white' :
+                                                        batch.status === 'exported' ? 'bg-sa-blue text-white' :
+                                                        'bg-gray-200 text-gray-700'
+                                                    }">\${batch.status.toUpperCase()}</span>
+                                                </td>
+                                                <td class="px-6 py-4 text-sm text-gray-600">\${new Date(batch.created_at).toLocaleDateString()}</td>
+                                                <td class="px-6 py-4 text-center">
+                                                    <div class="flex gap-2 justify-center">
+                                                        <button onclick="exportPayroll(\${batch.id})" class="px-3 py-1 bg-sa-green text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
+                                                            <i class="fas fa-download mr-1"></i> Export
+                                                        </button>
+                                                        \${batch.status === 'draft' ? \`
+                                                            <button onclick="approvePayroll(\${batch.id})" class="px-3 py-1 bg-sa-blue text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
+                                                                <i class="fas fa-check mr-1"></i> Approve
+                                                            </button>
+                                                        \` : ''}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        \`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    \`;
+                }
+            }).catch(error => {
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading payroll</p></div>';
+            });
+        }
+        
+        window.createPayrollBatch = function() {
+            alert('Payroll batch creation form will open here (full form implementation pending)');
+        };
+        
+        window.exportPayroll = function(batchId) {
+            alert(\`Exporting payroll batch #\${batchId} (CSV/Excel export pending)\`);
+        };
+        
+        window.approvePayroll = function(batchId) {
+            if (!confirm('Approve this payroll batch?')) return;
+            alert(\`Payroll batch #\${batchId} approval workflow pending\`);
+        };
+        
+        // ========== LABOR FORECASTING PAGE ==========
+        function loadForecastingPage() {
+            const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading forecasts...</p></div>';
+            
+            axios.get('/api/forecasts').then(response => {
+                if (response.data.success) {
+                    const forecasts = response.data.data;
+                    
+                    mainContent.innerHTML = \`
+                        <div class="glass-card p-8 mb-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-3xl font-bold text-sa-blue">
+                                    <i class="fas fa-brain mr-3"></i>
+                                    AI Labor Forecasting
+                                </h2>
+                                <span class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold">
+                                    <i class="fas fa-robot mr-2"></i> AI-Powered
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${forecasts.length}</div>
+                                    <div class="text-sm opacity-90">Forecasted Days</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${Math.round(forecasts.reduce((sum, f) => sum + f.predicted_customer_count, 0) / forecasts.length)}</div>
+                                    <div class="text-sm opacity-90">Avg Customers/Day</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${Math.round(forecasts.reduce((sum, f) => sum + f.recommended_staff_count, 0) / forecasts.length)}</div>
+                                    <div class="text-sm opacity-90">Avg Staff Needed</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${Math.round(forecasts.reduce((sum, f) => sum + (f.confidence_level || 0), 0) / forecasts.length * 100)}%</div>
+                                    <div class="text-sm opacity-90">Avg Confidence</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-6 p-4 bg-blue-50 border-l-4 border-sa-blue rounded-lg">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-lightbulb text-sa-yellow text-2xl"></i>
+                                    <h3 class="font-bold text-lg">AI Insights</h3>
+                                </div>
+                                <p class="text-gray-700">Machine learning models analyze historical data, seasonal patterns, weather, and local events to predict customer demand and optimal staffing levels.</p>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full bg-white rounded-xl overflow-hidden">
+                                    <thead class="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                                        <tr>
+                                            <th class="px-6 py-4 text-left">Date</th>
+                                            <th class="px-6 py-4 text-left">Location</th>
+                                            <th class="px-6 py-4 text-left">Predicted Customers</th>
+                                            <th class="px-6 py-4 text-left">Recommended Staff</th>
+                                            <th class="px-6 py-4 text-left">Skill Mix</th>
+                                            <th class="px-6 py-4 text-left">Confidence</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        \${forecasts.map(forecast => {
+                                            const skillMix = forecast.recommended_skill_mix ? JSON.parse(forecast.recommended_skill_mix) : {};
+                                            const confidence = Math.round((forecast.confidence_level || 0) * 100);
+                                            
+                                            return \`
+                                                <tr class="hover:bg-gray-50 transition">
+                                                    <td class="px-6 py-4 font-bold">\${new Date(forecast.forecast_date).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })}</td>
+                                                    <td class="px-6 py-4">\${forecast.location_name}</td>
+                                                    <td class="px-6 py-4">
+                                                        <div class="flex items-center gap-2">
+                                                            <i class="fas fa-users text-sa-blue"></i>
+                                                            <span class="font-bold text-lg">\${forecast.predicted_customer_count}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-6 py-4">
+                                                        <div class="flex items-center gap-2">
+                                                            <i class="fas fa-user-tie text-sa-green"></i>
+                                                            <span class="font-bold text-lg">\${forecast.recommended_staff_count}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-6 py-4">
+                                                        <div class="flex flex-wrap gap-1">
+                                                            \${Object.entries(skillMix).map(([skill, count]) => \`
+                                                                <span class="px-2 py-1 bg-sa-blue/10 text-sa-blue rounded text-xs font-bold">\${skill}: \${count}</span>
+                                                            \`).join('')}
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-6 py-4">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+                                                                <div class="h-full bg-gradient-to-r from-sa-green to-sa-blue rounded-full" style="width: \${confidence}%"></div>
+                                                            </div>
+                                                            <span class="font-bold text-sm">\${confidence}%</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            \`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    \`;
+                }
+            }).catch(error => {
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading forecasts</p></div>';
+            });
+        }
+        
+        // ========== ATTENDANCE RULES PAGE ==========
+        function loadAttendanceRulesPage() {
+            const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading attendance rules...</p></div>';
+            
+            Promise.all([
+                axios.get('/api/attendance/rules'),
+                axios.get('/api/attendance/violations')
+            ]).then(([rulesResponse, violationsResponse]) => {
+                if (rulesResponse.data.success && violationsResponse.data.success) {
+                    const rules = rulesResponse.data.data;
+                    const violations = violationsResponse.data.data;
+                    
+                    mainContent.innerHTML = \`
+                        <div class="glass-card p-8 mb-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-3xl font-bold text-sa-blue">
+                                    <i class="fas fa-gavel mr-3"></i>
+                                    Attendance Rules & Violations
+                                </h2>
+                                <button onclick="createAttendanceRule()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                    <i class="fas fa-plus mr-2"></i> New Rule
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${rules.filter(r => r.is_active).length}</div>
+                                    <div class="text-sm opacity-90">Active Rules</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${violations.length}</div>
+                                    <div class="text-sm opacity-90">Total Violations</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${violations.reduce((sum, v) => sum + (v.penalty_points || 0), 0)}</div>
+                                    <div class="text-sm opacity-90">Penalty Points</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">R\${violations.reduce((sum, v) => sum + parseFloat(v.pay_deduction || 0), 0).toFixed(2)}</div>
+                                    <div class="text-sm opacity-90">Total Deductions</div>
+                                </div>
+                            </div>
+                            
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4"><i class="fas fa-list-check mr-2 text-sa-blue"></i> Active Rules</h3>
+                            <div class="space-y-4 mb-8">
+                                \${rules.filter(r => r.is_active).map(rule => {
+                                    const config = rule.rule_config ? JSON.parse(rule.rule_config) : {};
+                                    
+                                    return \`
+                                        <div class="p-6 bg-white rounded-xl border-l-4 \${
+                                            rule.rule_type === 'late_arrival' ? 'border-sa-yellow' :
+                                            rule.rule_type === 'early_departure' ? 'border-sa-red' :
+                                            'border-sa-blue'
+                                        }">
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-3 mb-2">
+                                                        <h4 class="text-xl font-bold text-gray-800">\${rule.rule_name}</h4>
+                                                        <span class="px-3 py-1 bg-gray-200 rounded-full text-xs font-bold">\${rule.rule_type.replace(/_/g, ' ').toUpperCase()}</span>
+                                                    </div>
+                                                    <p class="text-gray-600 mb-3">\${rule.description}</p>
+                                                    <div class="grid grid-cols-3 gap-4">
+                                                        <div class="p-3 bg-gray-50 rounded-lg">
+                                                            <div class="text-sm text-gray-600">Penalty Points</div>
+                                                            <div class="text-2xl font-bold text-sa-red">\${rule.penalty_points}</div>
+                                                        </div>
+                                                        <div class="p-3 bg-gray-50 rounded-lg">
+                                                            <div class="text-sm text-gray-600">Auto Deduct Pay</div>
+                                                            <div class="text-2xl font-bold \${rule.auto_deduct_pay ? 'text-sa-red' : 'text-sa-green'}">
+                                                                <i class="fas fa-\${rule.auto_deduct_pay ? 'check' : 'times'}"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="p-3 bg-gray-50 rounded-lg">
+                                                            <div class="text-sm text-gray-600">Threshold</div>
+                                                            <div class="text-lg font-bold text-sa-blue">\${config.grace_minutes || config.threshold_minutes || 0} min</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button onclick="toggleRule(\${rule.id}, false)" class="ml-4 px-4 py-2 bg-sa-red text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                    <i class="fas fa-pause mr-2"></i> Disable
+                                                </button>
+                                            </div>
+                                        </div>
+                                    \`;
+                                }).join('')}
+                            </div>
+                            
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4"><i class="fas fa-exclamation-triangle mr-2 text-sa-red"></i> Recent Violations</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full bg-white rounded-xl overflow-hidden">
+                                    <thead class="bg-gradient-to-r from-sa-red to-sa-yellow text-white">
+                                        <tr>
+                                            <th class="px-6 py-4 text-left">Employee</th>
+                                            <th class="px-6 py-4 text-left">Rule</th>
+                                            <th class="px-6 py-4 text-left">Date</th>
+                                            <th class="px-6 py-4 text-left">Penalty Points</th>
+                                            <th class="px-6 py-4 text-left">Pay Deduction</th>
+                                            <th class="px-6 py-4 text-left">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        \${violations.map(violation => \`
+                                            <tr class="hover:bg-gray-50 transition">
+                                                <td class="px-6 py-4 font-bold">\${violation.employee_name}</td>
+                                                <td class="px-6 py-4">\${violation.rule_name}</td>
+                                                <td class="px-6 py-4">\${new Date(violation.violation_date).toLocaleDateString()}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="px-3 py-1 bg-sa-red text-white rounded-full text-sm font-bold">
+                                                        \${violation.penalty_points} pts
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 font-bold text-sa-red">R\${parseFloat(violation.pay_deduction || 0).toFixed(2)}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="px-3 py-1 rounded-full text-xs font-bold \${
+                                                        violation.is_disputed ? 'bg-sa-yellow text-white' :
+                                                        violation.is_resolved ? 'bg-sa-green text-white' :
+                                                        'bg-gray-200 text-gray-700'
+                                                    }">
+                                                        \${violation.is_disputed ? 'DISPUTED' : violation.is_resolved ? 'RESOLVED' : 'ACTIVE'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        \`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    \`;
+                }
+            }).catch(error => {
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading attendance rules</p></div>';
+            });
+        }
+        
+        window.createAttendanceRule = function() {
+            alert('Attendance rule creation form will open here (full form implementation pending)');
+        };
+        
+        window.toggleRule = function(ruleId, isActive) {
+            alert(\`Rule #\${ruleId} will be \${isActive ? 'enabled' : 'disabled'}\`);
+        };
+        
+        // ========== BUDGET TRACKING PAGE ==========
+        function loadBudgetsPage() {
+            const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading budgets...</p></div>';
+            
+            axios.get('/api/budgets').then(response => {
+                if (response.data.success) {
+                    const budgets = response.data.data;
+                    
+                    mainContent.innerHTML = \`
+                        <div class="glass-card p-8 mb-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-3xl font-bold text-sa-blue">
+                                    <i class="fas fa-chart-pie mr-3"></i>
+                                    Labor Budget Tracking
+                                </h2>
+                                <button onclick="createBudgetPeriod()" class="px-6 py-3 bg-gradient-to-r from-sa-green to-sa-blue text-white rounded-xl font-bold hover:shadow-lg transition">
+                                    <i class="fas fa-plus mr-2"></i> New Budget Period
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                <div class="p-6 bg-gradient-to-br from-sa-blue to-sa-blue/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">\${budgets.length}</div>
+                                    <div class="text-sm opacity-90">Active Budgets</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-green to-sa-green/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">R\${budgets.reduce((sum, b) => sum + parseFloat(b.budgeted_amount || 0), 0).toFixed(2)}</div>
+                                    <div class="text-sm opacity-90">Total Budget</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-yellow to-sa-yellow/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">R\${budgets.reduce((sum, b) => sum + parseFloat(b.actual_amount || 0), 0).toFixed(2)}</div>
+                                    <div class="text-sm opacity-90">Actual Spend</div>
+                                </div>
+                                <div class="p-6 bg-gradient-to-br from-sa-red to-sa-red/80 text-white rounded-xl">
+                                    <div class="text-4xl font-bold mb-2">R\${budgets.reduce((sum, b) => sum + parseFloat(b.variance_amount || 0), 0).toFixed(2)}</div>
+                                    <div class="text-sm opacity-90">Variance</div>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full bg-white rounded-xl overflow-hidden">
+                                    <thead class="bg-gradient-to-r from-sa-blue to-sa-green text-white">
+                                        <tr>
+                                            <th class="px-6 py-4 text-left">Period</th>
+                                            <th class="px-6 py-4 text-left">Location</th>
+                                            <th class="px-6 py-4 text-left">Department</th>
+                                            <th class="px-6 py-4 text-left">Budgeted</th>
+                                            <th class="px-6 py-4 text-left">Actual</th>
+                                            <th class="px-6 py-4 text-left">Variance</th>
+                                            <th class="px-6 py-4 text-left">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        \${budgets.map(budget => {
+                                            const budgeted = parseFloat(budget.budgeted_amount || 0);
+                                            const actual = parseFloat(budget.actual_amount || 0);
+                                            const variance = parseFloat(budget.variance_amount || 0);
+                                            const variancePercent = budgeted > 0 ? Math.round((variance / budgeted) * 100) : 0;
+                                            const isOverBudget = variance > 0;
+                                            
+                                            return \`
+                                                <tr class="hover:bg-gray-50 transition">
+                                                    <td class="px-6 py-4 font-bold">\${budget.period_start} to \${budget.period_end}</td>
+                                                    <td class="px-6 py-4">\${budget.location_name || 'All Locations'}</td>
+                                                    <td class="px-6 py-4">\${budget.department_name || 'All Departments'}</td>
+                                                    <td class="px-6 py-4 font-bold">R\${budgeted.toFixed(2)}</td>
+                                                    <td class="px-6 py-4 font-bold">R\${actual.toFixed(2)}</td>
+                                                    <td class="px-6 py-4">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="font-bold \${isOverBudget ? 'text-sa-red' : 'text-sa-green'}">
+                                                                R\${Math.abs(variance).toFixed(2)}
+                                                            </span>
+                                                            <span class="px-2 py-1 rounded text-xs font-bold \${isOverBudget ? 'bg-sa-red text-white' : 'bg-sa-green text-white'}">
+                                                                \${isOverBudget ? '+' : ''}\${variancePercent}%
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-6 py-4">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+                                                                <div class="h-full \${isOverBudget ? 'bg-sa-red' : 'bg-sa-green'} rounded-full" 
+                                                                     style="width: \${Math.min(100, Math.abs(variancePercent))}%"></div>
+                                                            </div>
+                                            \${isOverBudget ? 
+                                                                '<i class="fas fa-exclamation-triangle text-sa-red"></i>' : 
+                                                                '<i class="fas fa-check-circle text-sa-green"></i>'
+                                                            }
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            \`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    \`;
+                }
+            }).catch(error => {
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading budgets</p></div>';
+            });
+        }
+        
+        window.createBudgetPeriod = function() {
+            alert('Budget period creation form will open here (full form implementation pending)');
+        };
         
     </script>
 </body>
