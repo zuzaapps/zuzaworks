@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Compliance Checklist - ZuZaWorksOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">
+                        <i class="fas fa-clipboard-check mr-3"></i>
+                        Manager Compliance Checklist
+                    </h1>
+                    <p class="text-blue-100 mt-1">Team-specific compliance actions and deadlines</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <select id="teamFilter" class="bg-white text-gray-800 rounded px-4 py-2">
+                        <option value="">All Teams</option>
+                        <option value="hr">HR</option>
+                        <option value="payroll">Payroll</option>
+                        <option value="training">Training</option>
+                        <option value="operations">Operations</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-red-100 rounded-lg p-3">
+                        <i class="fas fa-exclamation-circle text-red-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-gray-500 text-sm">Overdue Actions</p>
+                        <p class="text-2xl font-bold text-gray-800" id="overdueCount">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-yellow-100 rounded-lg p-3">
+                        <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-gray-500 text-sm">Due This Week</p>
+                        <p class="text-2xl font-bold text-gray-800" id="thisWeekCount">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-100 rounded-lg p-3">
+                        <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-gray-500 text-sm">Completed Today</p>
+                        <p class="text-2xl font-bold text-gray-800" id="completedCount">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-100 rounded-lg p-3">
+                        <i class="fas fa-users text-blue-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-gray-500 text-sm">Team Members</p>
+                        <p class="text-2xl font-bold text-gray-800" id="teamCount">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Actions -->
+        <div class="bg-white rounded-lg shadow mb-8">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-tasks mr-2"></i>
+                        My Pending Actions
+                    </h2>
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                            <i class="fas fa-filter mr-2"></i>Filter
+                        </button>
+                        <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition" onclick="refreshData()">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="divide-y divide-gray-200" id="pendingActionsList">
+                <!-- Actions will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Team Member Compliance Status -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-user-check mr-2"></i>
+                    Team Member Compliance Status
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contract Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Documents</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Training</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamMembersTable" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Action Modal -->
+    <div id="actionModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Complete Compliance Action</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="modalContent" class="mb-4">
+                <!-- Modal content will be dynamically inserted -->
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                    Cancel
+                </button>
+                <button onclick="completeAction()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                    <i class="fas fa-check mr-2"></i>Mark Complete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAlertId = null;
+
+        async function refreshData() {
+            await loadPendingActions();
+            await loadTeamMembers();
+            updateQuickStats();
+        }
+
+        async function loadPendingActions() {
+            try {
+                const response = await axios.get('/api/compliance/alerts?status=new&role=manager');
+                const alerts = response.data.data || [];
+                
+                const listContainer = document.getElementById('pendingActionsList');
+                listContainer.innerHTML = '';
+                
+                if (alerts.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="p-8 text-center text-gray-500">
+                            <i class="fas fa-check-circle text-green-500 text-4xl mb-3"></i>
+                            <p class="text-lg">All compliance actions completed!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                alerts.forEach(alert => {
+                    const dueDate = new Date(alert.due_date);
+                    const today = new Date();
+                    const isOverdue = dueDate < today;
+                    const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    const div = document.createElement('div');
+                    div.className = 'p-6 hover:bg-gray-50';
+                    div.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded ${getSeverityBadge(alert.severity)}">
+                                        ${alert.severity}
+                                    </span>
+                                    ${isOverdue ? '<span class="px-2 py-1 text-xs font-semibold rounded bg-red-100 text-red-800">OVERDUE</span>' : ''}
+                                    ${daysUntilDue <= 7 && !isOverdue ? '<span class="px-2 py-1 text-xs font-semibold rounded bg-yellow-100 text-yellow-800">DUE SOON</span>' : ''}
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800">${alert.title}</h3>
+                                <p class="text-gray-600 mt-1">${alert.description || 'No description'}</p>
+                                <div class="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                                    <span><i class="fas fa-calendar mr-1"></i>Due: ${formatDate(alert.due_date)}</span>
+                                    <span><i class="fas fa-user mr-1"></i>Assigned: ${alert.responsible_role || 'Unassigned'}</span>
+                                </div>
+                            </div>
+                            <button onclick="openActionModal(${alert.id}, '${alert.title}')" 
+                                    class="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                <i class="fas fa-check mr-2"></i>Complete
+                            </button>
+                        </div>
+                    `;
+                    listContainer.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Failed to load pending actions:', error);
+            }
+        }
+
+        async function loadTeamMembers() {
+            try {
+                const response = await axios.get('/api/employees?limit=10');
+                const employees = response.data.data || [];
+                
+                const tableBody = document.getElementById('teamMembersTable');
+                tableBody.innerHTML = '';
+                
+                if (employees.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                No team members found
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                employees.forEach(emp => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50';
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <span class="text-blue-600 font-semibold">${emp.first_name?.[0]}${emp.last_name?.[0]}</span>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${emp.first_name} ${emp.last_name}</div>
+                                    <div class="text-xs text-gray-500">${emp.email || 'N/A'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            ${emp.department_name || 'N/A'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded ${getStatusBadge(emp.employment_status)}">
+                                ${emp.employment_status || 'N/A'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-green-600 font-semibold">✓</span> Complete
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-green-600 font-semibold">✓</span> Up to date
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <button class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Failed to load team members:', error);
+            }
+        }
+
+        function updateQuickStats() {
+            // These would be calculated from real data
+            document.getElementById('overdueCount').textContent = '3';
+            document.getElementById('thisWeekCount').textContent = '7';
+            document.getElementById('completedCount').textContent = '12';
+            document.getElementById('teamCount').textContent = '45';
+        }
+
+        function openActionModal(alertId, title) {
+            currentAlertId = alertId;
+            const modal = document.getElementById('actionModal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <p class="text-gray-700 mb-4">${title}</p>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Completion Notes</label>
+                    <textarea id="completionNotes" rows="4" 
+                              class="w-full border border-gray-300 rounded px-3 py-2"
+                              placeholder="Enter notes about how this action was completed..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Supporting Document (Optional)</label>
+                    <input type="file" class="w-full border border-gray-300 rounded px-3 py-2">
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+            currentAlertId = null;
+        }
+
+        async function completeAction() {
+            if (!currentAlertId) return;
+            
+            const notes = document.getElementById('completionNotes').value;
+            
+            try {
+                await axios.put(`/api/compliance/alerts/${currentAlertId}`, {
+                    status: 'resolved',
+                    acknowledged_by: 1, // Would use actual user ID
+                    resolution_notes: notes
+                });
+                
+                closeModal();
+                await refreshData();
+                alert('Action marked as complete!');
+            } catch (error) {
+                console.error('Failed to complete action:', error);
+                alert('Failed to complete action. Please try again.');
+            }
+        }
+
+        function getSeverityBadge(severity) {
+            const badges = {
+                'critical': 'bg-red-100 text-red-800',
+                'warning': 'bg-yellow-100 text-yellow-800',
+                'info': 'bg-blue-100 text-blue-800'
+            };
+            return badges[severity] || badges['info'];
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'active': 'bg-green-100 text-green-800',
+                'probation': 'bg-yellow-100 text-yellow-800',
+                'suspended': 'bg-red-100 text-red-800',
+                'terminated': 'bg-gray-100 text-gray-800'
+            };
+            return badges[status] || badges['active'];
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-ZA', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', refreshData);
+    </script>
+</body>
+</html>

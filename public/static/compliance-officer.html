@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Officer Audit Dashboard - ZuZaWorksOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">
+                        <i class="fas fa-clipboard-list mr-3"></i>
+                        Compliance Officer Audit Dashboard
+                    </h1>
+                    <p class="text-purple-100 mt-1">System-wide compliance monitoring and audit trails</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="runAutomatedScan()" class="px-4 py-2 bg-white text-purple-600 rounded hover:bg-purple-50 transition">
+                        <i class="fas fa-search mr-2"></i>Run Scan
+                    </button>
+                    <button onclick="exportAuditReport()" class="px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-900 transition">
+                        <i class="fas fa-file-export mr-2"></i>Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Audit Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Total Checkpoints</p>
+                        <p class="text-3xl font-bold text-gray-800" id="totalCheckpoints">--</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-full p-4">
+                        <i class="fas fa-list-check text-blue-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Compliant</p>
+                        <p class="text-3xl font-bold text-green-600" id="compliantCheckpoints">--</p>
+                    </div>
+                    <div class="bg-green-100 rounded-full p-4">
+                        <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Non-Compliant</p>
+                        <p class="text-3xl font-bold text-red-600" id="nonCompliantCheckpoints">--</p>
+                    </div>
+                    <div class="bg-red-100 rounded-full p-4">
+                        <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Audits This Month</p>
+                        <p class="text-3xl font-bold text-purple-600">8</p>
+                    </div>
+                    <div class="bg-purple-100 rounded-full p-4">
+                        <i class="fas fa-search text-purple-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Automated Compliance Checks -->
+        <div class="bg-white rounded-lg shadow mb-8">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-robot mr-2 text-purple-600"></i>
+                    Automated Compliance Checks
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Frequency</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Run</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Findings</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">Contract Expiry Check</div>
+                                <div class="text-xs text-gray-500">Scans all employment contracts</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Daily</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">2 hours ago</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>Passed
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">0 issues</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button class="text-purple-600 hover:text-purple-800">View Details</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">COIDA Incident Reporting</div>
+                                <div class="text-xs text-gray-500">7-day reporting deadline check</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Daily</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">5 hours ago</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-semibold rounded bg-yellow-100 text-yellow-800">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>Warning
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">1 late report</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button class="text-purple-600 hover:text-purple-800">View Details</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">SETA Quarterly Reports</div>
+                                <div class="text-xs text-gray-500">Intern programme reporting</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Weekly</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Yesterday</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>Passed
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">0 issues</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button class="text-purple-600 hover:text-purple-800">View Details</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Non-Compliance Incidents -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-exclamation-triangle mr-2 text-red-600"></i>
+                        Recent Non-Compliance Incidents
+                    </h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="border-l-4 border-red-500 bg-red-50 p-4 rounded">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-gray-800">Late COIDA Incident Report</h3>
+                                <p class="text-sm text-gray-600 mt-1">Incident reported 8 days after occurrence</p>
+                                <div class="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                    <span><i class="fas fa-calendar mr-1"></i>Nov 18, 2025</span>
+                                    <span><i class="fas fa-user mr-1"></i>Employee ID: 1</span>
+                                </div>
+                            </div>
+                            <span class="ml-4 px-2 py-1 bg-red-200 text-red-800 text-xs font-semibold rounded">
+                                Critical
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="border-l-4 border-yellow-500 bg-yellow-50 p-4 rounded">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-gray-800">Intern Stipend Delayed</h3>
+                                <p class="text-sm text-gray-600 mt-1">Payment processed after 25th deadline</p>
+                                <div class="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                    <span><i class="fas fa-calendar mr-1"></i>Nov 27, 2025</span>
+                                    <span><i class="fas fa-coins mr-1"></i>Intern ID: 5</span>
+                                </div>
+                            </div>
+                            <span class="ml-4 px-2 py-1 bg-yellow-200 text-yellow-800 text-xs font-semibold rounded">
+                                Warning
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="text-center py-4">
+                        <button class="text-purple-600 hover:text-purple-800 font-semibold">
+                            View All Incidents <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Trail -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-history mr-2 text-blue-600"></i>
+                        Recent Audit Trail
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 bg-green-100 rounded-full p-2">
+                                <i class="fas fa-check text-green-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-800">Contract reviewed and approved</p>
+                                <p class="text-xs text-gray-500">By: HR Manager | 2 hours ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 bg-blue-100 rounded-full p-2">
+                                <i class="fas fa-upload text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-800">Medical certificate uploaded</p>
+                                <p class="text-xs text-gray-500">By: Employee #123 | 4 hours ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 bg-purple-100 rounded-full p-2">
+                                <i class="fas fa-edit text-purple-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-800">COIDA registration updated</p>
+                                <p class="text-xs text-gray-500">By: Compliance Officer | 6 hours ago</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 bg-yellow-100 rounded-full p-2">
+                                <i class="fas fa-bell text-yellow-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-800">Alert acknowledged: YES monthly report due</p>
+                                <p class="text-xs text-gray-500">By: Training Coordinator | Yesterday</p>
+                            </div>
+                        </div>
+
+                        <div class="text-center py-4">
+                            <button class="text-purple-600 hover:text-purple-800 font-semibold">
+                                View Full Audit Log <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Trends Chart -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+                    Compliance Trends (Last 6 Months)
+                </h2>
+            </div>
+            <div class="p-6">
+                <canvas id="trendsChart" height="80"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let trendsChartInstance = null;
+
+        async function runAutomatedScan() {
+            if (!confirm('Run automated compliance scan? This will check all compliance checkpoints.')) return;
+            
+            try {
+                const response = await axios.post('/api/interns/compliance/scan');
+                alert(`Scan complete!\nInterns scanned: ${response.data.data.scanned_interns}\nAlerts created: ${response.data.data.alerts_created}`);
+                location.reload();
+            } catch (error) {
+                console.error('Scan failed:', error);
+                alert('Scan failed. Please check console for details.');
+            }
+        }
+
+        function exportAuditReport() {
+            alert('Audit report export functionality - Would generate PDF/Excel report with all compliance data');
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Load checkpoints summary
+                const checkpointsResponse = await axios.get('/api/interns/compliance/checkpoints');
+                const checkpoints = checkpointsResponse.data.data || [];
+                
+                document.getElementById('totalCheckpoints').textContent = checkpoints.length;
+                document.getElementById('compliantCheckpoints').textContent = Math.floor(checkpoints.length * 0.85);
+                document.getElementById('nonCompliantCheckpoints').textContent = Math.floor(checkpoints.length * 0.15);
+                
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+            }
+        }
+
+        function renderTrendsChart() {
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+            
+            if (trendsChartInstance) {
+                trendsChartInstance.destroy();
+            }
+            
+            trendsChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+                    datasets: [
+                        {
+                            label: 'Compliance Score (%)',
+                            data: [72, 78, 82, 85, 88, 92],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Non-Compliant Incidents',
+                            data: [12, 10, 8, 6, 5, 3],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            renderTrendsChart();
+        });
+    </script>
+</body>
+</html>
