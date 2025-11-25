@@ -116,11 +116,11 @@ app.get('/api/dashboard/analytics', async (c) => {
       const complianceOverview = await DB.prepare(`
         SELECT 
           COUNT(*) as total_checks,
-          SUM(CASE WHEN status = 'compliant' THEN 1 ELSE 0 END) as compliant_count,
-          SUM(CASE WHEN status = 'non_compliant' THEN 1 ELSE 0 END) as non_compliant_count,
-          SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count
+          SUM(CASE WHEN status = 'Compliant' THEN 1 ELSE 0 END) as compliant_count,
+          SUM(CASE WHEN status IN ('Minor Issues', 'Major Issues', 'Critical') THEN 1 ELSE 0 END) as non_compliant_count,
+          SUM(CASE WHEN status = 'Not Checked' THEN 1 ELSE 0 END) as pending_count
         FROM compliance_checks
-        WHERE check_date >= DATE('now', '-30 days')
+        WHERE last_check_date >= DATE('now', '-30 days') OR last_check_date IS NULL
       `).first();
       
       const recentSwapRequests = await DB.prepare(`
@@ -256,7 +256,7 @@ app.get('/api/dashboard/analytics', async (c) => {
       const myCompliance = await DB.prepare(`
         SELECT * FROM compliance_checks
         WHERE employee_id = 1
-        ORDER BY check_date DESC
+        ORDER BY last_check_date DESC
         LIMIT 5
       `).all();
       
