@@ -3,7 +3,7 @@
 # ZuZaWorksOS - Realistic Test Data Seeding Script
 # This script populates the system with comprehensive test data
 
-BASE_URL="http://localhost:3000"
+BASE_URL="https://zuzaworksos.pages.dev"
 
 echo "=========================================="
 echo "ZuZaWorksOS Test Data Seeding"
