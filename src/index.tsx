@@ -435,7 +435,7 @@ app.post('/api/documents', async (c) => {
   
   try {
     // In production, this would handle file upload to R2/S3
-    const file_path = \`/documents/\${employee_id}/\${Date.now()}_\${document_name}\`;
+    const file_path = '/documents/' + employee_id + '/' + Date.now() + '_' + document_name;
     
     const result = await DB.prepare(`
       INSERT INTO employee_documents (
@@ -480,7 +480,7 @@ app.post('/api/payroll/batches', async (c) => {
   const { pay_period_start, pay_period_end, calculated_by } = await c.req.json();
   
   try {
-    const batch_number = \`PAY-\${Date.now()}\`;
+    const batch_number = 'PAY-' + Date.now();
     
     const result = await DB.prepare(`
       INSERT INTO payroll_batches (
