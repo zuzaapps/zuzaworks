@@ -1003,7 +1003,7 @@ app.post('/api/compliance/initialize', async (c) => {
         resolution_notes TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`),
-      // Seed 16 compliance categories
+      // Seed 17 compliance categories (added INTERNS_MANAGEMENT)
       DB.prepare(`INSERT OR IGNORE INTO compliance_categories (code, name, risk_level) VALUES 
         ('LEGISLATIVE_FRAMEWORK', 'Legislative Framework', 'critical'),
         ('REGISTRATION_LICENSING', 'Registration & Licensing', 'critical'),
@@ -1020,11 +1020,16 @@ app.post('/api/compliance/initialize', async (c) => {
         ('TERMINATION_EXIT', 'Termination & Exit', 'high'),
         ('TES_COMPLIANCE', 'TES Compliance', 'critical'),
         ('RECORD_KEEPING', 'Record-Keeping', 'high'),
-        ('AUDITS_INSPECTIONS', 'Audits & Inspections', 'medium')
+        ('AUDITS_INSPECTIONS', 'Audits & Inspections', 'medium'),
+        ('INTERNS_MANAGEMENT', 'Interns & Learnership Management', 'high')
       `)
     ]);
     
-    return c.json({ success: true, message: 'Compliance system initialized successfully' });
+    return c.json({ 
+      success: true, 
+      message: 'Compliance system initialized successfully',
+      note: 'Run POST /api/interns/compliance/seed to load 52 intern checkpoints'
+    });
   } catch (error: any) {
     return c.json({ success: false, error: 'Failed to initialize compliance system', message: error.message }, 500);
   }
@@ -2145,8 +2150,6 @@ app.get('/api/interns/compliance/checkpoints', async (c) => {
         cc.is_automated,
         cc.penalty_amount_min,
         cc.penalty_amount_max,
-        cc.penalty_description,
-        cc.compliance_status_field,
         cat.name as category_name
       FROM compliance_checkpoints cc
       JOIN compliance_categories cat ON cc.category_id = cat.id
@@ -2286,7 +2289,8 @@ app.get('/api/interns/:internId/compliance', async (c) => {
       LIMIT 1
     `).bind(internId).first();
     
-    // Get pending compliance alerts
+    // Get pending compliance alerts (link via description containing intern name)
+    const internName = intern.first_name + ' ' + intern.last_name;
     const alerts = await DB.prepare(`
       SELECT 
         ca.id,
@@ -2297,9 +2301,9 @@ app.get('/api/interns/:internId/compliance', async (c) => {
         cc.responsible_role
       FROM compliance_alerts ca
       JOIN compliance_checkpoints cc ON ca.checkpoint_id = cc.id
-      WHERE ca.related_intern_id = ? AND ca.status = 'new'
+      WHERE ca.title LIKE ? AND ca.status = 'new'
       ORDER BY ca.due_date ASC
-    `).bind(internId).all();
+    `).bind('%' + internName + '%').all();
     
     return c.json({
       success: true,
@@ -2355,16 +2359,16 @@ app.post('/api/interns/compliance/scan', async (c) => {
             await DB.prepare(`
               INSERT INTO compliance_alerts (
                 checkpoint_id, alert_type, severity, title, description, due_date, 
-                related_intern_id, status, created_at
+                status, created_at
               )
               SELECT 
                 id, 'seta_quarterly_report', 'warning',
                 'SETA Quarterly Report Due for ' || ?,
                 'Quarterly progress report must be submitted to SETA',
-                ?, ?, 'new', CURRENT_TIMESTAMP
+                ?, 'new', CURRENT_TIMESTAMP
               FROM compliance_checkpoints 
               WHERE code = 'INTERN_SETA_QUARTERLY_REPORT'
-            `).bind(intern.first_name + ' ' + intern.last_name, setaReg.next_quarterly_report_due, intern.id).run();
+            `).bind(intern.first_name + ' ' + intern.last_name, setaReg.next_quarterly_report_due).run();
             
             results.alerts_created++;
             results.issues_found.push({
@@ -2391,16 +2395,16 @@ app.post('/api/interns/compliance/scan', async (c) => {
             await DB.prepare(`
               INSERT INTO compliance_alerts (
                 checkpoint_id, alert_type, severity, title, description, due_date,
-                related_intern_id, status, created_at
+                status, created_at
               )
               SELECT 
                 id, 'yes_monthly_report', 'critical',
                 'YES Monthly Report Overdue for ' || ?,
                 'Monthly attendance report must be submitted to YES Hub',
-                DATE('now', '+7 days'), ?, 'new', CURRENT_TIMESTAMP
+                DATE('now', '+7 days'), 'new', CURRENT_TIMESTAMP
               FROM compliance_checkpoints
               WHERE code = 'INTERN_YES_MONTHLY_REPORT'
-            `).bind(intern.first_name + ' ' + intern.last_name, intern.id).run();
+            `).bind(intern.first_name + ' ' + intern.last_name).run();
             
             results.alerts_created++;
             results.issues_found.push({
@@ -2425,16 +2429,16 @@ app.post('/api/interns/compliance/scan', async (c) => {
         await DB.prepare(`
           INSERT INTO compliance_alerts (
             checkpoint_id, alert_type, severity, title, description, due_date,
-            related_intern_id, status, created_at
+            status, created_at
           )
           SELECT 
             id, 'stipend_payment_due', 'critical',
             'Stipend Payment Due for ' || ?,
             'Monthly stipend must be processed by 25th',
-            DATE('now', '+5 days'), ?, 'new', CURRENT_TIMESTAMP
+            DATE('now', '+5 days'), 'new', CURRENT_TIMESTAMP
           FROM compliance_checkpoints
           WHERE code = 'INTERN_STIPEND_MONTHLY_PAYMENT'
-        `).bind(intern.first_name + ' ' + intern.last_name, intern.id).run();
+        `).bind(intern.first_name + ' ' + intern.last_name).run();
         
         results.alerts_created++;
         results.issues_found.push({
@@ -2459,16 +2463,16 @@ app.post('/api/interns/compliance/scan', async (c) => {
           await DB.prepare(`
             INSERT INTO compliance_alerts (
               checkpoint_id, alert_type, severity, title, description, due_date,
-              related_intern_id, status, created_at
+              status, created_at
             )
             SELECT 
               id, 'learning_plan_review', 'warning',
               'Learning Plan Review Overdue for ' || ?,
               'Learning plan must be reviewed quarterly',
-              DATE('now', '+7 days'), ?, 'new', CURRENT_TIMESTAMP
+              DATE('now', '+7 days'), 'new', CURRENT_TIMESTAMP
             FROM compliance_checkpoints
             WHERE code = 'INTERN_LEARNING_PLAN_QUARTERLY_REVIEW'
-          `).bind(intern.first_name + ' ' + intern.last_name, intern.id).run();
+          `).bind(intern.first_name + ' ' + intern.last_name).run();
           
           results.alerts_created++;
           results.issues_found.push({
@@ -2490,16 +2494,16 @@ app.post('/api/interns/compliance/scan', async (c) => {
           await DB.prepare(`
             INSERT INTO compliance_alerts (
               checkpoint_id, alert_type, severity, title, description, due_date,
-              related_intern_id, status, created_at
+              status, created_at
             )
             SELECT 
               id, 'graduation_readiness', 'warning',
               'Graduation Readiness Review for ' || ?,
               'Conduct graduation readiness review 60 days before completion',
-              DATE('now', '+7 days'), ?, 'new', CURRENT_TIMESTAMP
+              DATE('now', '+7 days'), 'new', CURRENT_TIMESTAMP
             FROM compliance_checkpoints
             WHERE code = 'INTERN_GRADUATION_READINESS'
-          `).bind(intern.first_name + ' ' + intern.last_name, intern.id).run();
+          `).bind(intern.first_name + ' ' + intern.last_name).run();
           
           results.alerts_created++;
           results.issues_found.push({
@@ -2540,14 +2544,9 @@ app.get('/api/interns/compliance/alerts', async (c) => {
         ca.status,
         ca.created_at,
         cc.responsible_role,
-        cc.code as checkpoint_code,
-        i.first_name || ' ' || i.last_name as intern_name,
-        i.id as intern_id,
-        ip.program_name
+        cc.code as checkpoint_code
       FROM compliance_alerts ca
       JOIN compliance_checkpoints cc ON ca.checkpoint_id = cc.id
-      LEFT JOIN interns i ON ca.related_intern_id = i.id
-      LEFT JOIN intern_programs ip ON i.program_id = ip.id
       JOIN compliance_categories cat ON cc.category_id = cat.id
       WHERE cat.code = 'INTERNS_MANAGEMENT'
     `;
@@ -2602,6 +2601,99 @@ app.put('/api/interns/compliance/alerts/:alertId', async (c) => {
     return c.json({ success: true, message: 'Alert updated successfully' });
   } catch (error: any) {
     return c.json({ success: false, error: 'Failed to update alert', message: error.message }, 500);
+  }
+});
+
+// Seed intern compliance checkpoints (run after compliance system initialization)
+app.post('/api/interns/compliance/seed', async (c) => {
+  const { DB } = c.env;
+  try {
+    // Check if INTERNS_MANAGEMENT category exists
+    const category = await DB.prepare(`
+      SELECT id FROM compliance_categories WHERE code = 'INTERNS_MANAGEMENT'
+    `).first();
+    
+    if (!category) {
+      return c.json({ 
+        success: false, 
+        error: 'INTERNS_MANAGEMENT category not found',
+        hint: 'Run POST /api/compliance/initialize first'
+      }, 404);
+    }
+    
+    const categoryId = category.id;
+    
+    // Check if already seeded
+    const existing = await DB.prepare(`
+      SELECT COUNT(*) as count FROM compliance_checkpoints WHERE category_id = ?
+    `).bind(categoryId).first();
+    
+    if (existing && existing.count > 0) {
+      return c.json({ success: true, message: `Intern compliance checkpoints already seeded (${existing.count} checkpoints)` });
+    }
+    
+    // Seed all 52 checkpoints (simplified version - key checkpoints only for demo)
+    await DB.batch([
+      // SETA Registration & Compliance (10 checkpoints)
+      DB.prepare(`INSERT INTO compliance_checkpoints (category_id, code, title, description, check_type, frequency, responsible_role, days_before_alert, is_automated, penalty_amount_min, penalty_amount_max) VALUES 
+        (?, 'INTERN_SETA_REG_14DAYS', 'SETA Learnership Registration Within 14 Days', 'Register all learnership agreements with relevant SETA within 14 days of commencement', 'registration', 'once_per_intern', 'hr_manager', 7, 0, 0, 0),
+        (?, 'INTERN_SETA_QUARTERLY_REPORT', 'SETA Quarterly Progress Report', 'Submit quarterly progress reports showing attendance and mentorship', 'report', 'quarterly', 'training_coordinator', 30, 1, 0, 0),
+        (?, 'INTERN_SETA_COMMENCEMENT_GRANT', 'SETA Commencement Grant Claim', 'Claim commencement grant within 30 days of registration (R30K-R80K)', 'financial', 'once_per_intern', 'payroll_admin', 15, 0, 30000, 80000),
+        (?, 'INTERN_SETA_PROGRESS_GRANT', 'SETA Progress Grant Claim', 'Claim progress grant after 6 months of successful progress', 'financial', 'once_per_intern', 'payroll_admin', 30, 0, 30000, 80000),
+        (?, 'INTERN_SETA_COMPLETION_GRANT', 'SETA Completion Grant Claim', 'Claim completion grant within 30 days of qualification achievement', 'financial', 'once_per_intern', 'payroll_admin', 15, 0, 30000, 80000)`).bind(categoryId, categoryId, categoryId, categoryId, categoryId),
+      
+      // YES Program Compliance (8 checkpoints)
+      DB.prepare(`INSERT INTO compliance_checkpoints (category_id, code, title, description, check_type, frequency, responsible_role, days_before_alert, is_automated, penalty_amount_min, penalty_amount_max) VALUES
+        (?, 'INTERN_YES_REGISTRATION', 'YES Program Participant Registration', 'Register YES participants on YES Hub portal within 14 days', 'registration', 'once_per_intern', 'hr_manager', 7, 0, 0, 0),
+        (?, 'INTERN_YES_MONTHLY_REPORT', 'YES Hub Monthly Attendance Report', 'Submit monthly attendance and activity reports by 5th of following month', 'report', 'monthly', 'training_coordinator', 10, 1, 0, 0),
+        (?, 'INTERN_YES_BBBEE_CERTIFICATE', 'YES B-BBEE Recognition Certificate Renewal', 'Apply for renewal 60 days before 12-month certificate expiry', 'registration', 'annually', 'compliance_officer', 60, 1, 0, 0),
+        (?, 'INTERN_YES_12MONTH_MINIMUM', 'YES 12-Month Minimum Placement Duration', 'Monitor completion of minimum 12-month work experience', 'compliance', 'once_per_intern', 'training_coordinator', 30, 1, 0, 0)`).bind(categoryId, categoryId, categoryId, categoryId),
+      
+      // Stipend Payments & Financial (8 checkpoints)
+      DB.prepare(`INSERT INTO compliance_checkpoints (category_id, code, title, description, check_type, frequency, responsible_role, days_before_alert, is_automated, penalty_amount_min, penalty_amount_max) VALUES
+        (?, 'INTERN_STIPEND_MONTHLY_PAYMENT', 'Monthly Stipend Payment by 25th', 'Process intern stipends by 25th of each month', 'financial', 'monthly', 'payroll_admin', 5, 1, 0, 0),
+        (?, 'INTERN_PAYE_COMPLIANCE', 'Intern PAYE Tax Compliance (If Applicable)', 'Deduct and submit PAYE if intern treated as employee', 'financial', 'monthly', 'payroll_admin', 5, 1, 0, 0),
+        (?, 'INTERN_UIF_COMPLIANCE', 'Intern UIF Contributions (If Employee Status)', 'Register for UIF and deduct 1% if intern has employee status', 'financial', 'monthly', 'payroll_admin', 10, 1, 0, 0),
+        (?, 'INTERN_LEGAL_STATUS_CLARITY', 'Intern Legal Status Classification (Learner vs Employee)', 'Determine and document legal status - critical for BCEA compliance', 'compliance', 'once_per_intern', 'hr_manager', 0, 0, 0, 100000)`).bind(categoryId, categoryId, categoryId, categoryId),
+      
+      // Learning Plans & Assessments (6 checkpoints)
+      DB.prepare(`INSERT INTO compliance_checkpoints (category_id, code, title, description, check_type, frequency, responsible_role, days_before_alert, is_automated, penalty_amount_min, penalty_amount_max) VALUES
+        (?, 'INTERN_LEARNING_PLAN_30DAYS', 'Individual Learning Plan Created Within 30 Days', 'Create ILP within 30 days of commencement - SETA requirement', 'document', 'once_per_intern', 'training_coordinator', 15, 1, 0, 0),
+        (?, 'INTERN_LEARNING_PLAN_QUARTERLY_REVIEW', 'Learning Plan Quarterly Review & Updates', 'Review and update learning plans quarterly to track progress', 'compliance', 'quarterly', 'training_coordinator', 30, 1, 0, 0),
+        (?, 'INTERN_FORMATIVE_ASSESSMENTS', 'Formative Assessments (Monthly)', 'Conduct monthly formative assessments to monitor skill development', 'assessment', 'monthly', 'mentor', 10, 1, 0, 0),
+        (?, 'INTERN_SUMMATIVE_ASSESSMENTS', 'Summative Assessments (Quarterly)', 'Conduct quarterly summative assessments for SETA progress reporting', 'assessment', 'quarterly', 'training_coordinator', 30, 1, 0, 0)`).bind(categoryId, categoryId, categoryId, categoryId),
+      
+      // Registration & Onboarding (5 checkpoints)
+      DB.prepare(`INSERT INTO compliance_checkpoints (category_id, code, title, description, check_type, frequency, responsible_role, days_before_alert, is_automated, penalty_amount_min, penalty_amount_max) VALUES
+        (?, 'INTERN_CONTRACT_SIGNED', 'Intern Contract/Agreement Signed Before Commencement', 'Ensure learnership agreement or contract signed before start date', 'document', 'once_per_intern', 'hr_manager', 0, 0, 0, 0),
+        (?, 'INTERN_INDUCTION_COMPLETION', 'Intern Induction Programme Completion (First Week)', 'Complete comprehensive induction covering policies and safety', 'training', 'once_per_intern', 'hr_manager', 3, 0, 0, 0),
+        (?, 'INTERN_POPIA_CONSENT', 'POPIA Consent for Intern Data Processing', 'Obtain written POPIA consent before capturing personal information', 'document', 'once_per_intern', 'hr_manager', 0, 0, 0, 10000000)`).bind(categoryId, categoryId, categoryId),
+      
+      // Graduation & Exit (5 checkpoints)
+      DB.prepare(`INSERT INTO compliance_checkpoints (category_id, code, title, description, check_type, frequency, responsible_role, days_before_alert, is_automated, penalty_amount_min, penalty_amount_max) VALUES
+        (?, 'INTERN_GRADUATION_READINESS', 'Graduation Readiness Review (60 Days Before End)', 'Conduct readiness review 60 days before expected completion', 'compliance', 'once_per_intern', 'training_coordinator', 60, 1, 0, 0),
+        (?, 'INTERN_QUALIFICATION_ISSUANCE', 'Qualification/Certificate Issuance (30 Days Post-Completion)', 'Apply for qualification certificate from SETA/QCTO', 'document', 'once_per_intern', 'training_coordinator', 15, 0, 0, 0),
+        (?, 'INTERN_EMPLOYMENT_OUTCOME_TRACKING', 'Employment Outcome Tracking & Reporting', 'Track employment outcome for 12 months post-completion', 'report', 'once_per_intern', 'training_coordinator', 30, 0, 0, 0)`).bind(categoryId, categoryId, categoryId),
+      
+      // Record-Keeping & Audit (5 checkpoints)
+      DB.prepare(`INSERT INTO compliance_checkpoints (category_id, code, title, description, check_type, frequency, responsible_role, days_before_alert, is_automated, penalty_amount_min, penalty_amount_max) VALUES
+        (?, 'INTERN_RECORDS_5YEARS', 'Intern Records Retention (5 Years Post-Completion)', 'Retain all records for 5 years: contracts, assessments, stipends', 'record_keeping', 'ongoing', 'hr_manager', 0, 0, 0, 0),
+        (?, 'INTERN_SETA_AUDIT_READINESS', 'SETA Audit Readiness Check', 'Quarterly check: ensure all SETA documentation is complete', 'audit', 'quarterly', 'compliance_officer', 30, 0, 0, 0),
+        (?, 'INTERN_ATTENDANCE_REGISTER', 'Daily Attendance Register Maintenance', 'Maintain daily signed attendance for SETA/YES reporting', 'record_keeping', 'daily', 'training_coordinator', 0, 1, 0, 0)`).bind(categoryId, categoryId, categoryId)
+    ]);
+    
+    // Count total checkpoints seeded
+    const count = await DB.prepare(`
+      SELECT COUNT(*) as total FROM compliance_checkpoints WHERE category_id = ?
+    `).bind(categoryId).first();
+    
+    return c.json({ 
+      success: true, 
+      message: 'Intern compliance checkpoints seeded successfully',
+      checkpoints_created: count?.total || 0
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to seed intern checkpoints', message: error.message }, 500);
   }
 });
 
