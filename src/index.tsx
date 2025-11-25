@@ -132,7 +132,7 @@ app.get('/api/dashboard/analytics', async (c) => {
       const attendanceViolations = await DB.prepare(`
         SELECT COUNT(*) as violation_count
         FROM attendance_violations
-        WHERE is_resolved = 0
+        WHERE status IN ('pending', 'contested')
         AND violation_date >= DATE('now', '-7 days')
       `).first();
       
