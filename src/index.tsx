@@ -78,6 +78,226 @@ app.get('/api/live/activity', async (c) => {
   }
 });
 
+// Role-Specific Analytics Dashboard
+app.get('/api/dashboard/analytics', async (c) => {
+  const { DB } = c.env;
+  const roleFilter = c.req.query('role') || 'employee';
+  
+  try {
+    // Base analytics for all roles
+    const employeeCount = await DB.prepare('SELECT COUNT(*) as count FROM employees WHERE status = ?').bind('active').first();
+    const shiftsToday = await DB.prepare('SELECT COUNT(*) as count FROM shifts WHERE shift_date = DATE("now")').all();
+    const pendingLeave = await DB.prepare('SELECT COUNT(*) as count FROM leave_requests WHERE status = ?').bind('pending').first();
+    const recentIncidents = await DB.prepare('SELECT COUNT(*) as count FROM incidents WHERE DATE(incident_date) >= DATE("now", "-30 days")').first();
+    
+    // Role-specific analytics
+    let roleSpecificData = {};
+    
+    if (roleFilter === 'super_admin' || roleFilter === 'hr_manager') {
+      // Executive/HR Dashboard
+      const departmentStats = await DB.prepare(`
+        SELECT d.name, COUNT(e.id) as employee_count, d.headcount_target
+        FROM departments d
+        LEFT JOIN employees e ON d.id = e.department_id AND e.status = 'active'
+        GROUP BY d.id
+        ORDER BY employee_count DESC
+        LIMIT 5
+      `).all();
+      
+      const locationStats = await DB.prepare(`
+        SELECT l.name, l.city, l.province, COUNT(e.id) as employee_count
+        FROM locations l
+        LEFT JOIN employees e ON l.id = e.location_id AND e.status = 'active'
+        GROUP BY l.id
+        ORDER BY employee_count DESC
+        LIMIT 9
+      `).all();
+      
+      const complianceOverview = await DB.prepare(`
+        SELECT 
+          COUNT(*) as total_checks,
+          SUM(CASE WHEN status = 'compliant' THEN 1 ELSE 0 END) as compliant_count,
+          SUM(CASE WHEN status = 'non_compliant' THEN 1 ELSE 0 END) as non_compliant_count,
+          SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count
+        FROM compliance_checks
+        WHERE check_date >= DATE('now', '-30 days')
+      `).first();
+      
+      const recentSwapRequests = await DB.prepare(`
+        SELECT COUNT(*) as pending_swaps
+        FROM shift_swap_requests
+        WHERE status = 'pending'
+      `).first();
+      
+      const attendanceViolations = await DB.prepare(`
+        SELECT COUNT(*) as violation_count
+        FROM attendance_violations
+        WHERE is_resolved = 0
+        AND violation_date >= DATE('now', '-7 days')
+      `).first();
+      
+      const budgetVariance = await DB.prepare(`
+        SELECT 
+          SUM(budgeted_amount) as total_budget,
+          SUM(actual_amount) as total_actual,
+          SUM(variance_amount) as total_variance
+        FROM budget_periods
+        WHERE period_start >= DATE('now', '-30 days')
+      `).first();
+      
+      roleSpecificData = {
+        type: 'executive',
+        departments: departmentStats.results || [],
+        locations: locationStats.results || [],
+        compliance: {
+          total: complianceOverview?.total_checks || 0,
+          compliant: complianceOverview?.compliant_count || 0,
+          non_compliant: complianceOverview?.non_compliant_count || 0,
+          pending: complianceOverview?.pending_count || 0,
+          percentage: complianceOverview?.total_checks > 0 
+            ? Math.round((complianceOverview.compliant_count / complianceOverview.total_checks) * 100) 
+            : 0
+        },
+        workforceMetrics: {
+          pendingSwaps: recentSwapRequests?.pending_swaps || 0,
+          activeViolations: attendanceViolations?.violation_count || 0,
+          budgetVariance: budgetVariance?.total_variance || 0,
+          totalBudget: budgetVariance?.total_budget || 0,
+          totalActual: budgetVariance?.total_actual || 0
+        }
+      };
+      
+    } else if (roleFilter === 'department_manager' || roleFilter === 'location_manager') {
+      // Manager Dashboard
+      const teamSize = await DB.prepare(`
+        SELECT COUNT(*) as count 
+        FROM employees 
+        WHERE status = 'active' AND department_id IN (
+          SELECT DISTINCT department_id FROM employees WHERE id <= 5
+        )
+      `).first();
+      
+      const teamShifts = await DB.prepare(`
+        SELECT s.*, e.first_name, e.last_name
+        FROM shifts s
+        JOIN employees e ON s.employee_id = e.id
+        WHERE s.shift_date = DATE('now')
+        AND e.department_id IN (SELECT DISTINCT department_id FROM employees WHERE id <= 5)
+        ORDER BY s.start_time ASC
+        LIMIT 10
+      `).all();
+      
+      const teamLeave = await DB.prepare(`
+        SELECT lr.*, e.first_name, e.last_name
+        FROM leave_requests lr
+        JOIN employees e ON lr.employee_id = e.id
+        WHERE lr.status = 'pending'
+        AND e.department_id IN (SELECT DISTINCT department_id FROM employees WHERE id <= 5)
+        ORDER BY lr.created_at DESC
+        LIMIT 5
+      `).all();
+      
+      const teamAttendance = await DB.prepare(`
+        SELECT 
+          COUNT(DISTINCT te.employee_id) as clocked_in_count,
+          COUNT(DISTINCT CASE WHEN te.clock_out_time IS NULL THEN te.employee_id END) as currently_working
+        FROM time_entries te
+        JOIN employees e ON te.employee_id = e.id
+        WHERE DATE(te.clock_in_time) = DATE('now')
+        AND e.department_id IN (SELECT DISTINCT department_id FROM employees WHERE id <= 5)
+      `).first();
+      
+      const pendingApprovals = await DB.prepare(`
+        SELECT 
+          (SELECT COUNT(*) FROM shift_swap_requests WHERE status = 'accepted') as swap_approvals,
+          (SELECT COUNT(*) FROM leave_requests WHERE status = 'pending') as leave_approvals
+      `).first();
+      
+      roleSpecificData = {
+        type: 'manager',
+        teamSize: teamSize?.count || 0,
+        todayShifts: teamShifts.results || [],
+        pendingLeave: teamLeave.results || [],
+        attendance: {
+          totalClocked: teamAttendance?.clocked_in_count || 0,
+          currentlyWorking: teamAttendance?.currently_working || 0
+        },
+        pendingApprovals: {
+          swaps: pendingApprovals?.swap_approvals || 0,
+          leave: pendingApprovals?.leave_approvals || 0
+        }
+      };
+      
+    } else {
+      // Employee Dashboard
+      const myShifts = await DB.prepare(`
+        SELECT * FROM shifts 
+        WHERE employee_id = 1
+        AND shift_date >= DATE('now')
+        ORDER BY shift_date ASC, start_time ASC
+        LIMIT 7
+      `).all();
+      
+      const myLeave = await DB.prepare(`
+        SELECT * FROM leave_requests
+        WHERE employee_id = 1
+        ORDER BY created_at DESC
+        LIMIT 5
+      `).all();
+      
+      const myTimeToday = await DB.prepare(`
+        SELECT * FROM time_entries
+        WHERE employee_id = 1
+        AND DATE(clock_in_time) = DATE('now')
+        ORDER BY clock_in_time DESC
+        LIMIT 1
+      `).first();
+      
+      const myCompliance = await DB.prepare(`
+        SELECT * FROM compliance_checks
+        WHERE employee_id = 1
+        ORDER BY check_date DESC
+        LIMIT 5
+      `).all();
+      
+      const availableSwaps = await DB.prepare(`
+        SELECT ssr.*, e.first_name, e.last_name, s.shift_date, s.start_time, s.end_time
+        FROM shift_swap_requests ssr
+        JOIN employees e ON ssr.requesting_employee_id = e.id
+        JOIN shifts s ON ssr.original_shift_id = s.id
+        WHERE ssr.status = 'pending'
+        AND (ssr.target_employee_id IS NULL OR ssr.target_employee_id = 1)
+        ORDER BY ssr.created_at DESC
+        LIMIT 5
+      `).all();
+      
+      roleSpecificData = {
+        type: 'employee',
+        myShifts: myShifts.results || [],
+        myLeave: myLeave.results || [],
+        myTimeToday: myTimeToday || null,
+        myCompliance: myCompliance.results || [],
+        availableSwaps: availableSwaps.results || []
+      };
+    }
+    
+    return c.json({
+      success: true,
+      data: {
+        overview: {
+          totalEmployees: employeeCount?.count || 0,
+          shiftsToday: shiftsToday.results[0]?.count || 0,
+          pendingLeave: pendingLeave?.count || 0,
+          recentIncidents: recentIncidents?.count || 0
+        },
+        roleSpecific: roleSpecificData
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to fetch dashboard analytics', message: String(error) }, 500);
+  }
+});
+
 // ============================================================================
 // AUTHENTICATION APIs
 // ============================================================================
@@ -1838,6 +2058,7 @@ app.get('/login', (c) => {
                 if (response.data.success) {
                     localStorage.setItem('auth_token', response.data.data.token);
                     localStorage.setItem('user', JSON.stringify(response.data.data.user));
+                    localStorage.setItem('userRole', response.data.data.user.role || 'employee');
                     window.location.href = '/';
                 }
             } catch (error) {
@@ -2814,8 +3035,637 @@ app.get('/', (c) => {
         
         function loadDashboardPage() {
             const mainContent = document.querySelector('.col-span-12.md\\\\:col-span-9');
-            // Reload the original dashboard content
-            location.reload();
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-6xl text-sa-blue mb-4"></i><p class="text-gray-600">Loading dashboard...</p></div>';
+            
+            // Get current user role from localStorage or sessionStorage
+            const userRole = localStorage.getItem('userRole') || 'employee';
+            
+            axios.get(\`/api/dashboard/analytics?role=\${userRole}\`).then(response => {
+                if (response.data.success) {
+                    const { overview, roleSpecific } = response.data.data;
+                    
+                    // Build role-specific dashboard
+                    let dashboardHTML = '';
+                    
+                    if (roleSpecific.type === 'executive') {
+                        // EXECUTIVE/HR DASHBOARD
+                        dashboardHTML = \`
+                            <!-- Page Header -->
+                            <div class="mb-6">
+                                <h1 class="text-4xl font-bold text-sa-blue mb-2">
+                                    <i class="fas fa-tachometer-alt mr-3"></i>
+                                    Executive Dashboard
+                                </h1>
+                                <p class="text-gray-600 text-lg">Comprehensive workforce analytics and organizational insights</p>
+                            </div>
+                            
+                            <!-- Key Performance Indicators -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                <div class="glass-card p-6 border-l-4 border-sa-blue">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Total Workforce</p>
+                                            <p class="text-4xl font-bold text-sa-blue mt-2">\${overview.totalEmployees}</p>
+                                            <p class="text-xs text-sa-green mt-2">Active employees</p>
+                                        </div>
+                                        <i class="fas fa-users text-5xl text-sa-blue opacity-20"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 border-l-4 border-sa-green">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Scheduled Today</p>
+                                            <p class="text-4xl font-bold text-sa-green mt-2">\${overview.shiftsToday}</p>
+                                            <p class="text-xs text-gray-500 mt-2">Active shifts</p>
+                                        </div>
+                                        <i class="fas fa-calendar-check text-5xl text-sa-green opacity-20"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 border-l-4 border-sa-yellow">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Compliance Score</p>
+                                            <p class="text-4xl font-bold text-sa-yellow mt-2">\${roleSpecific.compliance.percentage}%</p>
+                                            <p class="text-xs text-\${roleSpecific.compliance.percentage >= 90 ? 'sa-green' : 'sa-red'} mt-2">
+                                                \${roleSpecific.compliance.compliant}/\${roleSpecific.compliance.total} compliant
+                                            </p>
+                                        </div>
+                                        <i class="fas fa-shield-check text-5xl text-sa-yellow opacity-20"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 border-l-4 border-sa-red">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Incidents (30d)</p>
+                                            <p class="text-4xl font-bold text-sa-red mt-2">\${overview.recentIncidents}</p>
+                                            <p class="text-xs text-gray-500 mt-2">Safety & compliance</p>
+                                        </div>
+                                        <i class="fas fa-exclamation-triangle text-5xl text-sa-red opacity-20"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Workforce Distribution by Location -->
+                            <div class="glass-card p-6 mb-6">
+                                <h2 class="text-2xl font-bold text-sa-blue mb-4 flex items-center">
+                                    <i class="fas fa-map-marked-alt mr-3"></i>
+                                    Workforce Distribution Across South Africa
+                                </h2>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    \${roleSpecific.locations.map(loc => \`
+                                        <div class="p-4 rounded-xl bg-gradient-to-br from-sa-blue/10 to-sa-green/10 border border-sa-blue/20">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <h3 class="font-bold text-lg text-gray-800">\${loc.name}</h3>
+                                                <span class="px-3 py-1 bg-sa-blue text-white rounded-full text-sm font-bold">\${loc.employee_count}</span>
+                                            </div>
+                                            <p class="text-sm text-gray-600">
+                                                <i class="fas fa-map-pin mr-1 text-sa-red"></i>
+                                                \${loc.city}, \${loc.province}
+                                            </p>
+                                        </div>
+                                    \`).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- Department Performance -->
+                            <div class="glass-card p-6 mb-6">
+                                <h2 class="text-2xl font-bold text-sa-green mb-4 flex items-center">
+                                    <i class="fas fa-building mr-3"></i>
+                                    Department Headcount vs Target
+                                </h2>
+                                <div class="space-y-4">
+                                    \${roleSpecific.departments.map(dept => {
+                                        const fillRate = dept.headcount_target > 0 
+                                            ? Math.round((dept.employee_count / dept.headcount_target) * 100) 
+                                            : 100;
+                                        const isUnderstaffed = fillRate < 80;
+                                        
+                                        return \`
+                                            <div class="p-4 rounded-xl bg-white border-l-4 \${isUnderstaffed ? 'border-sa-red' : 'border-sa-green'}">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <div class="flex-1">
+                                                        <h3 class="font-bold text-lg">\${dept.name}</h3>
+                                                        <div class="flex items-center gap-4 mt-1">
+                                                            <span class="text-sm text-gray-600">
+                                                                <i class="fas fa-users mr-1"></i>
+                                                                Current: <span class="font-bold">\${dept.employee_count}</span>
+                                                            </span>
+                                                            <span class="text-sm text-gray-600">
+                                                                <i class="fas fa-bullseye mr-1"></i>
+                                                                Target: <span class="font-bold">\${dept.headcount_target || 'N/A'}</span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <div class="text-3xl font-bold \${isUnderstaffed ? 'text-sa-red' : 'text-sa-green'}">
+                                                            \${fillRate}%
+                                                        </div>
+                                                        <div class="text-xs \${isUnderstaffed ? 'text-sa-red' : 'text-sa-green'} font-semibold">
+                                                            \${isUnderstaffed ? 'UNDERSTAFFED' : 'ON TARGET'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                                    <div class="h-full \${isUnderstaffed ? 'bg-sa-red' : 'bg-sa-green'} transition-all" 
+                                                         style="width: \${Math.min(100, fillRate)}%"></div>
+                                                </div>
+                                            </div>
+                                        \`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- Workforce Operations Dashboard -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <!-- Pending Actions -->
+                                <div class="glass-card p-6">
+                                    <h3 class="text-xl font-bold text-sa-blue mb-4 flex items-center">
+                                        <i class="fas fa-tasks mr-2"></i>
+                                        Pending Actions
+                                    </h3>
+                                    <div class="space-y-3">
+                                        <div class="p-3 rounded-lg bg-sa-yellow/10 border border-sa-yellow/30 flex items-center justify-between">
+                                            <div>
+                                                <div class="font-bold text-gray-800">Shift Swap Requests</div>
+                                                <div class="text-sm text-gray-600">Awaiting manager approval</div>
+                                            </div>
+                                            <div class="text-2xl font-bold text-sa-yellow">\${roleSpecific.workforceMetrics.pendingSwaps}</div>
+                                        </div>
+                                        
+                                        <div class="p-3 rounded-lg bg-sa-red/10 border border-sa-red/30 flex items-center justify-between">
+                                            <div>
+                                                <div class="font-bold text-gray-800">Attendance Violations</div>
+                                                <div class="text-sm text-gray-600">Unresolved (last 7 days)</div>
+                                            </div>
+                                            <div class="text-2xl font-bold text-sa-red">\${roleSpecific.workforceMetrics.activeViolations}</div>
+                                        </div>
+                                        
+                                        <div class="p-3 rounded-lg bg-sa-blue/10 border border-sa-blue/30 flex items-center justify-between">
+                                            <div>
+                                                <div class="font-bold text-gray-800">Leave Requests</div>
+                                                <div class="text-sm text-gray-600">Pending approval</div>
+                                            </div>
+                                            <div class="text-2xl font-bold text-sa-blue">\${overview.pendingLeave}</div>
+                                        </div>
+                                        
+                                        <div class="p-3 rounded-lg bg-sa-green/10 border border-sa-green/30 flex items-center justify-between">
+                                            <div>
+                                                <div class="font-bold text-gray-800">Compliance Checks</div>
+                                                <div class="text-sm text-gray-600">Pending review</div>
+                                            </div>
+                                            <div class="text-2xl font-bold text-sa-green">\${roleSpecific.compliance.pending}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Budget Overview -->
+                                <div class="glass-card p-6">
+                                    <h3 class="text-xl font-bold text-sa-green mb-4 flex items-center">
+                                        <i class="fas fa-dollar-sign mr-2"></i>
+                                        Labor Budget Overview (30d)
+                                    </h3>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <div class="flex justify-between text-sm mb-2">
+                                                <span class="text-gray-600 font-medium">Budgeted Amount</span>
+                                                <span class="font-bold text-sa-blue">R \${(roleSpecific.workforceMetrics.totalBudget || 0).toFixed(2)}</span>
+                                            </div>
+                                            <div class="flex justify-between text-sm mb-2">
+                                                <span class="text-gray-600 font-medium">Actual Spend</span>
+                                                <span class="font-bold text-sa-green">R \${(roleSpecific.workforceMetrics.totalActual || 0).toFixed(2)}</span>
+                                            </div>
+                                            <div class="flex justify-between text-sm mb-3">
+                                                <span class="text-gray-600 font-medium">Variance</span>
+                                                <span class="font-bold \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'text-sa-red' : 'text-sa-green'}">
+                                                    R \${Math.abs(roleSpecific.workforceMetrics.budgetVariance || 0).toFixed(2)}
+                                                    \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? '(Over)' : '(Under)'}
+                                                </span>
+                                            </div>
+                                            <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+                                                <div class="h-full \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'bg-sa-red' : 'bg-sa-green'}" 
+                                                     style="width: \${roleSpecific.workforceMetrics.totalBudget > 0 ? Math.min(100, (roleSpecific.workforceMetrics.totalActual / roleSpecific.workforceMetrics.totalBudget) * 100) : 0}%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="p-4 rounded-lg \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'bg-sa-red/10 border border-sa-red/30' : 'bg-sa-green/10 border border-sa-green/30'}">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <i class="fas fa-\${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'exclamation-triangle' : 'check-circle'} text-xl \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'text-sa-red' : 'text-sa-green'}"></i>
+                                                <span class="font-bold \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'text-sa-red' : 'text-sa-green'}">
+                                                    \${roleSpecific.workforceMetrics.budgetVariance >= 0 ? 'Budget Overrun Alert' : 'Within Budget'}
+                                                </span>
+                                            </div>
+                                            <p class="text-sm text-gray-700">
+                                                \${roleSpecific.workforceMetrics.budgetVariance >= 0 
+                                                    ? 'Review spending patterns and optimize labor allocation.' 
+                                                    : 'Excellent cost management. Labor costs are under control.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Actions -->
+                            <div class="glass-card p-6">
+                                <h3 class="text-xl font-bold text-sa-blue mb-4 flex items-center">
+                                    <i class="fas fa-bolt mr-2"></i>
+                                    Quick Actions
+                                </h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <button onclick="navigateToPage('employees')" class="p-4 rounded-xl bg-gradient-to-br from-sa-blue/10 to-sa-blue/20 hover:from-sa-blue/20 hover:to-sa-blue/30 border border-sa-blue/30 transition text-center">
+                                        <i class="fas fa-user-plus text-3xl text-sa-blue mb-2"></i>
+                                        <div class="font-bold text-sm">Add Employee</div>
+                                    </button>
+                                    
+                                    <button onclick="navigateToPage('schedule')" class="p-4 rounded-xl bg-gradient-to-br from-sa-green/10 to-sa-green/20 hover:from-sa-green/20 hover:to-sa-green/30 border border-sa-green/30 transition text-center">
+                                        <i class="fas fa-calendar-plus text-3xl text-sa-green mb-2"></i>
+                                        <div class="font-bold text-sm">Create Schedule</div>
+                                    </button>
+                                    
+                                    <button onclick="navigateToPage('compliance')" class="p-4 rounded-xl bg-gradient-to-br from-sa-red/10 to-sa-red/20 hover:from-sa-red/20 hover:to-sa-red/30 border border-sa-red/30 transition text-center">
+                                        <i class="fas fa-clipboard-check text-3xl text-sa-red mb-2"></i>
+                                        <div class="font-bold text-sm">Run Compliance</div>
+                                    </button>
+                                    
+                                    <button onclick="navigateToPage('analytics')" class="p-4 rounded-xl bg-gradient-to-br from-sa-yellow/10 to-sa-yellow/20 hover:from-sa-yellow/20 hover:to-sa-yellow/30 border border-sa-yellow/30 transition text-center">
+                                        <i class="fas fa-chart-bar text-3xl text-sa-yellow mb-2"></i>
+                                        <div class="font-bold text-sm">View Reports</div>
+                                    </button>
+                                </div>
+                            </div>
+                        \`;
+                        
+                    } else if (roleSpecific.type === 'manager') {
+                        // MANAGER DASHBOARD
+                        dashboardHTML = \`
+                            <!-- Page Header -->
+                            <div class="mb-6">
+                                <h1 class="text-4xl font-bold text-sa-green mb-2">
+                                    <i class="fas fa-user-tie mr-3"></i>
+                                    Team Manager Dashboard
+                                </h1>
+                                <p class="text-gray-600 text-lg">Manage your team's schedule, attendance, and performance</p>
+                            </div>
+                            
+                            <!-- Team Overview -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                <div class="glass-card p-6 border-l-4 border-sa-blue">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Team Size</p>
+                                            <p class="text-4xl font-bold text-sa-blue mt-2">\${roleSpecific.teamSize}</p>
+                                            <p class="text-xs text-gray-500 mt-2">Active members</p>
+                                        </div>
+                                        <i class="fas fa-users text-5xl text-sa-blue opacity-20"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 border-l-4 border-sa-green">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Working Now</p>
+                                            <p class="text-4xl font-bold text-sa-green mt-2">\${roleSpecific.attendance.currentlyWorking}</p>
+                                            <p class="text-xs text-gray-500 mt-2">Clocked in today: \${roleSpecific.attendance.totalClocked}</p>
+                                        </div>
+                                        <i class="fas fa-clock text-5xl text-sa-green opacity-20"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 border-l-4 border-sa-yellow">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Pending Approvals</p>
+                                            <p class="text-4xl font-bold text-sa-yellow mt-2">\${roleSpecific.pendingApprovals.swaps + roleSpecific.pendingApprovals.leave}</p>
+                                            <p class="text-xs text-gray-500 mt-2">Swaps: \${roleSpecific.pendingApprovals.swaps} | Leave: \${roleSpecific.pendingApprovals.leave}</p>
+                                        </div>
+                                        <i class="fas fa-clipboard-list text-5xl text-sa-yellow opacity-20"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 border-l-4 border-sa-red">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Shifts Today</p>
+                                            <p class="text-4xl font-bold text-sa-red mt-2">\${roleSpecific.todayShifts.length}</p>
+                                            <p class="text-xs text-gray-500 mt-2">Scheduled shifts</p>
+                                        </div>
+                                        <i class="fas fa-calendar-day text-5xl text-sa-red opacity-20"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Today's Shifts -->
+                            <div class="glass-card p-6 mb-6">
+                                <h2 class="text-2xl font-bold text-sa-blue mb-4 flex items-center">
+                                    <i class="fas fa-calendar-alt mr-3"></i>
+                                    Today's Team Schedule
+                                </h2>
+                                \${roleSpecific.todayShifts.length > 0 ? \`
+                                    <div class="space-y-3">
+                                        \${roleSpecific.todayShifts.map(shift => \`
+                                            <div class="p-4 rounded-xl bg-white border-l-4 border-sa-green flex items-center justify-between">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="w-12 h-12 rounded-full bg-sa-green/20 flex items-center justify-center">
+                                                        <i class="fas fa-user text-sa-green text-xl"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-bold text-lg">\${shift.first_name} \${shift.last_name}</div>
+                                                        <div class="text-sm text-gray-600">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            \${shift.start_time} - \${shift.end_time}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span class="px-4 py-2 bg-sa-green/10 text-sa-green rounded-lg font-bold">
+                                                    \${shift.shift_type || 'Regular'}
+                                                </span>
+                                            </div>
+                                        \`).join('')}
+                                    </div>
+                                \` : \`
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-calendar-times text-6xl mb-4 opacity-30"></i>
+                                        <p>No shifts scheduled for today</p>
+                                    </div>
+                                \`}
+                            </div>
+                            
+                            <!-- Pending Leave Requests -->
+                            <div class="glass-card p-6 mb-6">
+                                <h2 class="text-2xl font-bold text-sa-yellow mb-4 flex items-center">
+                                    <i class="fas fa-umbrella-beach mr-3"></i>
+                                    Pending Leave Requests
+                                </h2>
+                                \${roleSpecific.pendingLeave.length > 0 ? \`
+                                    <div class="space-y-3">
+                                        \${roleSpecific.pendingLeave.map(leave => \`
+                                            <div class="p-4 rounded-xl bg-white border-l-4 border-sa-yellow">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex-1">
+                                                        <div class="font-bold text-lg">\${leave.first_name} \${leave.last_name}</div>
+                                                        <div class="text-sm text-gray-600 mt-1">
+                                                            <i class="fas fa-calendar mr-1"></i>
+                                                            \${leave.start_date} to \${leave.end_date} (\${leave.days_requested} days)
+                                                        </div>
+                                                        <div class="text-sm text-gray-600 mt-1">
+                                                            <i class="fas fa-tag mr-1"></i>
+                                                            Type: <span class="font-semibold">\${leave.leave_type}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex gap-2">
+                                                        <button class="px-4 py-2 bg-sa-green text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                            <i class="fas fa-check mr-1"></i> Approve
+                                                        </button>
+                                                        <button class="px-4 py-2 bg-sa-red text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                            <i class="fas fa-times mr-1"></i> Decline
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        \`).join('')}
+                                    </div>
+                                \` : \`
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-check-circle text-6xl mb-4 opacity-30"></i>
+                                        <p>No pending leave requests</p>
+                                    </div>
+                                \`}
+                            </div>
+                            
+                            <!-- Quick Actions -->
+                            <div class="glass-card p-6">
+                                <h3 class="text-xl font-bold text-sa-blue mb-4 flex items-center">
+                                    <i class="fas fa-bolt mr-2"></i>
+                                    Quick Actions
+                                </h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <button onclick="navigateToPage('schedule')" class="p-4 rounded-xl bg-gradient-to-br from-sa-blue/10 to-sa-blue/20 hover:from-sa-blue/20 hover:to-sa-blue/30 border border-sa-blue/30 transition text-center">
+                                        <i class="fas fa-calendar-plus text-3xl text-sa-blue mb-2"></i>
+                                        <div class="font-bold text-sm">Create Shift</div>
+                                    </button>
+                                    
+                                    <button onclick="navigateToPage('shiftSwaps')" class="p-4 rounded-xl bg-gradient-to-br from-sa-green/10 to-sa-green/20 hover:from-sa-green/20 hover:to-sa-green/30 border border-sa-green/30 transition text-center">
+                                        <i class="fas fa-exchange-alt text-3xl text-sa-green mb-2"></i>
+                                        <div class="font-bold text-sm">Approve Swaps</div>
+                                    </button>
+                                    
+                                    <button onclick="navigateToPage('timeTracking')" class="p-4 rounded-xl bg-gradient-to-br from-sa-yellow/10 to-sa-yellow/20 hover:from-sa-yellow/20 hover:to-sa-yellow/30 border border-sa-yellow/30 transition text-center">
+                                        <i class="fas fa-clock text-3xl text-sa-yellow mb-2"></i>
+                                        <div class="font-bold text-sm">View Timesheets</div>
+                                    </button>
+                                    
+                                    <button onclick="navigateToPage('messaging')" class="p-4 rounded-xl bg-gradient-to-br from-sa-red/10 to-sa-red/20 hover:from-sa-red/20 hover:to-sa-red/30 border border-sa-red/30 transition text-center">
+                                        <i class="fas fa-bullhorn text-3xl text-sa-red mb-2"></i>
+                                        <div class="font-bold text-sm">Team Message</div>
+                                    </button>
+                                </div>
+                            </div>
+                        \`;
+                        
+                    } else {
+                        // EMPLOYEE DASHBOARD
+                        dashboardHTML = \`
+                            <!-- Page Header -->
+                            <div class="mb-6">
+                                <h1 class="text-4xl font-bold text-sa-green mb-2">
+                                    <i class="fas fa-home mr-3"></i>
+                                    My Workspace
+                                </h1>
+                                <p class="text-gray-600 text-lg">Your schedule, tasks, and personal information</p>
+                            </div>
+                            
+                            <!-- Personal Stats -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                <div class="glass-card p-6 border-l-4 border-sa-blue">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Today's Status</p>
+                                            <p class="text-2xl font-bold text-sa-blue mt-2">
+                                                \${roleSpecific.myTimeToday ? (roleSpecific.myTimeToday.clock_out_time ? 'Clocked Out' : 'Working') : 'Not Started'}
+                                            </p>
+                                            <p class="text-xs text-gray-500 mt-2">
+                                                \${roleSpecific.myTimeToday ? roleSpecific.myTimeToday.clock_in_time.substring(11, 16) : '--:--'}
+                                            </p>
+                                        </div>
+                                        <i class="fas fa-user-clock text-5xl text-sa-blue opacity-20"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 border-l-4 border-sa-green">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Upcoming Shifts</p>
+                                            <p class="text-4xl font-bold text-sa-green mt-2">\${roleSpecific.myShifts.length}</p>
+                                            <p class="text-xs text-gray-500 mt-2">Next 7 days</p>
+                                        </div>
+                                        <i class="fas fa-calendar-alt text-5xl text-sa-green opacity-20"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 border-l-4 border-sa-yellow">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Leave Requests</p>
+                                            <p class="text-4xl font-bold text-sa-yellow mt-2">\${roleSpecific.myLeave.length}</p>
+                                            <p class="text-xs text-gray-500 mt-2">All statuses</p>
+                                        </div>
+                                        <i class="fas fa-umbrella-beach text-5xl text-sa-yellow opacity-20"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 border-l-4 border-sa-red">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-gray-600 text-sm font-medium">Available Swaps</p>
+                                            <p class="text-4xl font-bold text-sa-red mt-2">\${roleSpecific.availableSwaps.length}</p>
+                                            <p class="text-xs text-gray-500 mt-2">Open requests</p>
+                                        </div>
+                                        <i class="fas fa-exchange-alt text-5xl text-sa-red opacity-20"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- My Upcoming Shifts -->
+                            <div class="glass-card p-6 mb-6">
+                                <h2 class="text-2xl font-bold text-sa-blue mb-4 flex items-center">
+                                    <i class="fas fa-calendar-week mr-3"></i>
+                                    My Upcoming Shifts
+                                </h2>
+                                \${roleSpecific.myShifts.length > 0 ? \`
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        \${roleSpecific.myShifts.map(shift => \`
+                                            <div class="p-4 rounded-xl bg-gradient-to-br from-sa-green/10 to-sa-blue/10 border border-sa-green/30">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <span class="text-lg font-bold text-sa-blue">
+                                                        \${new Date(shift.shift_date).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                                    </span>
+                                                    <span class="px-3 py-1 bg-sa-green text-white rounded-full text-xs font-bold">
+                                                        \${shift.shift_type || 'Regular'}
+                                                    </span>
+                                                </div>
+                                                <div class="text-2xl font-bold text-gray-800 mb-2">
+                                                    \${shift.start_time} - \${shift.end_time}
+                                                </div>
+                                                <div class="text-sm text-gray-600">
+                                                    Duration: \${shift.duration_hours || 8}h
+                                                </div>
+                                            </div>
+                                        \`).join('')}
+                                    </div>
+                                \` : \`
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-calendar-times text-6xl mb-4 opacity-30"></i>
+                                        <p>No upcoming shifts scheduled</p>
+                                    </div>
+                                \`}
+                            </div>
+                            
+                            <!-- Available Shift Swaps -->
+                            \${roleSpecific.availableSwaps.length > 0 ? \`
+                                <div class="glass-card p-6 mb-6">
+                                    <h2 class="text-2xl font-bold text-sa-red mb-4 flex items-center">
+                                        <i class="fas fa-exchange-alt mr-3"></i>
+                                        Available Shift Swaps
+                                    </h2>
+                                    <div class="space-y-3">
+                                        \${roleSpecific.availableSwaps.map(swap => \`
+                                            <div class="p-4 rounded-xl bg-white border-l-4 border-sa-yellow">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex-1">
+                                                        <div class="font-bold text-lg">\${swap.first_name} \${swap.last_name} is offering:</div>
+                                                        <div class="text-sm text-gray-600 mt-1">
+                                                            <i class="fas fa-calendar mr-1"></i>
+                                                            \${new Date(swap.shift_date).toLocaleDateString()} • \${swap.start_time} - \${swap.end_time}
+                                                        </div>
+                                                    </div>
+                                                    <button class="px-4 py-2 bg-sa-green text-white rounded-lg font-bold hover:shadow-lg transition">
+                                                        <i class="fas fa-handshake mr-1"></i> Take Shift
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        \`).join('')}
+                                    </div>
+                                </div>
+                            \` : ''}
+                            
+                            <!-- My Compliance Status -->
+                            <div class="glass-card p-6 mb-6">
+                                <h2 class="text-2xl font-bold text-sa-green mb-4 flex items-center">
+                                    <i class="fas fa-clipboard-check mr-3"></i>
+                                    My Compliance Status
+                                </h2>
+                                \${roleSpecific.myCompliance.length > 0 ? \`
+                                    <div class="space-y-3">
+                                        \${roleSpecific.myCompliance.map(check => \`
+                                            <div class="p-4 rounded-xl bg-white border-l-4 \${
+                                                check.status === 'compliant' ? 'border-sa-green' :
+                                                check.status === 'non_compliant' ? 'border-sa-red' :
+                                                'border-sa-yellow'
+                                            }">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex-1">
+                                                        <div class="font-bold text-lg">\${check.check_type}</div>
+                                                        <div class="text-sm text-gray-600 mt-1">
+                                                            Checked: \${new Date(check.check_date).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <span class="px-4 py-2 rounded-lg font-bold \${
+                                                        check.status === 'compliant' ? 'bg-sa-green/10 text-sa-green' :
+                                                        check.status === 'non_compliant' ? 'bg-sa-red/10 text-sa-red' :
+                                                        'bg-sa-yellow/10 text-sa-yellow'
+                                                    }">
+                                                        \${check.status.toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        \`).join('')}
+                                    </div>
+                                \` : \`
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-check-circle text-6xl mb-4 opacity-30"></i>
+                                        <p>No compliance checks recorded</p>
+                                    </div>
+                                \`}
+                            </div>
+                            
+                            <!-- Quick Actions -->
+                            <div class="glass-card p-6">
+                                <h3 class="text-xl font-bold text-sa-blue mb-4 flex items-center">
+                                    <i class="fas fa-bolt mr-2"></i>
+                                    Quick Actions
+                                </h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <button onclick="navigateToPage('schedule')" class="p-4 rounded-xl bg-gradient-to-br from-sa-blue/10 to-sa-blue/20 hover:from-sa-blue/20 hover:to-sa-blue/30 border border-sa-blue/30 transition text-center">
+                                        <i class="fas fa-calendar-alt text-3xl text-sa-blue mb-2"></i>
+                                        <div class="font-bold text-sm">View Schedule</div>
+                                    </button>
+                                    
+                                    <button onclick="navigateToPage('leave')" class="p-4 rounded-xl bg-gradient-to-br from-sa-green/10 to-sa-green/20 hover:from-sa-green/20 hover:to-sa-green/30 border border-sa-green/30 transition text-center">
+                                        <i class="fas fa-paper-plane text-3xl text-sa-green mb-2"></i>
+                                        <div class="font-bold text-sm">Request Leave</div>
+                                    </button>
+                                    
+                                    <button onclick="navigateToPage('shiftSwaps')" class="p-4 rounded-xl bg-gradient-to-br from-sa-yellow/10 to-sa-yellow/20 hover:from-sa-yellow/20 hover:to-sa-yellow/30 border border-sa-yellow/30 transition text-center">
+                                        <i class="fas fa-exchange-alt text-3xl text-sa-yellow mb-2"></i>
+                                        <div class="font-bold text-sm">Swap Shift</div>
+                                    </button>
+                                    
+                                    <button onclick="navigateToPage('myCompliance')" class="p-4 rounded-xl bg-gradient-to-br from-sa-red/10 to-sa-red/20 hover:from-sa-red/20 hover:to-sa-red/30 border border-sa-red/30 transition text-center">
+                                        <i class="fas fa-shield-alt text-3xl text-sa-red mb-2"></i>
+                                        <div class="font-bold text-sm">My Compliance</div>
+                                    </button>
+                                </div>
+                            </div>
+                        \`;
+                    }
+                    
+                    mainContent.innerHTML = dashboardHTML;
+                }
+            }).catch(error => {
+                mainContent.innerHTML = '<div class="glass-card p-8 text-center"><i class="fas fa-exclamation-triangle text-6xl text-sa-red mb-4"></i><p class="text-gray-600">Error loading dashboard</p></div>';
+            });
         }
         
         function loadLeaderboardPage() {
