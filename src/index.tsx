@@ -2697,6 +2697,151 @@ app.post('/api/interns/compliance/seed', async (c) => {
   }
 });
 
+// Initialize COIDA tables (run once to create all COIDA tables)
+app.post('/api/coida/initialize', async (c) => {
+  const { DB } = c.env;
+  try {
+    // Check if already initialized
+    const check = await DB.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='coida_registration'
+    `).first();
+    
+    if (check) {
+      return c.json({ success: true, message: 'COIDA system already initialized' });
+    }
+    
+    // Create all COIDA tables
+    await DB.batch([
+      // 1. COIDA Registration
+      DB.prepare(`CREATE TABLE coida_registration (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        registration_number TEXT UNIQUE,
+        primary_tariff_code TEXT NOT NULL,
+        primary_tariff_rate REAL NOT NULL,
+        secondary_tariff_code TEXT,
+        secondary_tariff_rate REAL,
+        risk_class TEXT,
+        registration_date DATE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      
+      // 2. Annual Returns (W.As.2)
+      DB.prepare(`CREATE TABLE coida_annual_returns (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        return_year INTEGER NOT NULL,
+        submission_deadline DATE NOT NULL,
+        total_earnings_declared REAL NOT NULL,
+        total_employees_covered INTEGER,
+        assessment_amount REAL,
+        late_submission_penalty REAL DEFAULT 0,
+        submission_date DATE,
+        submission_status TEXT DEFAULT 'pending',
+        w_as2_form_path TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      
+      // 3. Advance Payments
+      DB.prepare(`CREATE TABLE coida_advance_payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        payment_period TEXT CHECK(payment_period IN ('first_half', 'second_half')),
+        due_date DATE NOT NULL,
+        amount_due REAL NOT NULL,
+        amount_paid REAL,
+        payment_date DATE,
+        payment_reference TEXT,
+        payment_status TEXT DEFAULT 'pending',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      
+      // 4. Incident Reporting (W.Cl.2)
+      DB.prepare(`CREATE TABLE coida_incident_reporting (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_id INTEGER NOT NULL,
+        w_cl2_form_number TEXT UNIQUE,
+        incident_date DATE NOT NULL,
+        incident_time TIME,
+        incident_location TEXT,
+        incident_type TEXT NOT NULL,
+        injury_description TEXT,
+        body_part_affected TEXT,
+        witnesses TEXT,
+        reported_to_saps INTEGER DEFAULT 0,
+        reported_to_ohs INTEGER DEFAULT 0,
+        reported_date DATE NOT NULL,
+        is_late INTEGER DEFAULT 0,
+        reported_by INTEGER,
+        status TEXT DEFAULT 'reported',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      
+      // 5. Medical Authorization (W.Cl.4)
+      DB.prepare(`CREATE TABLE coida_medical_authorization (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        incident_id INTEGER NOT NULL,
+        w_cl4_form_number TEXT UNIQUE,
+        authorization_date DATE NOT NULL,
+        authorized_by INTEGER,
+        authorization_status TEXT DEFAULT 'authorized',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      
+      // 6. Employee Claims (W.Cl.3)
+      DB.prepare(`CREATE TABLE coida_employee_claims (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        incident_id INTEGER NOT NULL,
+        employee_id INTEGER NOT NULL,
+        claim_reference TEXT UNIQUE,
+        claim_type TEXT CHECK(claim_type IN (
+          'medical_expenses',
+          'temporary_total_disablement',
+          'temporary_partial_disablement',
+          'permanent_disablement',
+          'death_benefit'
+        )),
+        claim_amount REAL,
+        claim_submission_date DATE,
+        claim_status TEXT DEFAULT 'pending',
+        cf_response_date DATE,
+        cf_decision TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      
+      // 7. Earnings Certificates (W.Cl.22)
+      DB.prepare(`CREATE TABLE coida_earnings_certificates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        claim_id INTEGER NOT NULL,
+        w_cl22_form_number TEXT UNIQUE,
+        employee_id INTEGER NOT NULL,
+        average_monthly_earnings REAL NOT NULL,
+        calculation_period_start DATE,
+        calculation_period_end DATE,
+        submitted_to_cf INTEGER DEFAULT 0,
+        submission_date DATE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`),
+      
+      // 8. Letter of Good Standing
+      DB.prepare(`CREATE TABLE coida_letters_of_good_standing (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        issue_date DATE,
+        expiry_date DATE,
+        certificate_number TEXT UNIQUE,
+        certificate_path TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`)
+    ]);
+    
+    return c.json({ 
+      success: true, 
+      message: 'COIDA system initialized successfully',
+      tables_created: 8
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to initialize COIDA system', message: error.message }, 500);
+  }
+});
+
 // ============================================================================
 // COIDA WORKPLACE INJURY COMPENSATION APIs
 // ============================================================================
