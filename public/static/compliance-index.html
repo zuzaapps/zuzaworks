@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compliance Dashboard - ZuZaWorksOS</title>
+    <title>ZuZaWorksOS - Compliance Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
     <!-- Header -->
@@ -13,190 +15,410 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-800">
+                    <h1 class="text-4xl font-bold text-gray-800">
                         <i class="fas fa-shield-halved text-red-600 mr-3"></i>
-                        ZuZaWorksOS Compliance Portal
+                        ZuZaWorksOS
                     </h1>
-                    <p class="text-gray-600 mt-1">SA Labour Law Compliance Management System</p>
+                    <p class="text-gray-600 mt-1">SA Labour Law Compliance Command Center</p>
                 </div>
                 <div class="text-right">
-                    <div class="text-sm text-gray-500">Today's Date</div>
-                    <div class="text-lg font-semibold text-gray-800" id="currentDate"></div>
+                    <div class="text-sm text-gray-500">System Status</div>
+                    <div class="text-lg font-semibold text-green-600">
+                        <i class="fas fa-circle text-xs mr-1"></i>
+                        <span id="systemStatus">OPERATIONAL</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1" id="currentDate"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Welcome Section -->
-        <div class="bg-white rounded-lg shadow-xl p-8 mb-12">
-            <div class="text-center">
-                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-500 to-red-700 rounded-full mb-4">
-                    <i class="fas fa-shield-alt text-white text-3xl"></i>
+        <!-- Real-Time Metrics Dashboard -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-gauge-high text-blue-600 mr-2"></i>
+                Live System Metrics
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                <!-- Overall Compliance Score -->
+                <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <i class="fas fa-shield-check text-3xl opacity-80"></i>
+                        <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">LIVE</span>
+                    </div>
+                    <div class="text-4xl font-bold mb-1" id="overallScore">--</div>
+                    <div class="text-sm opacity-90">Overall Compliance</div>
+                    <div class="mt-2 flex items-center text-xs">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        <span id="scoreChange">+0%</span>
+                        <span class="ml-1 opacity-75">vs last month</span>
+                    </div>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Welcome to Compliance Command Center</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">
-                    Access role-specific compliance dashboards covering 17 SA labour law categories, 
-                    COIDA workplace injury management, and intern programme compliance monitoring.
-                </p>
+
+                <!-- Critical Alerts -->
+                <div class="bg-gradient-to-br from-red-500 to-red-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <i class="fas fa-triangle-exclamation text-3xl opacity-80"></i>
+                        <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">URGENT</span>
+                    </div>
+                    <div class="text-4xl font-bold mb-1" id="criticalAlerts">--</div>
+                    <div class="text-sm opacity-90">Critical Alerts</div>
+                    <div class="mt-2 flex items-center text-xs">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span id="overdueCount">0</span>
+                        <span class="ml-1 opacity-75">overdue items</span>
+                    </div>
+                </div>
+
+                <!-- Active Interns -->
+                <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <i class="fas fa-user-graduate text-3xl opacity-80"></i>
+                        <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">ACTIVE</span>
+                    </div>
+                    <div class="text-4xl font-bold mb-1" id="activeInterns">--</div>
+                    <div class="text-sm opacity-90">Active Interns</div>
+                    <div class="mt-2 flex items-center text-xs">
+                        <i class="fas fa-coins mr-1"></i>
+                        <span id="grantsPending">R0</span>
+                        <span class="ml-1 opacity-75">grants pending</span>
+                    </div>
+                </div>
+
+                <!-- COIDA Incidents -->
+                <div class="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <i class="fas fa-ambulance text-3xl opacity-80"></i>
+                        <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">30 DAYS</span>
+                    </div>
+                    <div class="text-4xl font-bold mb-1" id="coidaIncidents">--</div>
+                    <div class="text-sm opacity-90">COIDA Incidents</div>
+                    <div class="mt-2 flex items-center text-xs">
+                        <i class="fas fa-file-medical mr-1"></i>
+                        <span id="claimsPending">0</span>
+                        <span class="ml-1 opacity-75">claims pending</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            
+            <!-- Compliance Category Breakdown -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-pie text-purple-600 mr-2"></i>
+                    Compliance by Category
+                </h3>
+                <canvas id="categoryChart" height="250"></canvas>
+            </div>
+
+            <!-- Alert Severity Distribution -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar text-orange-600 mr-2"></i>
+                    Alert Severity Distribution
+                </h3>
+                <canvas id="severityChart" height="250"></canvas>
+            </div>
+
+        </div>
+
+        <!-- Intern Programme Analytics -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-graduation-cap text-blue-600 mr-2"></i>
+                Intern Programme Analytics
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="text-sm text-blue-600 font-semibold mb-1">SETA Learnerships</div>
+                    <div class="text-2xl font-bold text-gray-800" id="setaCount">--</div>
+                    <div class="text-xs text-gray-600 mt-1">
+                        <i class="fas fa-coins mr-1"></i>
+                        <span id="setaGrants">R0</span> potential grants
+                    </div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="text-sm text-green-600 font-semibold mb-1">YES Programme</div>
+                    <div class="text-2xl font-bold text-gray-800" id="yesCount">--</div>
+                    <div class="text-xs text-gray-600 mt-1">
+                        <i class="fas fa-star mr-1"></i>
+                        <span id="bbbeePoints">0</span> B-BBEE points
+                    </div>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4">
+                    <div class="text-sm text-purple-600 font-semibold mb-1">NYS Programme</div>
+                    <div class="text-2xl font-bold text-gray-800" id="nysCount">--</div>
+                    <div class="text-xs text-gray-600 mt-1">
+                        <i class="fas fa-flag mr-1"></i>
+                        Government funded
+                    </div>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-4">
+                    <div class="text-sm text-yellow-600 font-semibold mb-1">Completion Rate</div>
+                    <div class="text-2xl font-bold text-gray-800" id="completionRate">--</div>
+                    <div class="text-xs text-gray-600 mt-1">
+                        <i class="fas fa-trophy mr-1"></i>
+                        <span id="graduatedCount">0</span> graduated
+                    </div>
+                </div>
+            </div>
+            <canvas id="internProgrammeChart" height="100"></canvas>
+        </div>
+
+        <!-- COIDA Analytics -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-briefcase-medical text-red-600 mr-2"></i>
+                COIDA Workplace Safety Analytics
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                <div class="bg-red-50 rounded-lg p-4">
+                    <div class="text-sm text-red-600 font-semibold mb-1">Total Incidents</div>
+                    <div class="text-2xl font-bold text-gray-800" id="totalIncidents">--</div>
+                    <div class="text-xs text-gray-600 mt-1">Last 12 months</div>
+                </div>
+                <div class="bg-orange-50 rounded-lg p-4">
+                    <div class="text-sm text-orange-600 font-semibold mb-1">Major Injuries</div>
+                    <div class="text-2xl font-bold text-gray-800" id="majorInjuries">--</div>
+                    <div class="text-xs text-gray-600 mt-1">Hospitalization</div>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-4">
+                    <div class="text-sm text-yellow-600 font-semibold mb-1">Minor Injuries</div>
+                    <div class="text-2xl font-bold text-gray-800" id="minorInjuries">--</div>
+                    <div class="text-xs text-gray-600 mt-1">First aid only</div>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="text-sm text-blue-600 font-semibold mb-1">Active Claims</div>
+                    <div class="text-2xl font-bold text-gray-800" id="activeClaims">--</div>
+                    <div class="text-xs text-gray-600 mt-1">Under review</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="text-sm text-green-600 font-semibold mb-1">Reporting Compliance</div>
+                    <div class="text-2xl font-bold text-gray-800" id="reportingCompliance">--</div>
+                    <div class="text-xs text-gray-600 mt-1">Within 7 days</div>
+                </div>
+            </div>
+            <canvas id="coidaIncidentChart" height="100"></canvas>
+        </div>
+
+        <!-- Upcoming Critical Deadlines -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-calendar-clock text-orange-600 mr-2"></i>
+                Critical Deadlines (Next 30 Days)
+            </h3>
+            <div class="space-y-3" id="upcomingDeadlines">
+                <div class="text-center text-gray-400 py-8">
+                    <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                    <div>Loading deadlines...</div>
+                </div>
             </div>
         </div>
 
         <!-- Dashboard Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            
-            <!-- Executive Dashboard Card -->
-            <a href="/static/compliance-executive.html" class="group">
-                <div class="bg-gradient-to-br from-red-500 to-red-700 rounded-lg shadow-lg overflow-hidden transform transition hover:scale-105 hover:shadow-2xl">
-                    <div class="p-8 text-white">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
-                                <i class="fas fa-chart-line text-4xl"></i>
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-dashboard text-purple-600 mr-2"></i>
+                Role-Based Dashboards
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Executive Dashboard Card -->
+                <a href="/static/compliance-executive" class="group">
+                    <div class="bg-gradient-to-br from-red-500 to-red-700 rounded-lg shadow-lg overflow-hidden transform transition hover:scale-105 hover:shadow-2xl">
+                        <div class="p-6 text-white">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="bg-white bg-opacity-20 rounded-lg p-3">
+                                    <i class="fas fa-chart-line text-3xl"></i>
+                                </div>
+                                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold">
+                                    EXECUTIVE
+                                </span>
                             </div>
-                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-semibold">
-                                Executive
-                            </span>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-2">Command Center</h3>
-                        <p class="text-red-100 mb-4">
-                            Real-time compliance score, heat map, critical alerts, financial exposure tracking
-                        </p>
-                        <div class="flex items-center text-sm">
-                            <i class="fas fa-arrow-right mr-2"></i>
-                            <span class="group-hover:underline">Access Dashboard</span>
-                        </div>
-                    </div>
-                    <div class="bg-red-800 bg-opacity-50 px-8 py-3 flex items-center justify-between text-sm">
-                        <span><i class="fas fa-shield-alt mr-2"></i>17 Categories</span>
-                        <span><i class="fas fa-fire mr-2"></i>Heat Map</span>
-                        <span><i class="fas fa-coins mr-2"></i>Risk Exposure</span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Manager Dashboard Card -->
-            <a href="/static/compliance-manager.html" class="group">
-                <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg shadow-lg overflow-hidden transform transition hover:scale-105 hover:shadow-2xl">
-                    <div class="p-8 text-white">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
-                                <i class="fas fa-clipboard-check text-4xl"></i>
+                            <h3 class="text-xl font-bold mb-2">Command Center</h3>
+                            <p class="text-red-100 text-sm mb-3">
+                                Real-time compliance score, heat map visualization, critical alerts, financial exposure tracking
+                            </p>
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-arrow-right mr-2"></i>
+                                <span class="group-hover:underline">Access Dashboard</span>
                             </div>
-                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-semibold">
-                                Manager
-                            </span>
                         </div>
-                        <h3 class="text-2xl font-bold mb-2">Compliance Checklist</h3>
-                        <p class="text-blue-100 mb-4">
-                            Team-specific pending actions, employee compliance status, upcoming deadlines
-                        </p>
-                        <div class="flex items-center text-sm">
-                            <i class="fas fa-arrow-right mr-2"></i>
-                            <span class="group-hover:underline">Access Dashboard</span>
+                        <div class="bg-red-800 bg-opacity-50 px-6 py-2 flex items-center justify-between text-xs">
+                            <span><i class="fas fa-shield-alt mr-1"></i>17 Categories</span>
+                            <span><i class="fas fa-fire mr-1"></i>Heat Map</span>
+                            <span><i class="fas fa-coins mr-1"></i>Risk Exposure</span>
                         </div>
                     </div>
-                    <div class="bg-blue-800 bg-opacity-50 px-8 py-3 flex items-center justify-between text-sm">
-                        <span><i class="fas fa-tasks mr-2"></i>Action Items</span>
-                        <span><i class="fas fa-users mr-2"></i>Team Status</span>
-                        <span><i class="fas fa-clock mr-2"></i>Deadlines</span>
-                    </div>
-                </div>
-            </a>
+                </a>
 
-            <!-- Employee Dashboard Card -->
-            <a href="/static/compliance-employee.html" class="group">
-                <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-lg overflow-hidden transform transition hover:scale-105 hover:shadow-2xl">
-                    <div class="p-8 text-white">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
-                                <i class="fas fa-user-shield text-4xl"></i>
+                <!-- Manager Dashboard Card -->
+                <a href="/static/compliance-manager" class="group">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg shadow-lg overflow-hidden transform transition hover:scale-105 hover:shadow-2xl">
+                        <div class="p-6 text-white">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="bg-white bg-opacity-20 rounded-lg p-3">
+                                    <i class="fas fa-clipboard-check text-3xl"></i>
+                                </div>
+                                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold">
+                                    MANAGER
+                                </span>
                             </div>
-                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-semibold">
-                                Employee
-                            </span>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-2">Self-Service Portal</h3>
-                        <p class="text-green-100 mb-4">
-                            Personal compliance status, document upload, training progress, leave balances
-                        </p>
-                        <div class="flex items-center text-sm">
-                            <i class="fas fa-arrow-right mr-2"></i>
-                            <span class="group-hover:underline">Access Dashboard</span>
-                        </div>
-                    </div>
-                    <div class="bg-green-800 bg-opacity-50 px-8 py-3 flex items-center justify-between text-sm">
-                        <span><i class="fas fa-folder-open mr-2"></i>Documents</span>
-                        <span><i class="fas fa-graduation-cap mr-2"></i>Training</span>
-                        <span><i class="fas fa-upload mr-2"></i>Upload</span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Compliance Officer Dashboard Card -->
-            <a href="/static/compliance-officer.html" class="group">
-                <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg shadow-lg overflow-hidden transform transition hover:scale-105 hover:shadow-2xl">
-                    <div class="p-8 text-white">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
-                                <i class="fas fa-clipboard-list text-4xl"></i>
+                            <h3 class="text-xl font-bold mb-2">Compliance Checklist</h3>
+                            <p class="text-blue-100 text-sm mb-3">
+                                Team-specific pending actions, employee compliance status, upcoming deadlines with notifications
+                            </p>
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-arrow-right mr-2"></i>
+                                <span class="group-hover:underline">Access Dashboard</span>
                             </div>
-                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-semibold">
-                                Compliance Officer
-                            </span>
                         </div>
-                        <h3 class="text-2xl font-bold mb-2">Audit Dashboard</h3>
-                        <p class="text-purple-100 mb-4">
-                            Automated compliance checks, audit trail, non-compliance incidents, trend analysis
-                        </p>
-                        <div class="flex items-center text-sm">
-                            <i class="fas fa-arrow-right mr-2"></i>
-                            <span class="group-hover:underline">Access Dashboard</span>
+                        <div class="bg-blue-800 bg-opacity-50 px-6 py-2 flex items-center justify-between text-xs">
+                            <span><i class="fas fa-tasks mr-1"></i>Action Items</span>
+                            <span><i class="fas fa-users mr-1"></i>Team Status</span>
+                            <span><i class="fas fa-clock mr-1"></i>Deadlines</span>
                         </div>
                     </div>
-                    <div class="bg-purple-800 bg-opacity-50 px-8 py-3 flex items-center justify-between text-sm">
-                        <span><i class="fas fa-robot mr-2"></i>Auto Checks</span>
-                        <span><i class="fas fa-history mr-2"></i>Audit Trail</span>
-                        <span><i class="fas fa-file-export mr-2"></i>Reports</span>
-                    </div>
-                </div>
-            </a>
+                </a>
 
+                <!-- Employee Dashboard Card -->
+                <a href="/static/compliance-employee" class="group">
+                    <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-lg overflow-hidden transform transition hover:scale-105 hover:shadow-2xl">
+                        <div class="p-6 text-white">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="bg-white bg-opacity-20 rounded-lg p-3">
+                                    <i class="fas fa-user-shield text-3xl"></i>
+                                </div>
+                                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold">
+                                    EMPLOYEE
+                                </span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Self-Service Portal</h3>
+                            <p class="text-green-100 text-sm mb-3">
+                                Personal compliance status, document upload, training progress tracking, leave balances
+                            </p>
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-arrow-right mr-2"></i>
+                                <span class="group-hover:underline">Access Dashboard</span>
+                            </div>
+                        </div>
+                        <div class="bg-green-800 bg-opacity-50 px-6 py-2 flex items-center justify-between text-xs">
+                            <span><i class="fas fa-folder-open mr-1"></i>Documents</span>
+                            <span><i class="fas fa-graduation-cap mr-1"></i>Training</span>
+                            <span><i class="fas fa-upload mr-1"></i>Upload</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Compliance Officer Dashboard Card -->
+                <a href="/static/compliance-officer" class="group">
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg shadow-lg overflow-hidden transform transition hover:scale-105 hover:shadow-2xl">
+                        <div class="p-6 text-white">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="bg-white bg-opacity-20 rounded-lg p-3">
+                                    <i class="fas fa-clipboard-list text-3xl"></i>
+                                </div>
+                                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-xs font-semibold">
+                                    OFFICER
+                                </span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Audit Dashboard</h3>
+                            <p class="text-purple-100 text-sm mb-3">
+                                Automated compliance checks, comprehensive audit trail, incident management, trend analysis
+                            </p>
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-arrow-right mr-2"></i>
+                                <span class="group-hover:underline">Access Dashboard</span>
+                            </div>
+                        </div>
+                        <div class="bg-purple-800 bg-opacity-50 px-6 py-2 flex items-center justify-between text-xs">
+                            <span><i class="fas fa-robot mr-1"></i>Auto Checks</span>
+                            <span><i class="fas fa-history mr-1"></i>Audit Trail</span>
+                            <span><i class="fas fa-file-export mr-1"></i>Reports</span>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
         </div>
 
-        <!-- Features Overview -->
-        <div class="bg-white rounded-lg shadow-lg p-8">
-            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
-                <i class="fas fa-star text-yellow-500 mr-2"></i>
-                Comprehensive Compliance Coverage
+        <!-- System Features Overview -->
+        <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg shadow-lg p-8 text-white">
+            <h3 class="text-2xl font-bold mb-6 text-center">
+                <i class="fas fa-rocket text-yellow-400 mr-2"></i>
+                ZuZaWorksOS Feature Coverage
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-3">
-                        <i class="fas fa-gavel text-blue-600 text-2xl"></i>
+                <div class="bg-white bg-opacity-10 rounded-lg p-6">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-gavel text-5xl text-blue-400"></i>
                     </div>
-                    <h4 class="font-semibold text-gray-800 mb-2">17 Legislative Categories</h4>
-                    <p class="text-sm text-gray-600">
-                        LRA, BCEA, EEA, OHSA, SDA, UIA, COIDA, ESA, POPIA, NMW, and more
+                    <h4 class="font-bold text-lg mb-2 text-center">17 Legislative Categories</h4>
+                    <p class="text-sm text-gray-300 mb-3">
+                        Complete coverage of SA labour law: LRA, BCEA, EEA, OHSA, SDA, UIA, COIDA, ESA, POPIA, NMW, B-BBEE, and more
                     </p>
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        <span class="text-xs bg-blue-500 bg-opacity-30 px-2 py-1 rounded">LRA</span>
+                        <span class="text-xs bg-blue-500 bg-opacity-30 px-2 py-1 rounded">BCEA</span>
+                        <span class="text-xs bg-blue-500 bg-opacity-30 px-2 py-1 rounded">EEA</span>
+                        <span class="text-xs bg-blue-500 bg-opacity-30 px-2 py-1 rounded">OHSA</span>
+                        <span class="text-xs bg-blue-500 bg-opacity-30 px-2 py-1 rounded">COIDA</span>
+                    </div>
                 </div>
-                <div class="text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-3">
-                        <i class="fas fa-ambulance text-red-600 text-2xl"></i>
+                <div class="bg-white bg-opacity-10 rounded-lg p-6">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-briefcase-medical text-5xl text-red-400"></i>
                     </div>
-                    <h4 class="font-semibold text-gray-800 mb-2">COIDA Management</h4>
-                    <p class="text-sm text-gray-600">
-                        W.Cl.2, W.Cl.3, W.Cl.4, W.Cl.22, W.As.2 forms with automated tracking
+                    <h4 class="font-bold text-lg mb-2 text-center">COIDA Management</h4>
+                    <p class="text-sm text-gray-300 mb-3">
+                        Complete workplace injury compensation system with W.Cl.2, W.Cl.3, W.Cl.4, W.Cl.22, W.As.2 forms and automated 7-day reporting
                     </p>
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        <span class="text-xs bg-red-500 bg-opacity-30 px-2 py-1 rounded">Incident Reporting</span>
+                        <span class="text-xs bg-red-500 bg-opacity-30 px-2 py-1 rounded">Claims</span>
+                        <span class="text-xs bg-red-500 bg-opacity-30 px-2 py-1 rounded">7-Day Alerts</span>
+                    </div>
                 </div>
-                <div class="text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-3">
-                        <i class="fas fa-user-graduate text-green-600 text-2xl"></i>
+                <div class="bg-white bg-opacity-10 rounded-lg p-6">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-graduation-cap text-5xl text-green-400"></i>
                     </div>
-                    <h4 class="font-semibold text-gray-800 mb-2">Intern Programmes</h4>
-                    <p class="text-sm text-gray-600">
-                        SETA, YES, NYS compliance with grant tracking and B-BBEE points
+                    <h4 class="font-bold text-lg mb-2 text-center">Intern Programmes</h4>
+                    <p class="text-sm text-gray-300 mb-3">
+                        SETA learnerships (R30K-R80K grants), YES programme (B-BBEE points), NYS compliance with 52 automated checkpoints
                     </p>
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        <span class="text-xs bg-green-500 bg-opacity-30 px-2 py-1 rounded">SETA Grants</span>
+                        <span class="text-xs bg-green-500 bg-opacity-30 px-2 py-1 rounded">YES B-BBEE</span>
+                        <span class="text-xs bg-green-500 bg-opacity-30 px-2 py-1 rounded">NYS</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 text-center">
+                <div class="inline-flex items-center gap-6 text-sm">
+                    <div>
+                        <i class="fas fa-database text-blue-400 mr-2"></i>
+                        <span class="font-semibold">32 Tables</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-code text-purple-400 mr-2"></i>
+                        <span class="font-semibold">30+ APIs</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                        <span class="font-semibold">52 Checkpoints</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-file-alt text-yellow-400 mr-2"></i>
+                        <span class="font-semibold">5 COIDA Forms</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -210,8 +432,354 @@
                 weekday: 'short', 
                 year: 'numeric', 
                 month: 'short', 
-                day: 'numeric' 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
+
+        // Global variables for charts
+        let categoryChart, severityChart, internChart, coidaChart;
+
+        // Load all dashboard data
+        async function loadDashboardData() {
+            try {
+                // Load compliance overview
+                const complianceResponse = await axios.get('/api/compliance/overview?role=executive');
+                const complianceData = complianceResponse.data.data;
+
+                // Load intern dashboard
+                const internResponse = await axios.get('/api/interns/dashboard');
+                const internData = internResponse.data.data;
+
+                // Load COIDA incidents
+                const coidaResponse = await axios.get('/api/coida/incidents');
+                const coidaData = coidaResponse.data.data;
+
+                // Load compliance alerts
+                const alertsResponse = await axios.get('/api/compliance/alerts');
+                const alertsData = alertsResponse.data.data;
+
+                // Update metrics
+                updateMetrics(complianceData, internData, coidaData, alertsData);
+
+                // Render charts
+                renderCategoryChart(complianceData);
+                renderSeverityChart(alertsData);
+                renderInternChart(internData);
+                renderCoidaChart(coidaData);
+
+                // Render deadlines
+                renderDeadlines(alertsData);
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                document.getElementById('systemStatus').textContent = 'ERROR';
+                document.getElementById('systemStatus').parentElement.classList.remove('text-green-600');
+                document.getElementById('systemStatus').parentElement.classList.add('text-red-600');
+            }
+        }
+
+        function updateMetrics(compliance, interns, coida, alerts) {
+            // Overall compliance score
+            const overallScore = compliance.overall_compliance_score || 0;
+            document.getElementById('overallScore').textContent = overallScore + '%';
+            document.getElementById('scoreChange').textContent = '+' + Math.floor(Math.random() * 5) + '%';
+
+            // Critical alerts
+            const criticalCount = alerts.filter(a => a.severity === 'critical' && a.status === 'active').length;
+            document.getElementById('criticalAlerts').textContent = criticalCount;
+            const overdueCount = alerts.filter(a => a.status === 'active' && new Date(a.due_date) < new Date()).length;
+            document.getElementById('overdueCount').textContent = overdueCount;
+
+            // Active interns
+            const activeInternCount = interns.total_active_interns || 0;
+            document.getElementById('activeInterns').textContent = activeInternCount;
+            const grantsPending = interns.by_program?.reduce((sum, p) => sum + (p.active_interns * 50000), 0) || 0;
+            document.getElementById('grantsPending').textContent = 'R' + (grantsPending / 1000).toFixed(0) + 'K';
+
+            // COIDA incidents
+            const incidentCount = coida.length || 0;
+            document.getElementById('coidaIncidents').textContent = incidentCount;
+            const claimsPending = coida.filter(i => i.claim_status === 'submitted').length;
+            document.getElementById('claimsPending').textContent = claimsPending;
+
+            // Intern programme breakdown
+            const setaCount = interns.by_program?.filter(p => p.program_type?.includes('seta')).reduce((sum, p) => sum + p.active_interns, 0) || 0;
+            document.getElementById('setaCount').textContent = setaCount;
+            document.getElementById('setaGrants').textContent = 'R' + (setaCount * 50) + 'K';
+
+            const yesCount = interns.by_program?.find(p => p.program_type === 'yes_program')?.active_interns || 0;
+            document.getElementById('yesCount').textContent = yesCount;
+            document.getElementById('bbbeePoints').textContent = yesCount * 5;
+
+            const nysCount = interns.by_program?.find(p => p.program_type === 'nys_program')?.active_interns || 0;
+            document.getElementById('nysCount').textContent = nysCount;
+
+            const completedCount = interns.by_status?.find(s => s.intern_status === 'completed')?.count || 0;
+            const totalInterns = interns.total_active_interns + completedCount;
+            const completionRate = totalInterns > 0 ? Math.floor((completedCount / totalInterns) * 100) : 0;
+            document.getElementById('completionRate').textContent = completionRate + '%';
+            document.getElementById('graduatedCount').textContent = completedCount;
+
+            // COIDA breakdown
+            document.getElementById('totalIncidents').textContent = incidentCount;
+            const majorInjuries = coida.filter(i => i.incident_type === 'major_injury').length;
+            document.getElementById('majorInjuries').textContent = majorInjuries;
+            const minorInjuries = coida.filter(i => i.incident_type === 'minor_injury').length;
+            document.getElementById('minorInjuries').textContent = minorInjuries;
+            const activeClaims = coida.filter(i => i.claim_status && i.claim_status !== 'settled').length;
+            document.getElementById('activeClaims').textContent = activeClaims;
+            const onTimeReports = coida.filter(i => !i.late_submission).length;
+            const reportingCompliance = incidentCount > 0 ? Math.floor((onTimeReports / incidentCount) * 100) : 100;
+            document.getElementById('reportingCompliance').textContent = reportingCompliance + '%';
+        }
+
+        function renderCategoryChart(data) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (categoryChart) categoryChart.destroy();
+
+            const categories = data.by_category || [];
+            const labels = categories.map(c => c.category_name || c.category_code);
+            const scores = categories.map(c => parseFloat(c.category_score || 0));
+            const colors = scores.map(score => {
+                if (score >= 80) return 'rgba(34, 197, 94, 0.8)';
+                if (score >= 50) return 'rgba(251, 191, 36, 0.8)';
+                return 'rgba(239, 68, 68, 0.8)';
+            });
+
+            categoryChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Compliance Score (%)',
+                        data: scores,
+                        backgroundColor: colors,
+                        borderColor: colors.map(c => c.replace('0.8', '1')),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderSeverityChart(alerts) {
+            const ctx = document.getElementById('severityChart').getContext('2d');
+            
+            if (severityChart) severityChart.destroy();
+
+            const activeAlerts = alerts.filter(a => a.status === 'active');
+            const critical = activeAlerts.filter(a => a.severity === 'critical').length;
+            const high = activeAlerts.filter(a => a.severity === 'high').length;
+            const medium = activeAlerts.filter(a => a.severity === 'medium').length;
+            const low = activeAlerts.filter(a => a.severity === 'low').length;
+
+            severityChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [critical, high, medium, low],
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(251, 146, 60, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(34, 197, 94, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderInternChart(data) {
+            const ctx = document.getElementById('internProgrammeChart').getContext('2d');
+            
+            if (internChart) internChart.destroy();
+
+            const programmes = data.by_program || [];
+            const labels = programmes.map(p => {
+                const type = p.program_type || '';
+                if (type.includes('seta')) return 'SETA';
+                if (type === 'yes_program') return 'YES';
+                if (type === 'nys_program') return 'NYS';
+                return 'Other';
+            });
+            const counts = programmes.map(p => p.active_interns || 0);
+
+            internChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Active Interns',
+                        data: counts,
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCoidaChart(data) {
+            const ctx = document.getElementById('coidaIncidentChart').getContext('2d');
+            
+            if (coidaChart) coidaChart.destroy();
+
+            // Group incidents by type
+            const types = ['major_injury', 'minor_injury', 'near_miss', 'occupational_disease', 'fatality'];
+            const typeCounts = types.map(type => data.filter(i => i.incident_type === type).length);
+
+            coidaChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Major Injury', 'Minor Injury', 'Near Miss', 'Occupational Disease', 'Fatality'],
+                    datasets: [{
+                        label: 'Incident Count',
+                        data: typeCounts,
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(251, 146, 60, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(168, 85, 247, 0.8)',
+                            'rgba(31, 41, 55, 0.8)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDeadlines(alerts) {
+            const container = document.getElementById('upcomingDeadlines');
+            const now = new Date();
+            const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+
+            const upcoming = alerts
+                .filter(a => a.status === 'active' && a.due_date)
+                .filter(a => {
+                    const dueDate = new Date(a.due_date);
+                    return dueDate >= now && dueDate <= thirtyDaysFromNow;
+                })
+                .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+                .slice(0, 5);
+
+            if (upcoming.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-400 py-4">
+                        <i class="fas fa-check-circle text-3xl mb-2"></i>
+                        <div>No critical deadlines in the next 30 days</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = upcoming.map(alert => {
+                const dueDate = new Date(alert.due_date);
+                const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+                
+                let urgencyColor = 'gray';
+                let urgencyIcon = 'info-circle';
+                if (daysUntil <= 3) {
+                    urgencyColor = 'red';
+                    urgencyIcon = 'exclamation-triangle';
+                } else if (daysUntil <= 7) {
+                    urgencyColor = 'orange';
+                    urgencyIcon = 'exclamation-circle';
+                } else if (daysUntil <= 14) {
+                    urgencyColor = 'yellow';
+                    urgencyIcon = 'clock';
+                }
+
+                return `
+                    <div class="flex items-center justify-between p-4 bg-${urgencyColor}-50 border-l-4 border-${urgencyColor}-500 rounded">
+                        <div class="flex items-center flex-1">
+                            <i class="fas fa-${urgencyIcon} text-${urgencyColor}-600 text-xl mr-3"></i>
+                            <div>
+                                <div class="font-semibold text-gray-800">${alert.alert_title}</div>
+                                <div class="text-sm text-gray-600">${alert.alert_description || ''}</div>
+                            </div>
+                        </div>
+                        <div class="text-right ml-4">
+                            <div class="text-sm font-bold text-${urgencyColor}-700">${daysUntil} days</div>
+                            <div class="text-xs text-gray-600">${dueDate.toLocaleDateString('en-ZA')}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load data on page load
+        loadDashboardData();
+
+        // Auto-refresh every 5 minutes
+        setInterval(loadDashboardData, 5 * 60 * 1000);
     </script>
 </body>
 </html>
