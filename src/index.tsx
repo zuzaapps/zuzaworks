@@ -2698,6 +2698,534 @@ app.post('/api/interns/compliance/seed', async (c) => {
 });
 
 // ============================================================================
+// COIDA WORKPLACE INJURY COMPENSATION APIs
+// ============================================================================
+// Complete lifecycle: Registration → Annual Returns → Incident Reporting → Claims → LOGS
+// Covers W.As.2, W.Cl.2, W.Cl.3, W.Cl.4, W.Cl.22 forms
+
+// 1. GET /api/coida/registration - View COIDA registration details
+app.get('/api/coida/registration', async (c) => {
+  const { DB } = c.env;
+  try {
+    const registration = await DB.prepare(`
+      SELECT 
+        cr.*,
+        (SELECT COUNT(*) FROM coida_incident_reporting WHERE status != 'closed') as open_incidents,
+        (SELECT COUNT(*) FROM coida_employee_claims WHERE claim_status = 'pending') as pending_claims,
+        (SELECT COUNT(*) FROM coida_annual_returns WHERE return_year = ? AND submission_status = 'submitted') as current_year_submitted
+      FROM coida_registration cr
+      LIMIT 1
+    `).bind(new Date().getFullYear()).first();
+    
+    if (!registration) {
+      return c.json({ 
+        success: false, 
+        error: 'COIDA registration not found',
+        hint: 'Organization must register with Compensation Fund'
+      }, 404);
+    }
+    
+    return c.json({ success: true, data: registration });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch COIDA registration', message: error.message }, 500);
+  }
+});
+
+// 2. PUT /api/coida/registration - Update COIDA registration (tariff codes, risk class)
+app.put('/api/coida/registration', async (c) => {
+  const { DB } = c.env;
+  try {
+    const data = await c.req.json();
+    
+    // Check if registration exists
+    const existing = await DB.prepare(`SELECT id FROM coida_registration LIMIT 1`).first();
+    
+    if (existing) {
+      // Update existing registration
+      await DB.prepare(`
+        UPDATE coida_registration
+        SET registration_number = ?,
+            primary_tariff_code = ?,
+            primary_tariff_rate = ?,
+            secondary_tariff_code = ?,
+            secondary_tariff_rate = ?,
+            risk_class = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).bind(
+        data.registration_number,
+        data.primary_tariff_code,
+        data.primary_tariff_rate,
+        data.secondary_tariff_code || null,
+        data.secondary_tariff_rate || null,
+        data.risk_class,
+        existing.id
+      ).run();
+      
+      return c.json({ success: true, message: 'COIDA registration updated successfully' });
+    } else {
+      // Create new registration
+      const result = await DB.prepare(`
+        INSERT INTO coida_registration (
+          registration_number, primary_tariff_code, primary_tariff_rate,
+          secondary_tariff_code, secondary_tariff_rate, risk_class,
+          registration_date, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_TIMESTAMP)
+      `).bind(
+        data.registration_number,
+        data.primary_tariff_code,
+        data.primary_tariff_rate,
+        data.secondary_tariff_code || null,
+        data.secondary_tariff_rate || null,
+        data.risk_class
+      ).run();
+      
+      return c.json({ 
+        success: true, 
+        message: 'COIDA registration created successfully',
+        data: { registration_id: result.meta.last_row_id }
+      });
+    }
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to update COIDA registration', message: error.message }, 500);
+  }
+});
+
+// 3. GET /api/coida/letter-of-good-standing - Check Letter of Good Standing status
+app.get('/api/coida/letter-of-good-standing', async (c) => {
+  const { DB } = c.env;
+  try {
+    // Get latest LOGS
+    const logs = await DB.prepare(`
+      SELECT 
+        logs.*,
+        CASE 
+          WHEN logs.expiry_date >= DATE('now') THEN 'valid'
+          WHEN logs.expiry_date < DATE('now') THEN 'expired'
+          ELSE 'not_issued'
+        END as status,
+        CAST((JULIANDAY(logs.expiry_date) - JULIANDAY('now')) AS INTEGER) as days_until_expiry
+      FROM coida_letters_of_good_standing logs
+      ORDER BY logs.issue_date DESC
+      LIMIT 1
+    `).first();
+    
+    if (!logs) {
+      return c.json({
+        success: true,
+        data: {
+          status: 'not_issued',
+          message: 'No Letter of Good Standing on record. Apply via Compensation Fund portal.',
+          requires_action: true
+        }
+      });
+    }
+    
+    return c.json({ 
+      success: true, 
+      data: logs,
+      requires_action: logs.status === 'expired' || logs.days_until_expiry < 30
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch Letter of Good Standing', message: error.message }, 500);
+  }
+});
+
+// 4. POST /api/coida/annual-return - Submit W.As.2 annual return
+app.post('/api/coida/annual-return', async (c) => {
+  const { DB } = c.env;
+  try {
+    const data = await c.req.json();
+    
+    // Check if return already exists for this year
+    const existing = await DB.prepare(`
+      SELECT id FROM coida_annual_returns WHERE return_year = ?
+    `).bind(data.return_year).first();
+    
+    if (existing) {
+      return c.json({ success: false, error: 'Annual return already exists for this year' }, 400);
+    }
+    
+    // Calculate submission deadline (March 31 of following year)
+    const submissionDeadline = `${data.return_year + 1}-03-31`;
+    const submissionDate = new Date();
+    const deadline = new Date(submissionDeadline);
+    const isLate = submissionDate > deadline;
+    const latePenalty = isLate ? data.assessment_amount * 0.10 : 0; // 10% penalty if late
+    
+    // Insert annual return
+    const result = await DB.prepare(`
+      INSERT INTO coida_annual_returns (
+        return_year, submission_deadline, total_earnings_declared,
+        total_employees_covered, assessment_amount, late_submission_penalty,
+        submission_date, submission_status, w_as2_form_path, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, 'submitted', ?, CURRENT_TIMESTAMP)
+    `).bind(
+      data.return_year,
+      submissionDeadline,
+      data.total_earnings_declared,
+      data.total_employees_covered,
+      data.assessment_amount,
+      latePenalty,
+      data.w_as2_form_path || null
+    ).run();
+    
+    // Create compliance alert if late
+    if (isLate) {
+      await DB.prepare(`
+        INSERT INTO compliance_alerts (
+          alert_type, severity, title, description, status, created_at
+        ) VALUES (
+          'coida_late_submission', 'critical',
+          'Late COIDA W.As.2 Submission - 10% Penalty Applied',
+          'Annual return for ${data.return_year} submitted after March 31 deadline. Penalty: R${latePenalty.toFixed(2)}',
+          'new', CURRENT_TIMESTAMP
+        )
+      `).run();
+    }
+    
+    return c.json({ 
+      success: true, 
+      message: isLate ? 'Annual return submitted (LATE - 10% penalty applied)' : 'Annual return submitted successfully',
+      data: { 
+        return_id: result.meta.last_row_id,
+        is_late: isLate,
+        late_penalty: latePenalty
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to submit annual return', message: error.message }, 500);
+  }
+});
+
+// 5. GET /api/coida/annual-returns - View annual return history
+app.get('/api/coida/annual-returns', async (c) => {
+  const { DB } = c.env;
+  try {
+    const returns = await DB.prepare(`
+      SELECT 
+        car.*,
+        CASE 
+          WHEN car.submission_date <= car.submission_deadline THEN 'on_time'
+          WHEN car.submission_date > car.submission_deadline THEN 'late'
+          ELSE 'pending'
+        END as submission_timeliness
+      FROM coida_annual_returns car
+      ORDER BY car.return_year DESC
+    `).all();
+    
+    return c.json({ success: true, data: returns.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch annual returns', message: error.message }, 500);
+  }
+});
+
+// 6. POST /api/coida/advance-payment - Record advance payment (July 31 or January 31)
+app.post('/api/coida/advance-payment', async (c) => {
+  const { DB } = c.env;
+  try {
+    const data = await c.req.json();
+    
+    // Validate payment period
+    if (!['first_half', 'second_half'].includes(data.payment_period)) {
+      return c.json({ success: false, error: 'Invalid payment period. Must be first_half or second_half' }, 400);
+    }
+    
+    // Determine due date
+    const currentYear = new Date().getFullYear();
+    const dueDate = data.payment_period === 'first_half' 
+      ? `${currentYear}-07-31` 
+      : `${currentYear + 1}-01-31`;
+    
+    const result = await DB.prepare(`
+      INSERT INTO coida_advance_payments (
+        payment_period, due_date, amount_due, amount_paid,
+        payment_date, payment_reference, payment_status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, 'paid', CURRENT_TIMESTAMP)
+    `).bind(
+      data.payment_period,
+      dueDate,
+      data.amount_due,
+      data.amount_paid,
+      data.payment_date,
+      data.payment_reference
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      message: 'Advance payment recorded successfully',
+      data: { payment_id: result.meta.last_row_id }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to record advance payment', message: error.message }, 500);
+  }
+});
+
+// 7. POST /api/coida/incident/report - Report workplace injury (W.Cl.2 form)
+app.post('/api/coida/incident/report', async (c) => {
+  const { DB } = c.env;
+  try {
+    const data = await c.req.json();
+    
+    // Calculate if report is late (must be within 7 days)
+    const incidentDate = new Date(data.incident_date);
+    const reportDate = new Date();
+    const daysDifference = Math.ceil((reportDate.getTime() - incidentDate.getTime()) / (1000 * 60 * 60 * 24));
+    const isLate = daysDifference > 7;
+    
+    // Generate W.Cl.2 form number
+    const formNumber = `WCL2-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+    
+    // Insert incident report
+    const result = await DB.prepare(`
+      INSERT INTO coida_incident_reporting (
+        employee_id, w_cl2_form_number, incident_date, incident_time,
+        incident_location, incident_type, injury_description, body_part_affected,
+        witnesses, reported_to_saps, reported_to_ohs, reported_date,
+        is_late, reported_by, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, 'reported', CURRENT_TIMESTAMP)
+    `).bind(
+      data.employee_id,
+      formNumber,
+      data.incident_date,
+      data.incident_time,
+      data.incident_location,
+      data.incident_type,
+      data.injury_description,
+      data.body_part_affected,
+      data.witnesses || null,
+      data.reported_to_saps || 0,
+      data.reported_to_ohs || 0,
+      isLate ? 1 : 0,
+      data.reported_by
+    ).run();
+    
+    // Auto-issue W.Cl.4 medical authorization
+    const authFormNumber = `WCL4-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+    await DB.prepare(`
+      INSERT INTO coida_medical_authorization (
+        incident_id, w_cl4_form_number, authorization_date,
+        authorized_by, authorization_status, created_at
+      ) VALUES (?, ?, CURRENT_DATE, ?, 'authorized', CURRENT_TIMESTAMP)
+    `).bind(result.meta.last_row_id, authFormNumber, data.reported_by).run();
+    
+    // Create critical alert if late
+    if (isLate) {
+      await DB.prepare(`
+        INSERT INTO compliance_alerts (
+          alert_type, severity, title, description, status, created_at
+        ) VALUES (
+          'coida_late_incident_report', 'critical',
+          'Late COIDA Incident Report - ${formNumber}',
+          'Incident reported ${daysDifference} days after occurrence (>7 day limit). May affect claim processing.',
+          'new', CURRENT_TIMESTAMP
+        )
+      `).run();
+    }
+    
+    // Create alert if fatality (must notify SAPS, OHS, CF immediately)
+    if (data.incident_type === 'fatality') {
+      await DB.prepare(`
+        INSERT INTO compliance_alerts (
+          alert_type, severity, title, description, due_date, status, created_at
+        ) VALUES (
+          'coida_fatality_immediate', 'critical',
+          'FATALITY - Immediate Reporting Required',
+          'Contact SAPS, Department of Labour OHS Inspector, and Compensation Fund immediately. Do not disturb scene.',
+          DATE('now'), 'new', CURRENT_TIMESTAMP
+        )
+      `).run();
+    }
+    
+    return c.json({ 
+      success: true, 
+      message: isLate ? 'Incident reported (LATE - may affect claim)' : 'Incident reported successfully',
+      data: { 
+        incident_id: result.meta.last_row_id,
+        w_cl2_form_number: formNumber,
+        w_cl4_authorization: authFormNumber,
+        is_late: isLate,
+        days_delayed: daysDifference
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to report incident', message: error.message }, 500);
+  }
+});
+
+// 8. GET /api/coida/incidents - List all workplace incidents
+app.get('/api/coida/incidents', async (c) => {
+  const { DB } = c.env;
+  try {
+    const status = c.req.query('status'); // reported, under_investigation, claim_submitted, closed
+    const incidentType = c.req.query('incident_type'); // minor_injury, major_injury, permanent_disability, fatality
+    const isLate = c.req.query('is_late'); // 0 or 1
+    
+    let query = `
+      SELECT 
+        cir.*,
+        e.first_name || ' ' || e.last_name as employee_name,
+        e.id_number as employee_id_number,
+        (SELECT COUNT(*) FROM coida_employee_claims WHERE incident_id = cir.id) as claim_count
+      FROM coida_incident_reporting cir
+      LEFT JOIN employees e ON cir.employee_id = e.id
+      WHERE 1=1
+    `;
+    
+    const params: any[] = [];
+    
+    if (status) {
+      query += ` AND cir.status = ?`;
+      params.push(status);
+    }
+    
+    if (incidentType) {
+      query += ` AND cir.incident_type = ?`;
+      params.push(incidentType);
+    }
+    
+    if (isLate !== undefined) {
+      query += ` AND cir.is_late = ?`;
+      params.push(parseInt(isLate));
+    }
+    
+    query += ` ORDER BY cir.incident_date DESC`;
+    
+    const incidents = await DB.prepare(query).bind(...params).all();
+    
+    return c.json({ success: true, data: incidents.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch incidents', message: error.message }, 500);
+  }
+});
+
+// 9. POST /api/coida/claim - Submit employee claim (W.Cl.3 + W.Cl.22)
+app.post('/api/coida/claim', async (c) => {
+  const { DB } = c.env;
+  try {
+    const data = await c.req.json();
+    
+    // Verify incident exists
+    const incident = await DB.prepare(`
+      SELECT id, employee_id FROM coida_incident_reporting WHERE id = ?
+    `).bind(data.incident_id).first();
+    
+    if (!incident) {
+      return c.json({ success: false, error: 'Incident not found' }, 404);
+    }
+    
+    // Generate claim reference
+    const claimRef = `CF-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+    
+    // Insert employee claim (W.Cl.3)
+    const result = await DB.prepare(`
+      INSERT INTO coida_employee_claims (
+        incident_id, employee_id, claim_reference, claim_type,
+        claim_amount, claim_submission_date, claim_status, created_at
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_DATE, 'pending', CURRENT_TIMESTAMP)
+    `).bind(
+      data.incident_id,
+      incident.employee_id,
+      claimRef,
+      data.claim_type,
+      data.claim_amount
+    ).run();
+    
+    // Generate W.Cl.22 earnings certificate if required
+    if (['temporary_total_disablement', 'temporary_partial_disablement', 'permanent_disablement'].includes(data.claim_type)) {
+      const wCl22Number = `WCL22-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+      
+      await DB.prepare(`
+        INSERT INTO coida_earnings_certificates (
+          claim_id, w_cl22_form_number, employee_id,
+          average_monthly_earnings, calculation_period_start, calculation_period_end,
+          submitted_to_cf, submission_date, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 0, NULL, CURRENT_TIMESTAMP)
+      `).bind(
+        result.meta.last_row_id,
+        wCl22Number,
+        incident.employee_id,
+        data.average_monthly_earnings,
+        data.calculation_period_start,
+        data.calculation_period_end
+      ).run();
+      
+      // Create alert: W.Cl.22 must be submitted to CF within 7 days
+      await DB.prepare(`
+        INSERT INTO compliance_alerts (
+          alert_type, severity, title, description, due_date, status, created_at
+        ) VALUES (
+          'coida_wcl22_due', 'critical',
+          'W.Cl.22 Earnings Certificate Must Be Submitted - ${wCl22Number}',
+          'Submit W.Cl.22 to Compensation Fund within 7 days of claim submission.',
+          DATE('now', '+7 days'), 'new', CURRENT_TIMESTAMP
+        )
+      `).run();
+    }
+    
+    return c.json({ 
+      success: true, 
+      message: 'Claim submitted successfully',
+      data: { 
+        claim_id: result.meta.last_row_id,
+        claim_reference: claimRef
+      }
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to submit claim', message: error.message }, 500);
+  }
+});
+
+// 10. GET /api/coida/claims - Track claim status and payments
+app.get('/api/coida/claims', async (c) => {
+  const { DB } = c.env;
+  try {
+    const status = c.req.query('status'); // pending, approved, rejected, paid
+    const claimType = c.req.query('claim_type');
+    const employeeId = c.req.query('employee_id');
+    
+    let query = `
+      SELECT 
+        cec.*,
+        e.first_name || ' ' || e.last_name as employee_name,
+        cir.w_cl2_form_number,
+        cir.incident_date,
+        cir.incident_type,
+        CAST((JULIANDAY('now') - JULIANDAY(cec.claim_submission_date)) AS INTEGER) as days_pending
+      FROM coida_employee_claims cec
+      LEFT JOIN employees e ON cec.employee_id = e.id
+      LEFT JOIN coida_incident_reporting cir ON cec.incident_id = cir.id
+      WHERE 1=1
+    `;
+    
+    const params: any[] = [];
+    
+    if (status) {
+      query += ` AND cec.claim_status = ?`;
+      params.push(status);
+    }
+    
+    if (claimType) {
+      query += ` AND cec.claim_type = ?`;
+      params.push(claimType);
+    }
+    
+    if (employeeId) {
+      query += ` AND cec.employee_id = ?`;
+      params.push(employeeId);
+    }
+    
+    query += ` ORDER BY cec.claim_submission_date DESC`;
+    
+    const claims = await DB.prepare(query).bind(...params).all();
+    
+    return c.json({ success: true, data: claims.results });
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Failed to fetch claims', message: error.message }, 500);
+  }
+});
+
+// ============================================================================
 // EXISTING APIs (keeping all previous endpoints)
 // ============================================================================
 
