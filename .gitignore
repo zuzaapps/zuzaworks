@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 
+# Next.js
+.next/
+out/
+
 # Runtime data
 pids
 *.pid
@@ -11,8 +15,15 @@ pids
 build
 dist
 
+# SQLite database
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
 # dotenv environment variables file
 .env
+.env.local
+.env.production
 .dev.vars
 
 # PM2
@@ -27,7 +38,7 @@ logs/
 *.tar.gz
 *.zip
 
-# Wrangler
+# Wrangler (legacy)
 .wrangler/
 
 # IDE
@@ -40,3 +51,7 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

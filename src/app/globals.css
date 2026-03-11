@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@layer base {
+  body {
+    @apply antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/95 backdrop-blur-xl rounded-3xl border-2 border-pastel-blue-200/50 transition-all duration-300;
+    box-shadow: 0 8px 32px 0 rgba(168, 213, 226, 0.3);
+  }
+
+  .glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px 0 rgba(126, 200, 227, 0.4);
+  }
+
+  .sa-gradient {
+    @apply bg-gradient-to-r from-pastel-blue-300 via-pastel-blue-400 to-pastel-blue-200;
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+  }
+
+  .nav-item {
+    @apply flex items-center p-3 rounded-xl transition-all duration-200;
+  }
+
+  .nav-item:hover {
+    @apply bg-pastel-blue-400/10;
+  }
+
+  .nav-item.active {
+    @apply bg-pastel-blue-400 text-white font-semibold;
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(125, 211, 252, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(56, 189, 248, 0.8); }
+}
+
+@keyframes badgePop {
+  0% { transform: scale(0) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes coinFlip {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(180deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+@keyframes fireFlicker {
+  0%, 100% { transform: scale(1) rotate(-2deg); filter: brightness(1); }
+  50% { transform: scale(1.1) rotate(2deg); filter: brightness(1.2); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.5); }
+}
+
+.pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+.badge-pop { animation: badgePop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+.notification-slide { animation: slideIn 0.5s ease-out; }
+.coin-flip { animation: coinFlip 1s ease-in-out; }
+.streak-fire { animation: fireFlicker 1s ease-in-out infinite; }
+.activity-dot {
+  @apply w-2 h-2 rounded-full bg-pastel-blue-300;
+  animation: pulse 2s infinite;
+}
