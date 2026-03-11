@@ -5,15 +5,13 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ internId: string }> }
 ) {
-  try {
-    const { internId } = await params;
+  const { internId } = await params;
 
+  try {
+    // Verify intern exists
     const intern = queryOne<any>('SELECT id, first_name, last_name FROM interns WHERE id = ?', [internId]);
     if (!intern) {
-      return NextResponse.json(
-        { success: false, error: 'Intern not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Intern not found' }, { status: 404 });
     }
 
     const stipends = query<any>(`
@@ -22,6 +20,7 @@ export async function GET(
       ORDER BY payment_year DESC, payment_month DESC
     `, [internId]);
 
+    // Calculate totals
     const totals = queryOne<any>(`
       SELECT
         COUNT(*) AS total_payments,
@@ -35,10 +34,10 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
-        intern,
+        intern: { id: intern.id, first_name: intern.first_name, last_name: intern.last_name },
         stipends,
-        totals,
-      },
+        totals
+      }
     });
   } catch (error: any) {
     return NextResponse.json(
