@@ -6,7 +6,6 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { serveStatic } from 'hono/cloudflare-workers';
 import { sign, verify } from 'hono/jwt';
 import bcrypt from 'bcryptjs';
 import type { Bindings, Variables } from './types';
@@ -23,7 +22,18 @@ app.use('/api/*', cors({
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
 
-app.use('/static/*', serveStatic({ root: './public' }));
+// Graceful fallback when D1 database is not available (e.g. Vercel deployment)
+app.use('/api/*', async (c, next) => {
+  if (!c.env?.DB) {
+    return c.json({
+      success: false,
+      error: 'Database not available',
+      message: 'API endpoints require Cloudflare D1. Visit the dashboard at / for the full demo experience.',
+      demo: true,
+    }, 503);
+  }
+  await next();
+});
 
 app.use('*', async (c, next) => {
   const start = Date.now();
