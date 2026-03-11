@@ -2,7 +2,7 @@
 // Comprehensive type definitions for the entire system
 
 export type Bindings = {
-  DB: D1Database;
+  DB: any; // D1Database on Cloudflare, undefined on Vercel
   AI: any; // Cloudflare AI binding
 };
 

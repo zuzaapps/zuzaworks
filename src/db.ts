@@ -1,5 +1,5 @@
 // Database utility functions for ZuZaWorksOS
-import type { D1Database } from '@cloudflare/workers-types';
+import type { D1Database, D1Result } from '@cloudflare/workers-types';
 import type { ApiResponse } from './types';
 
 /**
