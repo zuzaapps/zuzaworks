@@ -20,6 +20,7 @@
     "db:reset": "rm -rf .wrangler/state/v3/d1 && npm run db:migrate:local && npm run db:seed",
     "db:console:local": "wrangler d1 execute zuzaworksos-production --local",
     "db:console:prod": "wrangler d1 execute zuzaworksos-production",
+    "build:vercel": "node scripts/build-vercel.mjs",
     "git:commit": "git add . && git commit -m",
     "git:status": "git status",
     "git:log": "git log --oneline"

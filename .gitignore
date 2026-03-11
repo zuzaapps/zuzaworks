@@ -30,6 +30,9 @@ logs/
 # Wrangler
 .wrangler/
 
+# Vercel
+.vercel/
+
 # IDE
 .vscode/
 .idea/
