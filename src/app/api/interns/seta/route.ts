@@ -2,99 +2,67 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const setaName = searchParams.get('seta_name');
+  const status = searchParams.get('status');
+
   try {
-    const { searchParams } = new URL(request.url);
-    const setaId = searchParams.get('seta_id');
-    const status = searchParams.get('status');
-    const grantType = searchParams.get('grant_type');
+    let where = '1=1';
+    const params: any[] = [];
+    if (setaName) { where += ' AND sr.seta_name = ?'; params.push(setaName); }
+    if (status) { where += ' AND sr.registration_status = ?'; params.push(status); }
 
-    // SETA grant tracking
-    let grantSql = `
+    // Get all SETA registrations with intern and program details
+    const registrations = query<any>(`
+      SELECT sr.*,
+        i.first_name, i.last_name, i.id_number, i.intern_status,
+        ip.program_name, ip.program_type, ip.qualification_title, ip.qualification_nqf_level
+      FROM seta_registrations sr
+      JOIN interns i ON sr.intern_id = i.id
+      LEFT JOIN intern_programs ip ON sr.program_id = ip.id
+      WHERE ${where}
+      ORDER BY sr.registration_date DESC
+    `, params);
+
+    // Grant summary
+    const grantSummary = queryOne<any>(`
       SELECT
-        sg.id,
-        sg.seta_name,
-        sg.seta_id,
-        sg.grant_type,
-        sg.grant_reference,
-        sg.application_date,
-        sg.approval_date,
-        sg.grant_amount,
-        sg.amount_received,
-        sg.amount_pending,
-        sg.financial_year,
-        sg.status,
-        sg.conditions,
-        sg.reporting_deadline,
-        sg.notes,
-        sg.created_at,
-        (SELECT COUNT(*) FROM interns i
-         JOIN intern_programs ip ON i.program_id = ip.id
-         WHERE ip.seta_id = sg.seta_id AND i.status = 'active') as linked_active_interns,
-        (SELECT COUNT(*) FROM interns i
-         JOIN intern_programs ip ON i.program_id = ip.id
-         WHERE ip.seta_id = sg.seta_id AND i.status = 'completed') as linked_completed_interns
-      FROM seta_grants sg
-      WHERE 1=1
-    `;
-
-    const params: unknown[] = [];
-
-    if (setaId) {
-      grantSql += ` AND sg.seta_id = ?`;
-      params.push(setaId);
-    }
-    if (status) {
-      grantSql += ` AND sg.status = ?`;
-      params.push(status);
-    }
-    if (grantType) {
-      grantSql += ` AND sg.grant_type = ?`;
-      params.push(grantType);
-    }
-
-    grantSql += ` ORDER BY sg.application_date DESC`;
-
-    const grants = query<any>(grantSql, params);
-
-    // Summary
-    const summary = queryOne<any>(`
-      SELECT
-        COUNT(*) as total_grants,
-        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_grants,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_grants,
-        COALESCE(SUM(grant_amount), 0) as total_grant_amount,
-        COALESCE(SUM(amount_received), 0) as total_received,
-        COALESCE(SUM(amount_pending), 0) as total_pending
-      FROM seta_grants
+        COUNT(*) AS total_registrations,
+        SUM(CASE WHEN registration_status = 'registered' THEN 1 ELSE 0 END) AS active_registrations,
+        SUM(CASE WHEN commencement_grant_claimed = 1 THEN 1 ELSE 0 END) AS commencement_grants_claimed,
+        SUM(CASE WHEN progress_grant_claimed = 1 THEN 1 ELSE 0 END) AS progress_grants_claimed,
+        SUM(CASE WHEN completion_grant_claimed = 1 THEN 1 ELSE 0 END) AS completion_grants_claimed,
+        COALESCE(SUM(commencement_grant_amount), 0) AS total_commencement_amount,
+        COALESCE(SUM(progress_grant_amount), 0) AS total_progress_amount,
+        COALESCE(SUM(completion_grant_amount), 0) AS total_completion_amount,
+        COALESCE(SUM(total_grant_received), 0) AS grand_total_grants
+      FROM seta_registrations
     `);
 
-    // WSP/ATR status
-    const wspStatus = query<any>(`
-      SELECT
-        id,
-        financial_year,
-        submission_type,
-        submission_date,
-        submission_deadline,
-        status,
-        seta_name,
-        reference_number
-      FROM seta_wsp_submissions
-      ORDER BY financial_year DESC
-      LIMIT 5
+    // Overdue quarterly reports
+    const overdueReports = query<any>(`
+      SELECT sr.id, sr.intern_id, sr.seta_name, sr.next_quarterly_report_due,
+        i.first_name, i.last_name, ip.program_name
+      FROM seta_registrations sr
+      JOIN interns i ON sr.intern_id = i.id
+      LEFT JOIN intern_programs ip ON sr.program_id = ip.id
+      WHERE sr.registration_status = 'registered'
+        AND sr.next_quarterly_report_due IS NOT NULL
+        AND sr.next_quarterly_report_due < date('now')
+      ORDER BY sr.next_quarterly_report_due ASC
     `);
 
     return NextResponse.json({
       success: true,
       data: {
-        grants,
-        summary,
-        wsp_submissions: wspStatus,
-      },
+        registrations,
+        grantSummary,
+        overdueReports
+      }
     });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch SETA grant tracking data', message: String(error) },
+      { success: false, error: 'Failed to fetch SETA tracking data', message: error.message },
       { status: 500 }
     );
   }

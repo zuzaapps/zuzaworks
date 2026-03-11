@@ -5,76 +5,54 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ internId: string }> }
 ) {
+  const { internId } = await params;
+
   try {
-    const { internId } = await params;
-
     // Verify intern exists
-    const intern = queryOne<any>(
-      `SELECT id, intern_number, first_name, last_name FROM interns WHERE id = ?`,
-      [internId]
-    );
-
+    const intern = queryOne<any>('SELECT id, first_name, last_name FROM interns WHERE id = ?', [internId]);
     if (!intern) {
-      return NextResponse.json(
-        { success: false, error: 'Intern not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Intern not found' }, { status: 404 });
     }
 
     const assessments = query<any>(`
-      SELECT
-        id,
-        assessment_type,
-        assessment_date,
-        assessor_id,
-        assessor_name,
-        score,
-        max_score,
-        percentage,
-        grade,
-        competencies_assessed,
-        strengths,
-        areas_for_improvement,
-        recommendations,
-        intern_comments,
-        assessor_comments,
-        next_assessment_date,
-        notes,
-        status,
-        created_at
-      FROM intern_assessments
+      SELECT * FROM intern_assessments
       WHERE intern_id = ?
       ORDER BY assessment_date DESC
     `, [internId]);
 
-    // Summary
+    // Summary stats
     const summary = queryOne<any>(`
       SELECT
-        COUNT(*) as total_assessments,
-        AVG(percentage) as average_percentage,
-        MAX(percentage) as highest_percentage,
-        MIN(percentage) as lowest_percentage,
-        MIN(assessment_date) as first_assessment,
-        MAX(assessment_date) as last_assessment
+        COUNT(*) AS total_assessments,
+        COALESCE(AVG(overall_rating), 0) AS avg_overall_rating,
+        COALESCE(AVG(technical_skills_rating), 0) AS avg_technical_rating,
+        COALESCE(AVG(soft_skills_rating), 0) AS avg_soft_skills_rating,
+        COALESCE(AVG(workplace_behavior_rating), 0) AS avg_behavior_rating,
+        MAX(assessment_date) AS last_assessment_date
       FROM intern_assessments
-      WHERE intern_id = ? AND status = 'completed'
+      WHERE intern_id = ?
+    `, [internId]);
+
+    // Latest outcome
+    const latestOutcome = queryOne<any>(`
+      SELECT outcome, assessment_date, assessment_type
+      FROM intern_assessments
+      WHERE intern_id = ? AND outcome IS NOT NULL
+      ORDER BY assessment_date DESC LIMIT 1
     `, [internId]);
 
     return NextResponse.json({
       success: true,
       data: {
-        intern: {
-          id: intern.id,
-          intern_number: intern.intern_number,
-          name: `${intern.first_name} ${intern.last_name}`,
-        },
+        intern: { id: intern.id, first_name: intern.first_name, last_name: intern.last_name },
         assessments,
         summary,
-      },
+        latestOutcome
+      }
     });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch assessments', message: String(error) },
+      { success: false, error: 'Failed to fetch assessments', message: error.message },
       { status: 500 }
     );
   }
